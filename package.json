@@ -78,21 +78,21 @@
 		},
 		"win": {
 			"target": [
-				"portable",
 				"nsis"
 			]
 		},
-		"mac": {
-			"target": [
-				"dmg"
-			]
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
+			"createDesktopShortcut": true,
+			"createStartMenuShortcut": true,
+			"shortcutName": "FluxBrowser",
+			"installerIcon": "build/icon.ico",
+			"uninstallerIcon": "build/icon.ico",
+			"uninstallDisplayName": "FluxBrowser",
+			"runAfterFinish": true
 		},
-		"linux": {
-			"target": [
-				"AppImage",
-				"deb"
-			]
-		},
+		"asar": true,
 		"files": [
 			"src/**/*",
 			"package.json"
