@@ -91,14 +91,8 @@ npm run build
 * **Frontend**: HTML5, CSS3 (Glassmorphism), Vanilla JavaScript
 * **Icon Support**: Material Icons
 
-## 许可证
-
-[在此添加您的许可证信息]
-
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request！
 
 ## 联系方式
-
-[在此添加您的联系方式]
