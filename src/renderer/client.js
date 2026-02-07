@@ -5,6 +5,12 @@ const urlInput = document.getElementById("url-input");
 const goBtn = document.getElementById("go-btn");
 const fluxBar = document.getElementById("flux-bar");
 
+// 处理“点封面想开新窗”的需求
+webview.addEventListener('new-window', (e) => {
+    // 强制在当前的 webview 里跳转，而不是开新窗
+    webview.src = e.url;
+});
+
 // 1. 导航逻辑
 const navigate = () => {
 	let url = urlInput.value;
@@ -57,4 +63,19 @@ resizeHandles.forEach((handle) => {
 
 window.addEventListener("mouseup", () => {
 	ipcRenderer.send("stop-resizing");
+});
+
+webview.addEventListener('dom-ready', () => {
+    // 注入脚本到 B 站页面内
+    webview.executeJavaScript(`
+        // 确保所有链接都能在当前页打开，不触发 Electron 拦截
+        document.querySelectorAll('a').forEach(link => {
+            link.setAttribute('target', '_self');
+        });
+        
+        // 修复部分 B 站元素在透明窗口下的点击判定
+        const style = document.createElement('style');
+        style.innerHTML = '*{ pointer-events: auto !important; -webkit-user-drag: none !important; }';
+        document.head.appendChild(style);
+    `);
 });
