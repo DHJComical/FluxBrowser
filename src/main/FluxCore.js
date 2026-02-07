@@ -1,6 +1,12 @@
-const { BrowserWindow, ipcMain, screen, app, globalShortcut } = require("electron");
+const {
+	BrowserWindow,
+	ipcMain,
+	screen,
+	app,
+	globalShortcut,
+} = require("electron");
 const path = require("path"); // 引入 path 模块
-const fs = require("fs");     // 引入 fs 模块
+const fs = require("fs"); // 引入 fs 模块
 
 // 使用 path.join 而不是直接用 join
 const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
@@ -16,6 +22,7 @@ class FluxCore {
 			ImmersionMode: "Alt+W",
 			"Video-Pause": "Alt+Space",
 			"Video-Forward": "Alt+Right",
+			"Video-Backward": "Alt+Left",
 		};
 		// 加载保存的窗口位置和大小
 		this.savedBounds = this.loadWindowBounds();
@@ -24,23 +31,23 @@ class FluxCore {
 
 	// 1. 加载本地配置
 	loadKeyConfig() {
-        try {
-            // 必须使用 fs.existsSync
-            if (fs.existsSync(CONFIG_PATH)) {
-                const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
-                this.keyMap = { ...this.keyMap, ...saved };
-                console.log("快捷键配置加载成功");
-            }
-        } catch (e) {
-            console.error("加载快捷键配置失败", e);
-        }
-    }
+		try {
+			// 必须使用 fs.existsSync
+			if (fs.existsSync(CONFIG_PATH)) {
+				const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+				this.keyMap = { ...this.keyMap, ...saved };
+				console.log("快捷键配置加载成功");
+			}
+		} catch (e) {
+			console.error("加载快捷键配置失败", e);
+		}
+	}
 
 	// 2. 保存配置
 	saveKeyConfig(newMap) {
 		this.keyMap = { ...this.keyMap, ...newMap };
 		try {
-			writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
+			fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
 			// 重新注册所有快捷键
 			this.pluginLoader.reloadShortcuts();
 		} catch (e) {
@@ -50,16 +57,16 @@ class FluxCore {
 
 	// 读取本地窗口状态
 	loadWindowBounds() {
-        try {
-            // 必须使用 fs.existsSync
-            if (fs.existsSync(BOUNDS_PATH)) {
-                return JSON.parse(fs.readFileSync(BOUNDS_PATH, "utf-8"));
-            }
-        } catch (e) {
-            console.error("加载窗口位置配置失败", e);
-        }
-        return { width: 600, height: 400 };
-    }
+		try {
+			// 必须使用 fs.existsSync
+			if (fs.existsSync(BOUNDS_PATH)) {
+				return JSON.parse(fs.readFileSync(BOUNDS_PATH, "utf-8"));
+			}
+		} catch (e) {
+			console.error("加载窗口位置配置失败", e);
+		}
+		return { width: 600, height: 400 };
+	}
 
 	// 保存当前窗口状态
 	saveWindowBounds() {
@@ -99,7 +106,7 @@ class FluxCore {
 		ipcMain.on("app-exit", () => {
 			this.saveWindowBounds();
 			app.quit();
-	   });
+		});
 	}
 
 	createWindow() {

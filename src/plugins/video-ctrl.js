@@ -13,5 +13,11 @@ module.exports = {
                 if(v) v.currentTime += 10;
             `);
 		},
+		"Video-Backward": (core) => {
+			core.executeOnWebview(`
+                var v = document.querySelector('video');
+                if(v) v.currentTime -= 10;
+            `);
+		},
 	},
 };

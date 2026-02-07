@@ -185,6 +185,7 @@ const labelMap = {
 	ImmersionMode: "沉浸模式 (穿透)",
 	"Video-Pause": "视频 暂停/播放",
 	"Video-Forward": "视频 快进",
+	"Video-Backward": "视频 快退",
 };
 
 function renderShortcuts(map) {
