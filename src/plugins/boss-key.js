@@ -1,6 +1,8 @@
-export const name = "BossKey";
-export const shortcuts = {
-	"Alt+Q": (core) => {
-		core.toggleVisibility();
-	},
+module.exports = {
+    name: "BossKey",
+    shortcuts: {
+        "BossKey": (core) => {
+            core.toggleVisibility();
+        },
+    }
 };

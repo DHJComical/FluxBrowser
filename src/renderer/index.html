@@ -9,15 +9,26 @@
   
   <!-- 顶部控制栏 (Flux Bar) -->
   <div id="flux-bar">
-    <div class="drag-region">
-      <span class="app-name">FluxBrowser</span>
+    <div class="drag-region">FluxBrowser</div>
+    
+    <!-- 1. 确保这一块菜单按钮存在 -->
+    <div class="menu-container">
+        <button id="menu-btn"><i class="material-icons">menu</i></button>
+        <div id="dropdown-menu" class="hidden">
+            <div class="menu-item" id="settings-btn">
+                <i class="material-icons">settings</i> 设置快捷键
+            </div>
+            <div class="menu-item" id="exit-btn">
+                <i class="material-icons">power_settings_new</i> 退出
+            </div>
+        </div>
     </div>
+
     <div class="input-group">
-      <input type="text" id="url-input" placeholder="Enter URL..." value="https://www.bilibili.com">
-      <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
+        <input type="text" id="url-input" placeholder="Enter URL..." value="">
+        <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
     </div>
   </div>
-
   <!-- 网页容器 -->
 
   <webview id="browser-view" allowpopups></webview>
@@ -27,6 +38,21 @@
   <div class="resize-handle bottom" data-direction="bottom"></div>
   <div class="resize-handle corner" data-direction="both"></div>
 
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>快捷键设置</h3>
+            <button id="close-settings"><i class="material-icons">close</i></button>
+        </div>
+        <div class="modal-body">
+            <ul id="shortcut-list"></ul>
+        </div>
+        <div class="modal-footer">
+            <button id="save-shortcuts">保存并生效</button>
+        </div>
+    </div>
+  </div>
+  
   <script src="client.js"></script>
 </body>
 </html>

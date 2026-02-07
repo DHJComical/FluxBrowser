@@ -1,19 +1,80 @@
-const { BrowserWindow, ipcMain, screen } = require("electron");
+const {
+	BrowserWindow,
+	ipcMain,
+	screen,
+	app,
+	globalShortcut,
+} = require("electron");
 const path = require("path");
+const fs = require("fs");
+
+// 配置文件路径
+const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
 
 class FluxCore {
 	constructor() {
 		this.window = null;
 		this.pluginLoader = null;
+		// 默认快捷键映射 (ID -> 快捷键)
+		this.keyMap = {
+			BossKey: "Alt+Q",
+			ImmersionMode: "Alt+W",
+			"Video-Pause": "Alt+Space",
+			"Video-Forward": "Alt+Right",
+		};
+		this.loadKeyConfig();
+	}
+
+	// 1. 加载本地配置
+	loadKeyConfig() {
+		try {
+			if (fs.existsSync(CONFIG_PATH)) {
+				const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+				this.keyMap = { ...this.keyMap, ...saved };
+			}
+		} catch (e) {
+			console.error("加载快捷键配置失败", e);
+		}
+	}
+
+	// 2. 保存配置
+	saveKeyConfig(newMap) {
+		this.keyMap = { ...this.keyMap, ...newMap };
+		try {
+			fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
+			// 重新注册所有快捷键
+			this.pluginLoader.reloadShortcuts();
+		} catch (e) {
+			console.error("保存快捷键配置失败", e);
+		}
 	}
 
 	// 启动核心
 	launch(PluginLoaderClass) {
 		this.createWindow();
 		this.setupResizeHandler();
+		this.setupIpc();
 		// 初始化插件加载器，把核心实例传给插件
 		this.pluginLoader = new PluginLoaderClass(this);
 		this.pluginLoader.loadAll();
+	}
+
+	setupIpc() {
+		// 前端请求获取当前快捷键
+		ipcMain.handle("get-shortcuts", () => {
+			console.log("主进程：收到获取快捷键请求", this.keyMap);
+			return this.keyMap;
+		});
+
+		// 前端请求保存快捷键
+		ipcMain.on("save-shortcuts", (e, newMap) => {
+			this.saveKeyConfig(newMap);
+		});
+
+		// 监听退出
+		ipcMain.on("app-exit", () => {
+			app.quit();
+		});
 	}
 
 	createWindow() {
@@ -134,6 +195,11 @@ class FluxCore {
 			// level 参数 "screen-saver" 可以让置顶更高级，普通置顶用 flag 即可
 			this.window.setAlwaysOnTop(flag);
 		}
+	}
+
+	// 给 PluginLoader 用的辅助函数
+	getKey(actionId) {
+		return this.keyMap[actionId];
 	}
 }
 

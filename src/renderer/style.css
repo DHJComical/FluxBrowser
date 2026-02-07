@@ -6,6 +6,156 @@ body {
 	font-family: "Segoe UI", sans-serif;
 }
 
+/* 菜单容器 */
+.menu-container {
+	position: relative;
+	-webkit-app-region: no-drag;
+}
+
+#menu-btn {
+	margin-right: 10px;
+	color: #ccc;
+}
+
+#menu-btn:hover {
+	color: #00d2ff;
+}
+
+/* 下拉菜单 */
+#dropdown-menu {
+	position: absolute;
+	top: 35px;
+	left: 0;
+	width: 150px;
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 6px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+	z-index: 10000;
+	overflow: hidden;
+	transition:
+		opacity 0.2s,
+		transform 0.2s;
+}
+
+.hidden {
+	display: none !important;
+}
+
+.menu-item {
+	padding: 10px 15px;
+	color: white;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+}
+
+.menu-item:hover {
+	background: rgba(0, 210, 255, 0.2);
+	color: #00d2ff;
+}
+
+/* 设置模态框 */
+.modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(0, 0, 0, 0.6);
+	backdrop-filter: blur(5px);
+	z-index: 20000;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.modal-content {
+	width: 500px;
+	background: #1e1e1e;
+	border: 1px solid #00d2ff;
+	border-radius: 8px;
+	box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+	color: white;
+	display: flex;
+	flex-direction: column;
+}
+
+.modal-header {
+	padding: 15px 20px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.modal-body {
+	padding: 20px;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.shortcut-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+.shortcut-item label {
+	color: #ccc;
+	font-size: 14px;
+}
+
+.shortcut-input {
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid #444;
+	color: #00d2ff;
+	padding: 5px 10px;
+	border-radius: 4px;
+	text-align: center;
+	width: 150px;
+	cursor: pointer;
+	font-family: monospace;
+}
+
+.shortcut-input:focus {
+	border-color: #00d2ff;
+	outline: none;
+	background: rgba(0, 210, 255, 0.1);
+}
+
+.modal-footer {
+	padding: 15px;
+	border-top: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.tip {
+	font-size: 12px;
+	color: #666;
+}
+
+#save-shortcuts {
+	background: #00d2ff;
+	color: black;
+	border: none;
+	padding: 8px 20px;
+	border-radius: 4px;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+#save-shortcuts:hover {
+	background: #fff;
+	box-shadow: 0 0 10px #00d2ff;
+}
+
 /* 玻璃拟态控制栏 */
 #flux-bar {
 	display: flex;
