@@ -261,3 +261,8 @@ body.immersion #browser-view {
 		rgba(0, 210, 255, 0.5) 50%
 	);
 }
+
+/* 当 body 拥有 immersion 类时，隐藏所有缩放手柄 */
+body.immersion .resize-handle {
+    display: none !important;
+}

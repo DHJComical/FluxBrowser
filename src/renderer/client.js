@@ -131,6 +131,9 @@ webview.addEventListener("mouseenter", () => {
 // ==========================================
 resizeHandles.forEach((handle) => {
 	handle.addEventListener("mousedown", (e) => {
+		// 如果当前是沉浸模式，直接返回，不发送缩放指令
+        if (isImmersionMode) return; 
+        // --------------
 		e.preventDefault();
 		const direction = handle.getAttribute("data-direction");
 		ipcRenderer.send("start-resizing", direction);
