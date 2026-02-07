@@ -22,7 +22,7 @@ class FluxCore {
 			height: 400,
 			frame: false, // 无边框
 			transparent: true, // 透明背景
-			alwaysOnTop: true, // 永远置顶
+			alwaysOnTop: false,
 			hasShadow: false,
 			webPreferences: {
 				nodeIntegration: true,
@@ -126,6 +126,14 @@ class FluxCore {
 	// 4. 执行网页内的 JS (控制视频用)
 	executeOnWebview(jsCode) {
 		this.sendToRenderer("execute-webview-js", jsCode);
+	}
+
+	// 5. 设置窗口是否置顶
+	setAlwaysOnTop(flag) {
+		if (this.window) {
+			// level 参数 "screen-saver" 可以让置顶更高级，普通置顶用 flag 即可
+			this.window.setAlwaysOnTop(flag);
+		}
 	}
 }
 
