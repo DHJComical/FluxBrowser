@@ -21,14 +21,10 @@
   <!-- 网页容器 -->
   <webview id="browser-view" src="https://www.bilibili.com"></webview>
 
-  <!-- 1. 右边缘调整条 -->
-    <div class="resize-border right" data-direction="x"></div>
-
-    <!-- 2. 下边缘调整条 -->
-    <div class="resize-border bottom" data-direction="y"></div>
-
-    <!-- 3. 原来的右下角手柄 -->
-    <div id="resize-handle" class="resize-border corner" data-direction="xy"></div>
+  <!-- 边缘调整区域 -->
+  <div class="resize-handle right" data-direction="right"></div>
+  <div class="resize-handle bottom" data-direction="bottom"></div>
+  <div class="resize-handle corner" data-direction="both"></div>
 
   <script src="client.js"></script>
 </body>

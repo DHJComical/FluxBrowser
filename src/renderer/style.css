@@ -72,15 +72,42 @@ body.immersion #browser-view {
 	height: 100vh;
 }
 
-/* 调整大小 */
-#resize-handle {
+/* 所有的调整手柄通用样式 */
+.resize-handle {
 	position: absolute;
+	z-index: 9999;
+	background: transparent; /* 调试时可以设为 rgba(0,210,255,0.2) 看看位置 */
+}
+
+/* 右边框：宽 10px，高 100% */
+.resize-handle.right {
+	top: 0;
+	right: 0;
+	width: 10px;
+	height: 100%;
+	cursor: e-resize;
+}
+
+/* 下边框：高 10px，宽 100% */
+.resize-handle.bottom {
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 10px;
+	cursor: s-resize;
+}
+
+/* 右下角：20x20 的方块 */
+.resize-handle.corner {
 	bottom: 0;
 	right: 0;
-	width: 20px; /* 改大一点，好点中 */
-	height: 20px;
-	cursor: se-resize; /* 鼠标样式 */
-	background: linear-gradient(135deg, transparent 50%, #00d2ff 50%);
-	z-index: 99999; /* 确保在最上层 */
-	-webkit-app-region: no-drag; /* 关键：这块区域不能用来拖动窗口，只能用来调整大小 */
+	width: 15px;
+	height: 15px;
+	cursor: se-resize;
+	/* 给右下角画一个小三角指示器 */
+	background: linear-gradient(
+		135deg,
+		transparent 50%,
+		rgba(0, 210, 255, 0.5) 50%
+	);
 }
