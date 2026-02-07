@@ -249,23 +249,23 @@ saveShortcutsBtn.onclick = () => {
 console.log("按钮检查:", menuBtn, settingsBtn, settingsModal);
 
 menuBtn.onclick = (e) => {
-    e.stopPropagation();
-    console.log("菜单按钮被点击");
-    dropdownMenu.classList.toggle("hidden");
+	e.stopPropagation();
+	console.log("菜单按钮被点击");
+	dropdownMenu.classList.toggle("hidden");
 };
 
 settingsBtn.onclick = async () => {
-    console.log("设置按钮被点击");
-    dropdownMenu.classList.add("hidden");
-    
-    try {
-        console.log("正在请求快捷键数据...");
-        const keyMap = await ipcRenderer.invoke("get-shortcuts");
-        console.log("获取成功:", keyMap);
-        
-        renderShortcuts(keyMap);
-        settingsModal.classList.remove("hidden"); // 显示模态框
-    } catch (err) {
-        console.error("无法弹出设置界面:", err);
-    }
+	console.log("设置按钮被点击");
+	dropdownMenu.classList.add("hidden");
+
+	try {
+		console.log("正在请求快捷键数据...");
+		const keyMap = await ipcRenderer.invoke("get-shortcuts");
+		console.log("获取成功:", keyMap);
+
+		renderShortcuts(keyMap);
+		settingsModal.classList.remove("hidden"); // 显示模态框
+	} catch (err) {
+		console.error("无法弹出设置界面:", err);
+	}
 };
