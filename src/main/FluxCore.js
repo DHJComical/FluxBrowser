@@ -31,6 +31,20 @@ class FluxCore {
 			},
 		});
 
+		this.window.webContents.on("did-attach-webview", (event, webContents) => {
+			// webContents 是 webview 内部的页面对象
+			// setWindowOpenHandler 是 Electron 官方推荐的最强拦截方式
+			webContents.setWindowOpenHandler(({ url }) => {
+				// console.log("主进程拦截到跳转:", url);
+
+				// 强制让 webview 自身加载这个 URL
+				webContents.loadURL(url);
+
+				// 返回 deny 彻底禁止系统创建新窗口
+				return { action: "deny" };
+			});
+		});
+
 		this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
 
 		// 监听前端的鼠标穿透请求（智能穿透）
@@ -38,6 +52,7 @@ class FluxCore {
 			this.setIgnoreMouse(ignore);
 		});
 	}
+
 	setupResizeHandler() {
 		let resizeInterval;
 
