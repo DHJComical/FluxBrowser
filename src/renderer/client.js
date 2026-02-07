@@ -5,34 +5,62 @@ const urlInput = document.getElementById("url-input");
 const goBtn = document.getElementById("go-btn");
 const fluxBar = document.getElementById("flux-bar");
 
-// 新增：记录当前的沉浸模式状态，否则穿透逻辑无法判断何时恢复
+// 全局状态
 let isImmersionMode = false;
+// [新增] 定义默认主页
+const DEFAULT_URL = "https://www.bilibili.com"; 
 
 // ==========================================
-// 1. 核心导航逻辑 (你刚才的代码里漏掉了 navigate 函数)
+// [新增] 启动时恢复上次浏览的页面
+// ==========================================
+// 这一步必须在获取 DOM 元素之后立即执行
+const restoreLastSession = () => {
+    // 从本地存储获取
+    const lastUrl = localStorage.getItem("flux-last-url");
+    
+    // 如果有存档且是合法的 http 地址，就用存档；否则用默认主页
+    const targetUrl = (lastUrl && lastUrl.startsWith("http")) ? lastUrl : DEFAULT_URL;
+    
+    // 设置给 webview 和 输入框
+    // 注意：这里我们不需要改 HTML 里的 src，JS 会覆盖它
+    webview.src = targetUrl;
+    urlInput.value = targetUrl;
+};
+
+// 执行恢复逻辑
+restoreLastSession();
+
+// ==========================================
+// 2. 导航逻辑
 // ==========================================
 const navigate = () => {
-	let url = urlInput.value.trim();
-	if (!url) return;
-	if (!url.startsWith("http")) url = "https://" + url;
-	webview.src = url;
+    let url = urlInput.value.trim();
+    if (!url) return;
+    if (!url.startsWith("http")) url = "https://" + url;
+    webview.src = url;
 };
 
 goBtn.onclick = navigate;
 urlInput.onkeydown = (e) => {
-	if (e.key === "Enter") navigate();
+    if (e.key === "Enter") navigate();
 };
 
 // ==========================================
-// A. URL 自动刷新逻辑
+// A. URL 自动刷新逻辑 (修改：加入保存功能)
 // ==========================================
 const syncUrl = () => {
-	urlInput.value = webview.getURL();
+    const currentUrl = webview.getURL();
+    urlInput.value = currentUrl;
+
+    // [新增] 每次 URL 变化时，保存到本地存储
+    // 过滤掉空的或者非 http 的地址 (比如空白页)
+    if (currentUrl && currentUrl.startsWith("http")) {
+        localStorage.setItem("flux-last-url", currentUrl);
+    }
 };
 
 webview.addEventListener("did-navigate", syncUrl);
 webview.addEventListener("did-navigate-in-page", syncUrl);
-
 // B. 渲染进程的辅助拦截 (作为第二层保险)
 webview.addEventListener("new-window", (e) => {
 	e.preventDefault(); // 阻止默认开窗
