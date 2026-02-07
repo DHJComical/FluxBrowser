@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="style.css">
+  <!-- 引入 Material Icons 让界面更漂亮 -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  
+  <!-- 顶部控制栏 (Flux Bar) -->
+  <div id="flux-bar">
+    <div class="drag-region">
+      <span class="app-name">FluxBrowser</span>
+    </div>
+    <div class="input-group">
+      <input type="text" id="url-input" placeholder="Enter URL..." value="https://www.bilibili.com">
+      <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
+    </div>
+  </div>
+
+  <!-- 网页容器 -->
+  <webview id="browser-view" src="https://www.bilibili.com"></webview>
+
+  <!-- 调整大小的手柄 -->
+  <div id="resize-handle"></div>
+
+  <script src="client.js"></script>
+</body>
+</html>
