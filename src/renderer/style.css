@@ -66,10 +66,13 @@ body.immersion #browser-view {
 
 /* 调整大小 */
 #resize-handle {
-  position: absolute; bottom: 0; right: 0;
-  width: 15px; height: 15px;
-  cursor: se-resize;
-  /* 只有在右下角一个小三角区域可以点击 */
-  background: linear-gradient(135deg, transparent 50%, #00d2ff 50%);
-  z-index: 9999;
-}
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;       /* 改大一点，好点中 */
+    height: 20px;
+    cursor: se-resize; /* 鼠标样式 */
+    background: linear-gradient(135deg, transparent 50%, #00d2ff 50%);
+    z-index: 99999;    /* 确保在最上层 */
+    -webkit-app-region: no-drag; /* 关键：这块区域不能用来拖动窗口，只能用来调整大小 */
+  }

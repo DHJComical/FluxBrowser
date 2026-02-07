@@ -10,7 +10,7 @@ class FluxCore {
   // 启动核心
   launch(PluginLoaderClass) {
     this.createWindow();
-    
+    this.setupResizeHandler();
     // 初始化插件加载器，把核心实例传给插件
     this.pluginLoader = new PluginLoaderClass(this);
     this.pluginLoader.loadAll();
@@ -38,6 +38,47 @@ class FluxCore {
       this.setIgnoreMouse(ignore);
     });
   }
+  setupResizeHandler() {
+    let resizeInterval;
+
+    // 1. 开始调整
+    ipcMain.on('start-resizing', () => {
+      // 获取当前鼠标绝对位置 和 窗口当前大小
+      const startMousePos = screen.getCursorScreenPoint();
+      const startBounds = this.window.getBounds();
+
+      // 开启一个循环，每10毫秒检查一次鼠标位置
+      resizeInterval = setInterval(() => {
+        if (!this.window || this.window.isDestroyed()) {
+          clearInterval(resizeInterval);
+          return;
+        }
+
+        const currentMousePos = screen.getCursorScreenPoint();
+        
+        // 计算偏移量：当前鼠标 - 初始鼠标
+        const deltaX = currentMousePos.x - startMousePos.x;
+        const deltaY = currentMousePos.y - startMousePos.y;
+
+        // 新宽高 = 初始宽高 + 偏移量
+        const newWidth = startBounds.width + deltaX;
+        const newHeight = startBounds.height + deltaY;
+
+        // 设置新大小 (限制最小宽度300，最小高度200，防止缩没了)
+        this.window.setBounds({
+          x: startBounds.x,
+          y: startBounds.y,
+          width: Math.max(300, newWidth),
+          height: Math.max(200, newHeight)
+        });
+      }, 10); // 10ms 刷新率，非常丝滑
+    });
+
+        // 2. 停止调整
+        ipcMain.on('stop-resizing', () => {
+        if (resizeInterval) clearInterval(resizeInterval);
+        });
+    }
 
   // --- 开放给插件使用的 API ---
 

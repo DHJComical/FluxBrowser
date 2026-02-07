@@ -51,3 +51,17 @@ interactiveElements.forEach(el => {
     // 这里主要是为了防止在沉浸模式下，鼠标移入隐藏的菜单时无法操作。
   });
 });
+
+const resizeHandle = document.getElementById('resize-handle');
+
+// 1. 鼠标按下：告诉后端“开始干活”
+resizeHandle.addEventListener('mousedown', (e) => {
+  e.preventDefault(); // 防止选中文字
+  ipcRenderer.send('start-resizing');
+});
+
+// 2. 鼠标松开（在任何地方松开）：告诉后端“停！”
+// 注意：这里用 window 监听，防止鼠标跑出浏览器外松开检测不到
+window.addEventListener('mouseup', () => {
+  ipcRenderer.send('stop-resizing');
+});
