@@ -1,78 +1,86 @@
-body { margin: 0; padding: 0; overflow: hidden; background: transparent; font-family: 'Segoe UI', sans-serif; }
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background: transparent;
+	font-family: "Segoe UI", sans-serif;
+}
 
 /* 玻璃拟态控制栏 */
 #flux-bar {
-  display: flex;
-  height: 40px;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(10px); /* 毛玻璃特效 */
-  align-items: center;
-  padding: 0 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  transition: transform 0.3s ease;
+	display: flex;
+	height: 40px;
+	background: rgba(20, 20, 20, 0.85);
+	backdrop-filter: blur(10px); /* 毛玻璃特效 */
+	align-items: center;
+	padding: 0 10px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	transition: transform 0.3s ease;
 }
 
 .drag-region {
-  -webkit-app-region: drag; /* 可拖拽 */
-  flex: 0 0 100px;
-  color: #00d2ff; /* 赛博朋克蓝 */
-  font-weight: bold;
-  font-size: 14px;
-  cursor: default;
+	-webkit-app-region: drag; /* 可拖拽 */
+	flex: 0 0 100px;
+	color: #00d2ff; /* 赛博朋克蓝 */
+	font-weight: bold;
+	font-size: 14px;
+	cursor: default;
 }
 
 .input-group {
-  flex: 1;
-  display: flex;
-  -webkit-app-region: no-drag;
+	flex: 1;
+	display: flex;
+	-webkit-app-region: no-drag;
 }
 
 input {
-  flex: 1;
-  background: rgba(255,255,255,0.1);
-  border: none;
-  color: white;
-  padding: 5px 10px;
-  border-radius: 4px;
-  outline: none;
+	flex: 1;
+	background: rgba(255, 255, 255, 0.1);
+	border: none;
+	color: white;
+	padding: 5px 10px;
+	border-radius: 4px;
+	outline: none;
 }
 
 button {
-  background: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  margin-left: 5px;
+	background: transparent;
+	border: none;
+	color: white;
+	cursor: pointer;
+	margin-left: 5px;
 }
 
-button:hover { color: #00d2ff; }
+button:hover {
+	color: #00d2ff;
+}
 
 /* 浏览器视图 */
 #browser-view {
-  width: 100vw;
-  height: calc(100vh - 40px);
-  background: black;
+	width: 100vw;
+	height: calc(100vh - 40px);
+	background: black;
 }
 
 /* 沉浸模式样式：控制栏向上收起 */
 body.immersion #flux-bar {
-  transform: translateY(-100%);
-  position: absolute; 
+	transform: translateY(-100%);
+	position: absolute;
 }
 
 body.immersion #browser-view {
-  height: 100vh;
+	height: 100vh;
 }
 
 /* 调整大小 */
 #resize-handle {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 20px;       /* 改大一点，好点中 */
-    height: 20px;
-    cursor: se-resize; /* 鼠标样式 */
-    background: linear-gradient(135deg, transparent 50%, #00d2ff 50%);
-    z-index: 99999;    /* 确保在最上层 */
-    -webkit-app-region: no-drag; /* 关键：这块区域不能用来拖动窗口，只能用来调整大小 */
-  }
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 20px; /* 改大一点，好点中 */
+	height: 20px;
+	cursor: se-resize; /* 鼠标样式 */
+	background: linear-gradient(135deg, transparent 50%, #00d2ff 50%);
+	z-index: 99999; /* 确保在最上层 */
+	-webkit-app-region: no-drag; /* 关键：这块区域不能用来拖动窗口，只能用来调整大小 */
+}

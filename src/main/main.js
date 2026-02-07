@@ -1,11 +1,11 @@
-const { app } = require('electron');
-const fluxCore = require('./FluxCore');
-const PluginLoader = require('./PluginLoader');
+const { app } = require("electron");
+const fluxCore = require("./FluxCore");
+const PluginLoader = require("./PluginLoader");
 
 app.whenReady().then(() => {
-  fluxCore.launch(PluginLoader);
+	fluxCore.launch(PluginLoader);
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+app.on("window-all-closed", () => {
+	if (process.platform !== "darwin") app.quit();
 });
