@@ -93,6 +93,8 @@ npm run build
 
 ## 贡献
 
+这是一个 AI 代码的作品(主要是Gemini),但仍欢迎所有人做贡献
+
 欢迎提交 Issue 和 Pull Request！
 
 ## 联系方式
