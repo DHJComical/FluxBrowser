@@ -1,0 +1,43 @@
+name: Build FluxBrowser
+
+on:
+  push:
+    branches:
+      - main  # 当推送到 main 分支时触发
+  workflow_dispatch: # 允许手动触发构建
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        # 同时构建 Windows, macOS, Linux (如果你只需要 Windows，可以只留 windows-latest)
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build and Package Electron App
+        # 使用 electron-builder 进行打包
+        # GH_TOKEN 是 GitHub 自动提供的，用于发布 Release
+        run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: FluxBrowser-${{ matrix.os }}
+          path: dist/*.exe
+          if-no-files-found: ignore

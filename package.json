@@ -67,8 +67,33 @@
 		"yauzl": "^2.10.0"
 	},
 	"scripts": {
-		"start": "electron ."
+		"start": "electron .",
+		"build": "electron-builder"
 	},
+	"devDependencies": {
+	  "electron": "^28.0.0",
+	  "electron-builder": "^24.9.1"
+	},
+	"build": {
+    "appId": "com.flux.browser",
+    "productName": "FluxBrowser",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": ["portable", "nsis"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"]
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ]
+  	},
 	"keywords": [],
 	"author": "DHJComical",
 	"license": "ISC",
