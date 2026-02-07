@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest # 建议先只跑 Windows，稳定后再加多系统
     timeout-minutes: 30     # 给够 30 分钟，防止被系统强制 SIGINT
 
