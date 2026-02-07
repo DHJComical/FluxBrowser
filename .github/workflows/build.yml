@@ -3,17 +3,18 @@ name: Build FluxBrowser
 on:
   push:
     branches:
-      - main  # 当推送到 main 分支时触发
-  workflow_dispatch: # 允许手动触发构建
+      - main
+  workflow_dispatch:
+
+# 如果有新的 commit，自动取消旧的构建任务，节省资源
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   release:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        # 同时构建 Windows, macOS, Linux (如果你只需要 Windows，可以只留 windows-latest)
-        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: windows-latest # 建议先只跑 Windows，稳定后再加多系统
+    timeout-minutes: 30     # 给够 30 分钟，防止被系统强制 SIGINT
 
     steps:
       - name: Checkout Code
@@ -28,16 +29,23 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build and Package Electron App
-        # 使用 electron-builder 进行打包
-        # GH_TOKEN 是 GitHub 自动提供的，用于发布 Release
-        run: npm run build
+      # 缓存 Electron 二进制文件，防止下载中断
+      - name: Cache Electron Binaries
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/AppData/Local/electron-builder/Cache
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('package-lock.json') }}
+
+      - name: Build and Package
+        # 使用 --publish never 避免 CI 尝试连接 GitHub Release 导致超时
+        run: npm run build -- --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Artifacts
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FluxBrowser-${{ matrix.os }}
+          name: FluxBrowser-Windows
           path: dist/*.exe
-          if-no-files-found: ignore
