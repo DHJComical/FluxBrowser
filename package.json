@@ -87,8 +87,8 @@
 			"createDesktopShortcut": true,
 			"createStartMenuShortcut": true,
 			"shortcutName": "FluxBrowser",
-			"installerIcon": "build/icon.ico",
-			"uninstallerIcon": "build/icon.ico",
+			"installerIcon": "resources/icon.ico",
+			"uninstallerIcon": "resources/icon.ico",
 			"uninstallDisplayName": "FluxBrowser",
 			"runAfterFinish": true
 		},

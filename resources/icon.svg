@@ -1,0 +1,42 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- 定义赛博朋克霓虹渐变 -->
+    <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d2ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0077ff;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 定义外发光滤镜 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- 背景：深色磨砂玻璃感 -->
+  <rect x="0" y="0" width="512" height="512" rx="128" ry="128" fill="#141414" />
+  
+  <!-- 装饰环：暗淡的科技圆环 -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#333" stroke-width="20" opacity="0.5" />
+
+  <!-- 核心图标：Flux 流动体 -->
+  <g transform="translate(256, 256)" filter="url(#glow)">
+    <!-- 动态旋转的 F 形状 / 涡旋 -->
+    <path d="M-60 -100 L60 -100 L80 -40 L-20 -40 Z" fill="url(#neon-grad)" opacity="0.9">
+      <animateTransform attributeName="transform" type="skewX" values="0; -20; 0" dur="5s" repeatCount="indefinite" />
+    </path>
+    <path d="M-60 -20 L40 -20 L60 40 L-40 40 Z" fill="url(#neon-grad)" opacity="0.8">
+       <animateTransform attributeName="transform" type="skewX" values="0; -15; 0" dur="5s" repeatCount="indefinite" begin="0.2s" />
+    </path>
+    <path d="M-60 60 L20 60 L40 120 L-40 120 Z" fill="url(#neon-grad)" opacity="0.7">
+       <animateTransform attributeName="transform" type="skewX" values="0; -10; 0" dur="5s" repeatCount="indefinite" begin="0.4s" />
+    </path>
+  </g>
+  
+  <!-- 高光反射 -->
+  <path d="M0 0 L512 0 L512 512 L0 512 Z" fill="url(#neon-grad)" opacity="0" />
+  <ellipse cx="256" cy="100" rx="150" ry="60" fill="white" opacity="0.1" />
+</svg>
