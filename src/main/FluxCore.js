@@ -1,15 +1,10 @@
-const {
-	BrowserWindow,
-	ipcMain,
-	screen,
-	app,
-	globalShortcut,
-} = require("electron");
-const path = require("path");
-const fs = require("fs");
+const { BrowserWindow, ipcMain, screen, app, globalShortcut } = require("electron");
+const path = require("path"); // 引入 path 模块
+const fs = require("fs");     // 引入 fs 模块
 
-// 配置文件路径
+// 使用 path.join 而不是直接用 join
 const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
+const BOUNDS_PATH = path.join(app.getPath("userData"), "window-bounds.json");
 
 class FluxCore {
 	constructor() {
@@ -22,30 +17,59 @@ class FluxCore {
 			"Video-Pause": "Alt+Space",
 			"Video-Forward": "Alt+Right",
 		};
+		// 加载保存的窗口位置和大小
+		this.savedBounds = this.loadWindowBounds();
 		this.loadKeyConfig();
 	}
 
 	// 1. 加载本地配置
 	loadKeyConfig() {
-		try {
-			if (fs.existsSync(CONFIG_PATH)) {
-				const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
-				this.keyMap = { ...this.keyMap, ...saved };
-			}
-		} catch (e) {
-			console.error("加载快捷键配置失败", e);
-		}
-	}
+        try {
+            // 必须使用 fs.existsSync
+            if (fs.existsSync(CONFIG_PATH)) {
+                const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
+                this.keyMap = { ...this.keyMap, ...saved };
+                console.log("快捷键配置加载成功");
+            }
+        } catch (e) {
+            console.error("加载快捷键配置失败", e);
+        }
+    }
 
 	// 2. 保存配置
 	saveKeyConfig(newMap) {
 		this.keyMap = { ...this.keyMap, ...newMap };
 		try {
-			fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
+			writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
 			// 重新注册所有快捷键
 			this.pluginLoader.reloadShortcuts();
 		} catch (e) {
 			console.error("保存快捷键配置失败", e);
+		}
+	}
+
+	// 读取本地窗口状态
+	loadWindowBounds() {
+        try {
+            // 必须使用 fs.existsSync
+            if (fs.existsSync(BOUNDS_PATH)) {
+                return JSON.parse(fs.readFileSync(BOUNDS_PATH, "utf-8"));
+            }
+        } catch (e) {
+            console.error("加载窗口位置配置失败", e);
+        }
+        return { width: 600, height: 400 };
+    }
+
+	// 保存当前窗口状态
+	saveWindowBounds() {
+		if (!this.window) return;
+		try {
+			// 获取当前窗口的坐标和宽高
+			const bounds = this.window.getBounds();
+			fs.writeFileSync(BOUNDS_PATH, JSON.stringify(bounds));
+		} catch (e) {
+			console.error("保存窗口位置失败", e);
 		}
 	}
 
@@ -73,14 +97,29 @@ class FluxCore {
 
 		// 监听退出
 		ipcMain.on("app-exit", () => {
+			this.saveWindowBounds();
 			app.quit();
-		});
+	   });
 	}
 
 	createWindow() {
+		let { x, y, width, height } = this.savedBounds;
+
+		// 如果有保存的坐标，检查它是否在当前可见的屏幕范围内
+		if (x !== undefined && y !== undefined) {
+			const visible = screen.getDisplayMatching(this.savedBounds);
+			if (!visible) {
+				// 如果坐标不可见，重置为居中
+				x = undefined;
+				y = undefined;
+			}
+		}
+
 		this.window = new BrowserWindow({
-			width: 600,
-			height: 400,
+			x: x,
+			y: y,
+			width: width || 800,
+			height: height || 600,
 			frame: false, // 无边框
 			transparent: true, // 透明背景
 			alwaysOnTop: false,
@@ -90,6 +129,10 @@ class FluxCore {
 				contextIsolation: false,
 				webviewTag: true, // 允许 <webview>
 			},
+		});
+
+		this.window.on("close", () => {
+			this.saveWindowBounds();
 		});
 
 		this.window.webContents.on("did-attach-webview", (event, webContents) => {
@@ -203,4 +246,4 @@ class FluxCore {
 	}
 }
 
-module.exports = new FluxCore(); // 导出单例
+module.exports = new FluxCore();
