@@ -77,9 +77,8 @@
 			"output": "dist"
 		},
 		"win": {
-			"target": [
-				"nsis"
-			]
+			"target": ["nsis"],
+			"icon": "resources/image/FluxBrowser-icon.ico"
 		},
 		"nsis": {
 			"oneClick": false,
@@ -87,8 +86,8 @@
 			"createDesktopShortcut": true,
 			"createStartMenuShortcut": true,
 			"shortcutName": "FluxBrowser",
-			"installerIcon": "resources/icon.ico",
-			"uninstallerIcon": "resources/icon.ico",
+			"installerIcon": "resources/image/FluxBrowser-icon.ico",
+			"uninstallerIcon": "resources/image/FluxBrowser-icon.ico",
 			"uninstallDisplayName": "FluxBrowser",
 			"runAfterFinish": true
 		},
