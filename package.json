@@ -99,6 +99,6 @@
 	},
 	"keywords": [],
 	"author": "DHJComical",
-	"license": "ISC",
+	"license": "MIT",
 	"description": "A floating, immersive, framework-based browser."
 }
