@@ -15,12 +15,15 @@ const DEFAULT_KEY_CONFIG = {
     "ImmersionMode": "Alt+W",
     "Video-Pause": "Alt+Space",
     "Video-Forward": "Alt+Right",
-    "Video-Backward": "Alt+Left"
+    "Video-Backward": "Alt+Left",
+    "Opacity-Up": "Alt+Up",
+    "Opacity-Down": "Alt+Down"
 };
 
 const DEFAULT_BOUNDS_CONFIG = {
     width: 800,
-    height: 600
+    height: 600,
+    opacity: 1.0
 };
 
 class ConfigManager {
@@ -78,8 +81,8 @@ class ConfigManager {
     }
     
     // 保存窗口位置配置
-    saveBoundsConfig(bounds) {
-        this.boundsConfig = bounds;
+    saveBoundsConfig(config) {
+        this.boundsConfig = { ...this.boundsConfig, ...config };
         this._saveConfig(BOUNDS_CONFIG_PATH, this.boundsConfig);
     }
 }

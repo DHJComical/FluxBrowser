@@ -12,6 +12,7 @@ class PluginLoader {
 			require("../plugins/boss-key"),
 			require("../plugins/immersion"),
 			require("../plugins/video-ctrl"),
+			require("../plugins/opacity"),
 		];
 
 		this.plugins.forEach((p) => {

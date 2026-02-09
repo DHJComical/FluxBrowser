@@ -131,6 +131,15 @@ resizeHandles.forEach((handle) => {
 	});
 });
 
+// 透明度控制逻辑
+ipcRenderer.on("set-opacity", (e, opacity) => {
+    // 设置 webview 的透明度
+    webview.style.opacity = opacity;
+    
+    // [可选] 也可以顺便把输入框的背景也变淡一点，保持一致性
+    // fluxBar.style.opacity = Math.max(0.5, opacity); 
+});
+
 window.addEventListener("mouseup", () => {
 	ipcRenderer.send("stop-resizing");
 });
@@ -180,6 +189,8 @@ const labelMap = {
 	"Video-Pause": "视频 暂停/播放",
 	"Video-Forward": "视频 快进",
 	"Video-Backward": "视频 快退",
+	"Opacity-Up": "增加不透明度 (变实)",
+    "Opacity-Down": "减少不透明度 (变虚)"
 };
 
 function renderShortcuts(map) {

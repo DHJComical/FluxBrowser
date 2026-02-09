@@ -18,6 +18,7 @@ class FluxCore {
         this.window = null;
         this.pluginLoader = null;
         this.savedBounds = configManager.getBoundsConfig();
+		this.currentOpacity = this.savedBounds.opacity || 1.0;
     }
 
 
@@ -104,6 +105,10 @@ class FluxCore {
 			},
 		});
 
+		this.window.webContents.on('did-finish-load', () => {
+            this.sendToRenderer("set-opacity", this.currentOpacity);
+        });
+
 		this.window.setMenu(null); // 去掉默认菜单
 
 		this.window.on("close", () => {
@@ -178,6 +183,30 @@ class FluxCore {
 			}
 		});
 	}
+
+	// 调整透明度的核心方法
+    // delta: 变化量 (例如 +0.1 或 -0.1)
+    adjustOpacity(delta) {
+        let newOp = this.currentOpacity + delta;
+        
+        // 限制范围：最低 0.2 (防止完全看不见)，最高 1.0
+        if (newOp > 1.0) newOp = 1.0;
+        if (newOp < 0.2) newOp = 0.2;
+        
+        // 保留一位小数，防止 JS 浮点数精度问题 (0.1 + 0.2 = 0.3000004)
+        newOp = parseFloat(newOp.toFixed(1));
+
+        this.currentOpacity = newOp;
+        
+        // 发送给前端应用视觉效果
+        this.sendToRenderer("set-opacity", newOp);
+        
+        // 保存到配置文件 (复用 bounds config)
+        // 注意：这里我们只更新 opacity 字段，ConfigManager 会合并
+        configManager.saveBoundsConfig({ opacity: newOp });
+        
+        console.log(`当前透明度: ${newOp}`);
+    }
 
 	// --- 开放给插件使用的 API ---
 
