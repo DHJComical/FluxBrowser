@@ -1,5 +1,7 @@
 # FluxBrowser
 
+![FluxBrowser](./resources/image/FluxBrowser-icon.ico)
+
 FluxBrowser 是一款基于 Electron 开发的轻量化、无边框沉浸式浏览器。它专为网页视频播放和多任务并行场景设计，通过透明度控制和鼠标穿透技术，让网页内容能够自然地融入桌面环境。
 
 ## 核心功能
