@@ -40,11 +40,11 @@ class FluxCore {
 			hasShadow: false,
 			icon: path.join(__dirname, "../../build/icon.png"),
 			webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false,
-            webviewTag: true,
-            javascript: true
-        }
+				nodeIntegration: true,
+				contextIsolation: false,
+				webviewTag: true,
+				javascript: true,
+			},
 		});
 
 		this.window.setMenu(null);
@@ -139,7 +139,6 @@ class FluxCore {
 
 	// 设置 IPC 通信
 	setupIpc() {
-
 		// 打开设置窗口
 		ipcMain.on("open-settings", () => this.openSettingsWindow());
 
@@ -171,9 +170,9 @@ class FluxCore {
 		});
 
 		// 获取应用版本号
-        ipcMain.handle("get-app-version", () => {
-            return app.getVersion(); // 自动从 package.json 读取 version 字段
-        });
+		ipcMain.handle("get-app-version", () => {
+			return app.getVersion(); // 自动从 package.json 读取 version 字段
+		});
 	}
 
 	// 广播消息到所有窗口
@@ -202,14 +201,14 @@ class FluxCore {
 	}
 
 	// 发送指令给前端
-    sendToRenderer(channel, data) { 
-        this.broadcast(channel, data); 
-    }
+	sendToRenderer(channel, data) {
+		this.broadcast(channel, data);
+	}
 
-    // 执行网页内的 JS (用于视频控制插件)
-    executeOnWebview(jsCode) {
-        this.sendToRenderer("execute-webview-js", jsCode);
-    }
+	// 执行网页内的 JS (用于视频控制插件)
+	executeOnWebview(jsCode) {
+		this.sendToRenderer("execute-webview-js", jsCode);
+	}
 
 	// 切换窗口显示状态
 	toggleVisibility() {
@@ -223,27 +222,26 @@ class FluxCore {
 	}
 
 	// 控制视频 (供 video-ctrl.js 调用)
-    executeOnWebview(jsCode) {
-        this.sendToRenderer("execute-webview-js", jsCode);
-    }
+	executeOnWebview(jsCode) {
+		this.sendToRenderer("execute-webview-js", jsCode);
+	}
 
-    // 设置鼠标穿透 (供 immersion.js 调用)
-    setIgnoreMouse(ignore) {
-        if (this.window) {
-            this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
-        }
-    }
+	// 设置鼠标穿透 (供 immersion.js 调用)
+	setIgnoreMouse(ignore) {
+		if (this.window) {
+			this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
+		}
+	}
 
-    // 调整透明度 (供 opacity.js 调用)
-    adjustOpacity(delta) {
-        let newOp = parseFloat((this.currentOpacity + delta).toFixed(1));
-        if (newOp > 1.0) newOp = 1.0;
-        if (newOp < 0.2) newOp = 0.2;
-        this.currentOpacity = newOp;
-        this.broadcast("set-opacity", newOp);
-        configManager.saveBoundsConfig({ opacity: newOp });
-    }
-
+	// 调整透明度 (供 opacity.js 调用)
+	adjustOpacity(delta) {
+		let newOp = parseFloat((this.currentOpacity + delta).toFixed(1));
+		if (newOp > 1.0) newOp = 1.0;
+		if (newOp < 0.2) newOp = 0.2;
+		this.currentOpacity = newOp;
+		this.broadcast("set-opacity", newOp);
+		configManager.saveBoundsConfig({ opacity: newOp });
+	}
 }
 
 module.exports = new FluxCore();

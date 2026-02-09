@@ -83,8 +83,8 @@ webview.addEventListener("dom-ready", () => {
 
 // 执行 Webview JS 代码
 ipcRenderer.on("execute-webview-js", (e, code) => {
-    console.log("收到视频控制指令"); // 调试用
-    if (webview) {
-        webview.executeJavaScript(code);
-    }
+	console.log("收到视频控制指令"); // 调试用
+	if (webview) {
+		webview.executeJavaScript(code);
+	}
 });

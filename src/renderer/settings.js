@@ -18,13 +18,12 @@ const labelMap = {
 };
 
 async function init() {
-
 	// 获取应用版本号
 	const version = await ipcRenderer.invoke("get-app-version");
-    const updateStatus = document.getElementById("update-status");
-    if (updateStatus) {
-        updateStatus.innerText = `当前版本: v${version}`;
-    }
+	const updateStatus = document.getElementById("update-status");
+	if (updateStatus) {
+		updateStatus.innerText = `当前版本: v${version}`;
+	}
 
 	// 加载快捷键配置
 	const map = await ipcRenderer.invoke("get-shortcuts");

@@ -17,10 +17,10 @@ class Updater {
 			console.log("正在检查更新...");
 		});
 
-		autoUpdater.on('update-available', (info) => {
-			this.core.broadcast('update-message', {
-				status: 'available',
-				msg: `发现新版本 v${info.version} (当前: v${app.getVersion()})`
+		autoUpdater.on("update-available", (info) => {
+			this.core.broadcast("update-message", {
+				status: "available",
+				msg: `发现新版本 v${info.version} (当前: v${app.getVersion()})`,
 			});
 		});
 
