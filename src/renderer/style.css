@@ -1,3 +1,10 @@
+* {
+	-webkit-user-select: none;  /* 禁用选中 */
+	user-select: none;
+	-webkit-user-drag: none;    /* 禁用系统默认拖拽 */
+	cursor: default;            /* 默认鼠标指针，防止出现文本选择的光标 */
+}
+
 body {
 	margin: 0;
 	padding: 0;
@@ -115,6 +122,10 @@ button:hover {
 	background: black;
 	position: relative;
 	z-index: 1;
+	-webkit-user-select: auto;
+	user-select: auto;
+	-webkit-user-drag: auto;
+	cursor: auto;
 }
 
 /* 沉浸模式 */
@@ -293,4 +304,20 @@ body:not(.immersion):not(:has(#browser-view)) {
 	height: 1px;
 	background: rgba(255, 255, 255, 0.1);
 	margin: 20px 0;
+}
+
+input, textarea {
+	-webkit-user-select: text; /* 允许输入框内的文字被选中和编辑 */
+	user-select: text;
+	cursor: text;              /* 恢复输入框的文本光标 */
+}
+
+.shortcut-input {
+	-webkit-user-select: none; /* 快捷键框不需要选中文字，但需要响应点击 */
+	user-select: none;
+	cursor: pointer;
+}
+
+button, .menu-item, .secondary-btn, .primary-btn {
+    cursor: pointer;
 }

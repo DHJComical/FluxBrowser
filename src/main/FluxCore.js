@@ -169,6 +169,11 @@ class FluxCore {
 			if (this.window)
 				this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
 		});
+
+		// 获取应用版本号
+        ipcMain.handle("get-app-version", () => {
+            return app.getVersion(); // 自动从 package.json 读取 version 字段
+        });
 	}
 
 	// 广播消息到所有窗口

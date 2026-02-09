@@ -18,6 +18,15 @@ const labelMap = {
 };
 
 async function init() {
+
+	// 获取应用版本号
+	const version = await ipcRenderer.invoke("get-app-version");
+    const updateStatus = document.getElementById("update-status");
+    if (updateStatus) {
+        updateStatus.innerText = `当前版本: v${version}`;
+    }
+
+	// 加载快捷键配置
 	const map = await ipcRenderer.invoke("get-shortcuts");
 	tempKeyMap = { ...map };
 	shortcutList.innerHTML = "";
@@ -27,16 +36,21 @@ async function init() {
 		div.innerHTML = `<span>${labelMap[id] || id}</span><input type="text" class="shortcut-input" value="${key}" readonly>`;
 		const input = div.querySelector("input");
 
+		// 录制快捷键
 		input.onfocus = () => {
 			ipcRenderer.send("suspend-shortcuts");
 			input.value = "请按键...";
 			input.classList.add("recording");
 		};
+
+		// 结束录制
 		input.onblur = () => {
 			ipcRenderer.send("resume-shortcuts");
 			input.classList.remove("recording");
 			if (input.value === "请按键...") input.value = tempKeyMap[id];
 		};
+
+		// 监听按键
 		input.onkeydown = (e) => {
 			e.preventDefault();
 			if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return;
@@ -53,25 +67,31 @@ async function init() {
 			tempKeyMap[id] = str;
 			input.blur();
 		};
+
+		// 添加到列表
 		shortcutList.appendChild(div);
 	});
 }
 
+// 保存快捷键配置
 saveBtn.onclick = () => {
 	ipcRenderer.send("save-shortcuts", tempKeyMap);
 	window.close();
 };
 
+// 检查更新
 checkUpdateBtn.onclick = () => {
 	ipcRenderer.send("check-for-updates");
 	updateStatus.innerText = "正在检查更新...";
 };
 
+// 安装更新
 ipcRenderer.on("update-message", (e, data) => {
 	updateStatus.innerText = data.msg;
 	if (data.status === "downloaded") installUpdateBtn.classList.remove("hidden");
 });
 
+// 安装更新按钮
 ipcRenderer.on("update-progress", (e, percent) => {
 	document.getElementById("progress-container").classList.remove("hidden");
 	document.getElementById("progress-bar").style.width = percent + "%";
