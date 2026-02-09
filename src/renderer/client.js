@@ -9,6 +9,7 @@ const dropdownMenu = document.getElementById("dropdown-menu");
 const settingsBtn = document.getElementById("settings-btn");
 const exitBtn = document.getElementById("exit-btn");
 const resizeHandles = document.querySelectorAll(".resize-handle");
+const dragRegion = document.querySelector(".drag-region");
 
 let isImmersionMode = false;
 
@@ -70,6 +71,24 @@ resizeHandles.forEach((h) => {
 	};
 });
 window.onmouseup = () => ipcRenderer.send("stop-resizing");
+
+// 原生拖拽
+if (dragRegion) {
+    dragRegion.onmousedown = (e) => {
+        // 如果是沉浸模式，通常标题栏是隐藏的，但为了保险加个判断
+        if (isImmersionMode) return;
+
+        e.preventDefault();
+        // 发送开始移动指令
+        ipcRenderer.send("start-moving");
+    };
+}
+
+// 统一使用已有的 window.onmouseup 来停止所有动作（缩放和移动）
+window.addEventListener("mouseup", () => {
+    ipcRenderer.send("stop-moving"); // 新增：停止移动
+    ipcRenderer.send("stop-resizing");
+});
 
 // 透明度
 ipcRenderer.on("set-opacity", (e, op) => (webview.style.opacity = op));

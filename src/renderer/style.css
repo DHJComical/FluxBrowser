@@ -50,12 +50,12 @@ button:hover {
 }
 
 .drag-region {
-	-webkit-app-region: drag;
+	/* -webkit-app-region: drag; */
 	flex: 0 0 100px;
 	color: #00d2ff;
 	font-weight: bold;
 	font-size: 14px;
-	cursor: default;
+	cursor: auto;
 }
 
 .input-group {

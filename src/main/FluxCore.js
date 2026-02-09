@@ -173,6 +173,44 @@ class FluxCore {
 		ipcMain.handle("get-app-version", () => {
 			return app.getVersion(); // 自动从 package.json 读取 version 字段
 		});
+
+		// 手动窗口移动监听
+        let moveInterval = null;
+        ipcMain.on("start-moving", (event) => {
+            if (moveInterval) clearInterval(moveInterval);
+            if (!this.window) return;
+
+            // 获取初始鼠标位置和初始窗口位置
+            const startMousePos = screen.getCursorScreenPoint();
+            const startWindowPos = this.window.getPosition();
+
+            moveInterval = setInterval(() => {
+                if (!this.window || this.window.isDestroyed()) {
+                    clearInterval(moveInterval);
+                    return;
+                }
+
+                const currentMousePos = screen.getCursorScreenPoint();
+                
+                // 计算偏移量
+                const deltaX = currentMousePos.x - startMousePos.x;
+                const deltaY = currentMousePos.y - startMousePos.y;
+
+                // 设置窗口新位置
+                this.window.setPosition(
+                    startWindowPos[0] + deltaX,
+                    startWindowPos[1] + deltaY
+                );
+            }, 10); // 10ms 刷新率，保证拖拽丝滑
+        });
+
+        // 停止移动监听
+        ipcMain.on("stop-moving", () => {
+            if (moveInterval) {
+                clearInterval(moveInterval);
+                moveInterval = null;
+            }
+        });
 	}
 
 	// 广播消息到所有窗口
