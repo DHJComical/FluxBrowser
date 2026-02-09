@@ -56,14 +56,12 @@ urlInput.onkeydown = (e) => {
 	if (e.key === "Enter") navigate();
 };
 
-// ==========================================
-// A. URL 自动刷新逻辑 (修改：加入保存功能)
-// ==========================================
+// URL 自动刷新逻辑 (修改：加入保存功能)
 const syncUrl = () => {
 	const currentUrl = webview.getURL();
 	urlInput.value = currentUrl;
 
-	// [新增] 每次 URL 变化时，保存到本地存储
+	// 每次 URL 变化时，保存到本地存储
 	// 过滤掉空的或者非 http 的地址 (比如空白页)
 	if (currentUrl && currentUrl.startsWith("http")) {
 		localStorage.setItem("flux-last-url", currentUrl);
@@ -72,13 +70,13 @@ const syncUrl = () => {
 
 webview.addEventListener("did-navigate", syncUrl);
 webview.addEventListener("did-navigate-in-page", syncUrl);
-// B. 渲染进程的辅助拦截 (作为第二层保险)
+// 渲染进程的辅助拦截 (作为第二层保险)
 webview.addEventListener("new-window", (e) => {
 	e.preventDefault(); // 阻止默认开窗
 	webview.src = e.url; // 当前窗口跳转
 });
 
-// C. 注入 User-Agent (极其重要！)
+// 注入 User-Agent (极其重要！)
 // 有些网站发现你是 Electron 就会故意弹出新窗口，模拟 Chrome 可以避开很多问题
 webview.addEventListener("dom-ready", () => {
 	// 设置一个伪装成普通浏览器的 UA
@@ -87,9 +85,7 @@ webview.addEventListener("dom-ready", () => {
 	);
 });
 
-// ==========================================
-// 2. 接收后端指令
-// ==========================================
+// 接收后端指令
 ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
 	isImmersionMode = isImmersion; // 更新状态记录
 	if (isImmersion) {
@@ -105,9 +101,7 @@ ipcRenderer.on("execute-webview-js", (e, code) => {
 	webview.executeJavaScript(code);
 });
 
-// ==========================================
-// 3. 智能鼠标穿透增强 (修正逻辑)
-// ==========================================
+// 智能鼠标穿透增强 (修正逻辑)
 const resizeHandles = document.querySelectorAll(".resize-handle");
 const interactiveElements = [fluxBar, ...resizeHandles];
 
@@ -126,14 +120,11 @@ webview.addEventListener("mouseenter", () => {
 	}
 });
 
-// ==========================================
-// 4. 窗口缩放逻辑
-// ==========================================
+// 窗口缩放逻辑
 resizeHandles.forEach((handle) => {
 	handle.addEventListener("mousedown", (e) => {
 		// 如果当前是沉浸模式，直接返回，不发送缩放指令
 		if (isImmersionMode) return;
-		// --------------
 		e.preventDefault();
 		const direction = handle.getAttribute("data-direction");
 		ipcRenderer.send("start-resizing", direction);
@@ -144,7 +135,7 @@ window.addEventListener("mouseup", () => {
 	ipcRenderer.send("stop-resizing");
 });
 
-// 1. 切换下拉菜单
+// 切换下拉菜单
 menuBtn.onclick = (e) => {
 	e.stopPropagation();
 	dropdownMenu.classList.toggle("hidden");
@@ -157,27 +148,30 @@ document.addEventListener("click", (e) => {
 	}
 });
 
-// 2. 退出程序
+// 退出程序
 exitBtn.onclick = () => {
 	ipcRenderer.send("app-exit");
 };
 
-// 3. 打开设置面板
+// 打开设置面板
 settingsBtn.onclick = async () => {
-	dropdownMenu.classList.add("hidden");
-	settingsModal.classList.remove("hidden");
-
-	// 获取当前快捷键配置
-	const keyMap = await ipcRenderer.invoke("get-shortcuts");
-	renderShortcuts(keyMap);
+    dropdownMenu.classList.add("hidden");
+    webview.classList.add("webview-disabled");
+    
+    const keyMap = await ipcRenderer.invoke("get-shortcuts");
+    renderShortcuts(keyMap);
+    
+    settingsModal.classList.remove("hidden");
 };
 
 // 关闭设置面板
 closeSettings.onclick = () => {
-	settingsModal.classList.add("hidden");
+    settingsModal.classList.add("hidden");
+    webview.classList.remove("webview-disabled");
+    ipcRenderer.send("resume-shortcuts");
 };
 
-// 4. 渲染快捷键列表
+// 渲染快捷键列表
 let tempKeyMap = {}; // 暂存修改
 
 const labelMap = {
@@ -205,6 +199,22 @@ function renderShortcuts(map) {
 		input.value = key;
 		input.readOnly = true; // 禁止直接打字，必须通过录制
 
+		input.onfocus = () => {
+            input.classList.add("recording"); // 加个样式变红提示用户
+            input.value = "请按键...";
+            ipcRenderer.send("suspend-shortcuts");
+        };
+
+		// 当输入框失去焦点时（录制结束）：告诉主进程“恢复工作”
+        input.onblur = () => {
+            input.classList.remove("recording");
+            // 如果用户没按键就点走了，恢复原来的值
+            if (input.value === "请按键...") {
+                input.value = tempKeyMap[id];
+            }
+            ipcRenderer.send("resume-shortcuts");
+        };
+
 		// 绑定录制事件
 		input.onkeydown = (e) => handleRecordKey(e, input, id);
 
@@ -214,10 +224,16 @@ function renderShortcuts(map) {
 	}
 }
 
-// 5. 核心：录制快捷键
+// 核心：录制快捷键
 function handleRecordKey(e, input, id) {
+    // 强制阻止所有默认行为（包括网页滚动、系统菜单、浏览器刷新）
 	e.preventDefault();
+	e.stopPropagation(); 
 
+	// 如果焦点不在 input 上，强制聚焦（防止跑焦）
+	if (document.activeElement !== input) {
+        input.focus();
+    }
 	// 忽略单独按下的修饰键
 	if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return;
 
@@ -239,14 +255,15 @@ function handleRecordKey(e, input, id) {
 	tempKeyMap[id] = shortcutString;
 
 	// 录制完成后让输入框失去焦点，防止连续误触
-	// input.blur();
+	input.blur();
 }
 
-// 6. 保存设置
+// 保存设置
 saveShortcutsBtn.onclick = () => {
 	ipcRenderer.send("save-shortcuts", tempKeyMap);
-	settingsModal.classList.add("hidden");
-	alert("快捷键已更新！");
+    settingsModal.classList.add("hidden");
+    webview.classList.remove("webview-disabled");
+    alert("快捷键已更新！");
 };
 
 // 检查元素是否获取成功

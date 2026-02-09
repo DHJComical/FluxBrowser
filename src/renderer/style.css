@@ -128,6 +128,13 @@ body {
 	background: rgba(0, 210, 255, 0.1);
 }
 
+.shortcut-input.recording {
+    background: #ff004c;
+    color: white;
+    border-color: white;
+    box-shadow: 0 0 10px #ff004c;
+}
+
 .modal-footer {
 	padding: 15px;
 	border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -265,4 +272,10 @@ body.immersion #browser-view {
 /* 当 body 拥有 immersion 类时，隐藏所有缩放手柄 */
 body.immersion .resize-handle {
 	display: none !important;
+}
+
+.webview-disabled {
+    pointer-events: none !important; /* 禁止鼠标交互 */
+    filter: grayscale(100%) blur(2px); /* 变灰变模糊，视觉提示用户现在不能操作网页 */
+    opacity: 0.5;
 }

@@ -17,8 +17,6 @@ class FluxCore {
 	constructor() {
         this.window = null;
         this.pluginLoader = null;
-        // 直接从 ConfigManager 获取配置
-        this.keyMap = configManager.getKeyConfig();
         this.savedBounds = configManager.getBoundsConfig();
     }
 
@@ -26,8 +24,8 @@ class FluxCore {
 	// 保存配置
 	saveKeyConfig(newMap) {
         configManager.saveKeyConfig(newMap);
-        this.keyMap = configManager.getKeyConfig();
         this.pluginLoader.reloadShortcuts();
+        console.log("快捷键已更新并重载");
     }
 
 	// 保存当前窗口状态
@@ -50,14 +48,25 @@ class FluxCore {
 	setupIpc() {
 		// 前端请求获取当前快捷键
 		ipcMain.handle("get-shortcuts", () => {
-			console.log("主进程：收到获取快捷键请求", this.keyMap);
-			return this.keyMap;
-		});
+            return configManager.getKeyConfig();
+        });
 
 		// 前端请求保存快捷键
 		ipcMain.on("save-shortcuts", (e, newMap) => {
 			this.saveKeyConfig(newMap);
 		});
+
+		// 暂停所有快捷键 (打开设置时调用)
+        ipcMain.on("suspend-shortcuts", () => {
+            globalShortcut.unregisterAll();
+            console.log("已暂停所有全局快捷键，准备录制...");
+        });
+
+        // 恢复所有快捷键 (关闭设置时调用)
+        ipcMain.on("resume-shortcuts", () => {
+            this.pluginLoader.reloadShortcuts();
+            console.log("已恢复所有全局快捷键");
+        });
 
 		// 监听退出
 		ipcMain.on("app-exit", () => {
@@ -94,6 +103,8 @@ class FluxCore {
 				webviewTag: true, // 允许 <webview>
 			},
 		});
+
+		this.window.setMenu(null); // 去掉默认菜单
 
 		this.window.on("close", () => {
 			this.saveWindowBounds();
@@ -206,8 +217,9 @@ class FluxCore {
 
 	// 给 PluginLoader 用的辅助函数
 	getKey(actionId) {
-		return this.keyMap[actionId];
-	}
+        const currentKeyMap = configManager.getKeyConfig();
+        return currentKeyMap[actionId];
+    }
 }
 
 module.exports = new FluxCore();
