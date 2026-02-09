@@ -15,26 +15,25 @@ const BOUNDS_PATH = path.join(app.getPath("userData"), "window-bounds.json");
 
 class FluxCore {
 	constructor() {
-        this.window = null;
-        this.pluginLoader = null;
-        this.savedBounds = configManager.getBoundsConfig();
+		this.window = null;
+		this.pluginLoader = null;
+		this.savedBounds = configManager.getBoundsConfig();
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
-    }
-
+	}
 
 	// 保存配置
 	saveKeyConfig(newMap) {
-        configManager.saveKeyConfig(newMap);
-        this.pluginLoader.reloadShortcuts();
-        console.log("快捷键已更新并重载");
-    }
+		configManager.saveKeyConfig(newMap);
+		this.pluginLoader.reloadShortcuts();
+		console.log("快捷键已更新并重载");
+	}
 
 	// 保存当前窗口状态
 	saveWindowBounds() {
-        if (this.window) {
-            configManager.saveBoundsConfig(this.window.getBounds());
-        }
-    }
+		if (this.window) {
+			configManager.saveBoundsConfig(this.window.getBounds());
+		}
+	}
 
 	// 启动核心
 	launch(PluginLoaderClass) {
@@ -49,8 +48,8 @@ class FluxCore {
 	setupIpc() {
 		// 前端请求获取当前快捷键
 		ipcMain.handle("get-shortcuts", () => {
-            return configManager.getKeyConfig();
-        });
+			return configManager.getKeyConfig();
+		});
 
 		// 前端请求保存快捷键
 		ipcMain.on("save-shortcuts", (e, newMap) => {
@@ -58,16 +57,16 @@ class FluxCore {
 		});
 
 		// 暂停所有快捷键 (打开设置时调用)
-        ipcMain.on("suspend-shortcuts", () => {
-            globalShortcut.unregisterAll();
-            console.log("已暂停所有全局快捷键，准备录制...");
-        });
+		ipcMain.on("suspend-shortcuts", () => {
+			globalShortcut.unregisterAll();
+			console.log("已暂停所有全局快捷键，准备录制...");
+		});
 
-        // 恢复所有快捷键 (关闭设置时调用)
-        ipcMain.on("resume-shortcuts", () => {
-            this.pluginLoader.reloadShortcuts();
-            console.log("已恢复所有全局快捷键");
-        });
+		// 恢复所有快捷键 (关闭设置时调用)
+		ipcMain.on("resume-shortcuts", () => {
+			this.pluginLoader.reloadShortcuts();
+			console.log("已恢复所有全局快捷键");
+		});
 
 		// 监听退出
 		ipcMain.on("app-exit", () => {
@@ -105,9 +104,9 @@ class FluxCore {
 			},
 		});
 
-		this.window.webContents.on('did-finish-load', () => {
-            this.sendToRenderer("set-opacity", this.currentOpacity);
-        });
+		this.window.webContents.on("did-finish-load", () => {
+			this.sendToRenderer("set-opacity", this.currentOpacity);
+		});
 
 		this.window.setMenu(null); // 去掉默认菜单
 
@@ -185,28 +184,28 @@ class FluxCore {
 	}
 
 	// 调整透明度的核心方法
-    // delta: 变化量 (例如 +0.1 或 -0.1)
-    adjustOpacity(delta) {
-        let newOp = this.currentOpacity + delta;
-        
-        // 限制范围：最低 0.2 (防止完全看不见)，最高 1.0
-        if (newOp > 1.0) newOp = 1.0;
-        if (newOp < 0.2) newOp = 0.2;
-        
-        // 保留一位小数，防止 JS 浮点数精度问题 (0.1 + 0.2 = 0.3000004)
-        newOp = parseFloat(newOp.toFixed(1));
+	// delta: 变化量 (例如 +0.1 或 -0.1)
+	adjustOpacity(delta) {
+		let newOp = this.currentOpacity + delta;
 
-        this.currentOpacity = newOp;
-        
-        // 发送给前端应用视觉效果
-        this.sendToRenderer("set-opacity", newOp);
-        
-        // 保存到配置文件 (复用 bounds config)
-        // 注意：这里我们只更新 opacity 字段，ConfigManager 会合并
-        configManager.saveBoundsConfig({ opacity: newOp });
-        
-        console.log(`当前透明度: ${newOp}`);
-    }
+		// 限制范围：最低 0.2 (防止完全看不见)，最高 1.0
+		if (newOp > 1.0) newOp = 1.0;
+		if (newOp < 0.2) newOp = 0.2;
+
+		// 保留一位小数，防止 JS 浮点数精度问题 (0.1 + 0.2 = 0.3000004)
+		newOp = parseFloat(newOp.toFixed(1));
+
+		this.currentOpacity = newOp;
+
+		// 发送给前端应用视觉效果
+		this.sendToRenderer("set-opacity", newOp);
+
+		// 保存到配置文件 (复用 bounds config)
+		// 注意：这里我们只更新 opacity 字段，ConfigManager 会合并
+		configManager.saveBoundsConfig({ opacity: newOp });
+
+		console.log(`当前透明度: ${newOp}`);
+	}
 
 	// --- 开放给插件使用的 API ---
 
@@ -246,9 +245,9 @@ class FluxCore {
 
 	// 给 PluginLoader 用的辅助函数
 	getKey(actionId) {
-        const currentKeyMap = configManager.getKeyConfig();
-        return currentKeyMap[actionId];
-    }
+		const currentKeyMap = configManager.getKeyConfig();
+		return currentKeyMap[actionId];
+	}
 }
 
 module.exports = new FluxCore();

@@ -133,11 +133,11 @@ resizeHandles.forEach((handle) => {
 
 // 透明度控制逻辑
 ipcRenderer.on("set-opacity", (e, opacity) => {
-    // 设置 webview 的透明度
-    webview.style.opacity = opacity;
-    
-    // [可选] 也可以顺便把输入框的背景也变淡一点，保持一致性
-    // fluxBar.style.opacity = Math.max(0.5, opacity); 
+	// 设置 webview 的透明度
+	webview.style.opacity = opacity;
+
+	// [可选] 也可以顺便把输入框的背景也变淡一点，保持一致性
+	// fluxBar.style.opacity = Math.max(0.5, opacity);
 });
 
 window.addEventListener("mouseup", () => {
@@ -164,20 +164,20 @@ exitBtn.onclick = () => {
 
 // 打开设置面板
 settingsBtn.onclick = async () => {
-    dropdownMenu.classList.add("hidden");
-    webview.classList.add("webview-disabled");
-    
-    const keyMap = await ipcRenderer.invoke("get-shortcuts");
-    renderShortcuts(keyMap);
-    
-    settingsModal.classList.remove("hidden");
+	dropdownMenu.classList.add("hidden");
+	webview.classList.add("webview-disabled");
+
+	const keyMap = await ipcRenderer.invoke("get-shortcuts");
+	renderShortcuts(keyMap);
+
+	settingsModal.classList.remove("hidden");
 };
 
 // 关闭设置面板
 closeSettings.onclick = () => {
-    settingsModal.classList.add("hidden");
-    webview.classList.remove("webview-disabled");
-    ipcRenderer.send("resume-shortcuts");
+	settingsModal.classList.add("hidden");
+	webview.classList.remove("webview-disabled");
+	ipcRenderer.send("resume-shortcuts");
 };
 
 // 渲染快捷键列表
@@ -190,7 +190,7 @@ const labelMap = {
 	"Video-Forward": "视频 快进",
 	"Video-Backward": "视频 快退",
 	"Opacity-Up": "增加不透明度 (变实)",
-    "Opacity-Down": "减少不透明度 (变虚)"
+	"Opacity-Down": "减少不透明度 (变虚)",
 };
 
 function renderShortcuts(map) {
@@ -211,20 +211,20 @@ function renderShortcuts(map) {
 		input.readOnly = true; // 禁止直接打字，必须通过录制
 
 		input.onfocus = () => {
-            input.classList.add("recording"); // 加个样式变红提示用户
-            input.value = "请按键...";
-            ipcRenderer.send("suspend-shortcuts");
-        };
+			input.classList.add("recording"); // 加个样式变红提示用户
+			input.value = "请按键...";
+			ipcRenderer.send("suspend-shortcuts");
+		};
 
 		// 当输入框失去焦点时（录制结束）：告诉主进程“恢复工作”
-        input.onblur = () => {
-            input.classList.remove("recording");
-            // 如果用户没按键就点走了，恢复原来的值
-            if (input.value === "请按键...") {
-                input.value = tempKeyMap[id];
-            }
-            ipcRenderer.send("resume-shortcuts");
-        };
+		input.onblur = () => {
+			input.classList.remove("recording");
+			// 如果用户没按键就点走了，恢复原来的值
+			if (input.value === "请按键...") {
+				input.value = tempKeyMap[id];
+			}
+			ipcRenderer.send("resume-shortcuts");
+		};
 
 		// 绑定录制事件
 		input.onkeydown = (e) => handleRecordKey(e, input, id);
@@ -237,14 +237,14 @@ function renderShortcuts(map) {
 
 // 核心：录制快捷键
 function handleRecordKey(e, input, id) {
-    // 强制阻止所有默认行为（包括网页滚动、系统菜单、浏览器刷新）
+	// 强制阻止所有默认行为（包括网页滚动、系统菜单、浏览器刷新）
 	e.preventDefault();
-	e.stopPropagation(); 
+	e.stopPropagation();
 
 	// 如果焦点不在 input 上，强制聚焦（防止跑焦）
 	if (document.activeElement !== input) {
-        input.focus();
-    }
+		input.focus();
+	}
 	// 忽略单独按下的修饰键
 	if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return;
 
@@ -272,9 +272,9 @@ function handleRecordKey(e, input, id) {
 // 保存设置
 saveShortcutsBtn.onclick = () => {
 	ipcRenderer.send("save-shortcuts", tempKeyMap);
-    settingsModal.classList.add("hidden");
-    webview.classList.remove("webview-disabled");
-    alert("快捷键已更新！");
+	settingsModal.classList.add("hidden");
+	webview.classList.remove("webview-disabled");
+	alert("快捷键已更新！");
 };
 
 // 检查元素是否获取成功

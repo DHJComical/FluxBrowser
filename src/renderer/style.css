@@ -129,10 +129,10 @@ body {
 }
 
 .shortcut-input.recording {
-    background: #ff004c;
-    color: white;
-    border-color: white;
-    box-shadow: 0 0 10px #ff004c;
+	background: #ff004c;
+	color: white;
+	border-color: white;
+	box-shadow: 0 0 10px #ff004c;
 }
 
 .modal-footer {
@@ -173,9 +173,9 @@ body {
 	padding: 0 10px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	transition: transform 0.3s ease;
-	position: relative; 
-    z-index: 10000; 
-    overflow: visible; 
+	position: relative;
+	z-index: 10000;
+	overflow: visible;
 }
 
 .drag-region {
@@ -221,7 +221,7 @@ button:hover {
 	height: calc(100vh - 40px);
 	background: black;
 	position: relative;
-    z-index: 1; 
+	z-index: 1;
 }
 
 /* 沉浸模式样式：控制栏向上收起 */
@@ -280,7 +280,7 @@ body.immersion .resize-handle {
 }
 
 .webview-disabled {
-    pointer-events: none !important; /* 禁止鼠标交互 */
-    filter: grayscale(100%) blur(2px); /* 变灰变模糊，视觉提示用户现在不能操作网页 */
-    opacity: 0.5;
+	pointer-events: none !important; /* 禁止鼠标交互 */
+	filter: grayscale(100%) blur(2px); /* 变灰变模糊，视觉提示用户现在不能操作网页 */
+	opacity: 0.5;
 }
