@@ -4,331 +4,87 @@ const webview = document.getElementById("browser-view");
 const urlInput = document.getElementById("url-input");
 const goBtn = document.getElementById("go-btn");
 const fluxBar = document.getElementById("flux-bar");
-
-// 设置GUI
 const menuBtn = document.getElementById("menu-btn");
 const dropdownMenu = document.getElementById("dropdown-menu");
 const settingsBtn = document.getElementById("settings-btn");
 const exitBtn = document.getElementById("exit-btn");
-const settingsModal = document.getElementById("settings-modal");
-const closeSettings = document.getElementById("close-settings");
-const shortcutList = document.getElementById("shortcut-list");
-const saveShortcutsBtn = document.getElementById("save-shortcuts");
+const resizeHandles = document.querySelectorAll(".resize-handle");
 
-// 更新相关元素
-const checkUpdateBtn = document.getElementById("check-update-btn");
-const installUpdateBtn = document.getElementById("install-update-btn");
-const updateStatus = document.getElementById("update-status");
-const progressBar = document.getElementById("update-progress-bar");
-const progressContainer = document.getElementById("update-progress-container");
-
-// 全局状态
 let isImmersionMode = false;
-// 定义默认主页
-const DEFAULT_URL = "https://www.bilibili.com";
 
-// 启动时恢复上次浏览的页面
-// 这一步必须在获取 DOM 元素之后立即执行
-const restoreLastSession = () => {
-	// 从本地存储获取
-	const lastUrl = localStorage.getItem("flux-last-url");
+// 恢复 Session
+const lastUrl =
+	localStorage.getItem("flux-last-url") || "https://www.bilibili.com";
+webview.src = lastUrl;
+urlInput.value = lastUrl;
 
-	// 如果有存档且是合法的 http 地址，就用存档；否则用默认主页
-	const targetUrl =
-		lastUrl && lastUrl.startsWith("http") ? lastUrl : DEFAULT_URL;
-
-	// 设置给 webview 和 输入框
-	// 注意：这里我们不需要改 HTML 里的 src，JS 会覆盖它
-	webview.src = targetUrl;
-	urlInput.value = targetUrl;
-};
-
-// 执行恢复逻辑
-restoreLastSession();
-
-// 导航逻辑
+// 导航
 const navigate = () => {
 	let url = urlInput.value.trim();
-	if (!url) return;
 	if (!url.startsWith("http")) url = "https://" + url;
 	webview.src = url;
 };
-
 goBtn.onclick = navigate;
 urlInput.onkeydown = (e) => {
 	if (e.key === "Enter") navigate();
 };
 
-// URL 自动刷新逻辑 (修改：加入保存功能)
-const syncUrl = () => {
-	const currentUrl = webview.getURL();
-	urlInput.value = currentUrl;
+webview.addEventListener("did-navigate", () => {
+	urlInput.value = webview.getURL();
+	localStorage.setItem("flux-last-url", webview.getURL());
+});
+webview.addEventListener("did-navigate-in-page", () => {
+	urlInput.value = webview.getURL();
+	localStorage.setItem("flux-last-url", webview.getURL());
+});
 
-	// 每次 URL 变化时，保存到本地存储
-	// 过滤掉空的或者非 http 的地址 (比如空白页)
-	if (currentUrl && currentUrl.startsWith("http")) {
-		localStorage.setItem("flux-last-url", currentUrl);
-	}
+// 设置相关
+menuBtn.onclick = (e) => {
+	e.stopPropagation();
+	dropdownMenu.classList.toggle("hidden");
+};
+document.onclick = () => dropdownMenu.classList.add("hidden");
+settingsBtn.onclick = () => ipcRenderer.send("open-settings");
+exitBtn.onclick = () => ipcRenderer.send("app-exit");
+
+// 穿透与沉浸
+ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
+	isImmersionMode = isImmersion;
+	document.body.classList.toggle("immersion", isImmersion);
+	if (!isImmersion) ipcRenderer.send("set-ignore-mouse", false);
+});
+
+[fluxBar, ...resizeHandles].forEach((el) => {
+	el.onmouseenter = () => ipcRenderer.send("set-ignore-mouse", false);
+});
+
+webview.onmouseenter = () => {
+	if (isImmersionMode) ipcRenderer.send("set-ignore-mouse", true);
 };
 
-webview.addEventListener("did-navigate", syncUrl);
-webview.addEventListener("did-navigate-in-page", syncUrl);
-// 渲染进程的辅助拦截 (作为第二层保险)
-webview.addEventListener("new-window", (e) => {
-	e.preventDefault(); // 阻止默认开窗
-	webview.src = e.url; // 当前窗口跳转
+// 缩放
+resizeHandles.forEach((h) => {
+	h.onmousedown = (e) => {
+		if (isImmersionMode) return;
+		ipcRenderer.send("start-resizing", h.getAttribute("data-direction"));
+	};
 });
+window.onmouseup = () => ipcRenderer.send("stop-resizing");
 
-// 更新检查逻辑
-if (checkUpdateBtn) {
-    checkUpdateBtn.onclick = () => {
-        ipcRenderer.send("check-for-updates");
-        updateStatus.innerText = "正在检查更新...";
-        checkUpdateBtn.disabled = true; // 防止重复点击
-    };
-}
+// 透明度
+ipcRenderer.on("set-opacity", (e, op) => (webview.style.opacity = op));
 
-if (installUpdateBtn) {
-    installUpdateBtn.onclick = () => {
-        ipcRenderer.send("quit-and-install");
-    };
-}
-
-ipcRenderer.on('update-message', (e, data) => {
-    updateStatus.innerText = data.msg;
-    if (data.status === 'downloaded') {
-        installUpdateBtn.classList.remove('hidden');
-        checkUpdateBtn.classList.add('hidden');
-    }
-    if (data.status === 'error') {
-        checkUpdateBtn.disabled = false;
-    }
-});
-
-ipcRenderer.on('update-progress', (e, percent) => {
-    if (progressContainer) progressContainer.classList.remove('hidden');
-    if (progressBar) progressBar.style.width = percent + '%';
-});
-
-// 注入 User-Agent (极其重要！)
-// 有些网站发现你是 Electron 就会故意弹出新窗口，模拟 Chrome 可以避开很多问题
 webview.addEventListener("dom-ready", () => {
-	// 设置一个伪装成普通浏览器的 UA
 	webview.setUserAgent(
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 	);
+	webview.focus();
 });
 
-// 接收后端指令
-ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
-	isImmersionMode = isImmersion; // 更新状态记录
-	if (isImmersion) {
-		document.body.classList.add("immersion");
-	} else {
-		document.body.classList.remove("immersion");
-		// 显式确保退出沉浸模式时，窗口不再穿透
-		ipcRenderer.send("set-ignore-mouse", false);
-	}
-});
-
+// 执行 Webview JS 代码
 ipcRenderer.on("execute-webview-js", (e, code) => {
-	webview.executeJavaScript(code);
+    console.log("收到视频控制指令"); // 调试用
+    if (webview) {
+        webview.executeJavaScript(code);
+    }
 });
-
-// 智能鼠标穿透增强 (修正逻辑)
-const resizeHandles = document.querySelectorAll(".resize-handle");
-const interactiveElements = [fluxBar, ...resizeHandles];
-
-// 鼠标进入 UI 区域：无论什么模式，都必须关闭穿透，否则点不动地址栏
-interactiveElements.forEach((el) => {
-	el.addEventListener("mouseenter", () => {
-		ipcRenderer.send("set-ignore-mouse", false);
-	});
-});
-
-// 新增：鼠标回到网页区域时的逻辑
-webview.addEventListener("mouseenter", () => {
-	// 只有在沉浸模式下，回到网页才需要恢复穿透
-	if (isImmersionMode) {
-		ipcRenderer.send("set-ignore-mouse", true);
-	}
-});
-
-// 窗口缩放逻辑
-resizeHandles.forEach((handle) => {
-	handle.addEventListener("mousedown", (e) => {
-		// 如果当前是沉浸模式，直接返回，不发送缩放指令
-		if (isImmersionMode) return;
-		e.preventDefault();
-		const direction = handle.getAttribute("data-direction");
-		ipcRenderer.send("start-resizing", direction);
-	});
-});
-
-// 透明度控制逻辑
-ipcRenderer.on("set-opacity", (e, opacity) => {
-	// 设置 webview 的透明度
-	webview.style.opacity = opacity;
-});
-
-window.addEventListener("mouseup", () => {
-	ipcRenderer.send("stop-resizing");
-});
-
-// 切换下拉菜单
-menuBtn.onclick = (e) => {
-	e.stopPropagation();
-	dropdownMenu.classList.toggle("hidden");
-};
-
-// 点击其他地方关闭菜单
-document.addEventListener("click", (e) => {
-	if (!menuBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
-		dropdownMenu.classList.add("hidden");
-	}
-});
-
-// 退出程序
-exitBtn.onclick = () => {
-	ipcRenderer.send("app-exit");
-};
-
-// 打开设置面板
-settingsBtn.onclick = async () => {
-	dropdownMenu.classList.add("hidden");
-	webview.classList.add("webview-disabled");
-
-	const keyMap = await ipcRenderer.invoke("get-shortcuts");
-	renderShortcuts(keyMap);
-
-	settingsModal.classList.remove("hidden");
-};
-
-// 关闭设置面板
-closeSettings.onclick = () => {
-	settingsModal.classList.add("hidden");
-	webview.classList.remove("webview-disabled");
-	ipcRenderer.send("resume-shortcuts");
-};
-
-// 渲染快捷键列表
-let tempKeyMap = {}; // 暂存修改
-
-const labelMap = {
-	BossKey: "老板键 (隐藏窗口)",
-	ImmersionMode: "沉浸模式 (穿透)",
-	"Video-Pause": "视频 暂停/播放",
-	"Video-Forward": "视频 快进",
-	"Video-Backward": "视频 快退",
-	"Opacity-Up": "增加不透明度 (变实)",
-	"Opacity-Down": "减少不透明度 (变虚)",
-};
-
-function renderShortcuts(map) {
-	tempKeyMap = { ...map };
-	shortcutList.innerHTML = "";
-
-	for (const [id, key] of Object.entries(map)) {
-		const li = document.createElement("li");
-		li.className = "shortcut-item";
-
-		const label = document.createElement("label");
-		label.innerText = labelMap[id] || id;
-
-		const input = document.createElement("input");
-		input.type = "text";
-		input.className = "shortcut-input";
-		input.value = key;
-		input.readOnly = true; // 禁止直接打字，必须通过录制
-
-		input.onfocus = () => {
-			input.classList.add("recording"); // 加个样式变红提示用户
-			input.value = "请按键...";
-			ipcRenderer.send("suspend-shortcuts");
-		};
-
-		// 当输入框失去焦点时（录制结束）：告诉主进程“恢复工作”
-		input.onblur = () => {
-			input.classList.remove("recording");
-			// 如果用户没按键就点走了，恢复原来的值
-			if (input.value === "请按键...") {
-				input.value = tempKeyMap[id];
-			}
-			ipcRenderer.send("resume-shortcuts");
-		};
-
-		// 绑定录制事件
-		input.onkeydown = (e) => handleRecordKey(e, input, id);
-
-		li.appendChild(label);
-		li.appendChild(input);
-		shortcutList.appendChild(li);
-	}
-}
-
-// 核心：录制快捷键
-function handleRecordKey(e, input, id) {
-	// 强制阻止所有默认行为（包括网页滚动、系统菜单、浏览器刷新）
-	e.preventDefault();
-	e.stopPropagation();
-
-	// 如果焦点不在 input 上，强制聚焦（防止跑焦）
-	if (document.activeElement !== input) {
-		input.focus();
-	}
-	// 忽略单独按下的修饰键
-	if (["Control", "Alt", "Shift", "Meta"].includes(e.key)) return;
-
-	const keys = [];
-	if (e.ctrlKey) keys.push("Ctrl");
-	if (e.metaKey) keys.push("Command"); // Mac
-	if (e.altKey) keys.push("Alt");
-	if (e.shiftKey) keys.push("Shift");
-
-	// 处理普通键 (把 a 变成 A, ArrowRight 变成 Right)
-	let keyName = e.key.toUpperCase();
-	if (keyName === " ") keyName = "Space";
-	if (keyName.startsWith("ARROW")) keyName = keyName.replace("ARROW", "");
-
-	keys.push(keyName);
-
-	const shortcutString = keys.join("+");
-	input.value = shortcutString;
-	tempKeyMap[id] = shortcutString;
-
-	// 录制完成后让输入框失去焦点，防止连续误触
-	input.blur();
-}
-
-// 保存设置
-saveShortcutsBtn.onclick = () => {
-	ipcRenderer.send("save-shortcuts", tempKeyMap);
-	settingsModal.classList.add("hidden");
-	webview.classList.remove("webview-disabled");
-	alert("快捷键已更新！");
-};
-
-// 检查元素是否获取成功
-console.log("按钮检查:", menuBtn, settingsBtn, settingsModal);
-
-menuBtn.onclick = (e) => {
-	e.stopPropagation();
-	console.log("菜单按钮被点击");
-	dropdownMenu.classList.toggle("hidden");
-};
-
-settingsBtn.onclick = async () => {
-	console.log("设置按钮被点击");
-	dropdownMenu.classList.add("hidden");
-
-	try {
-		console.log("正在请求快捷键数据...");
-		const keyMap = await ipcRenderer.invoke("get-shortcuts");
-		console.log("获取成功:", keyMap);
-
-		renderShortcuts(keyMap);
-		settingsModal.classList.remove("hidden"); // 显示模态框
-	} catch (err) {
-		console.error("无法弹出设置界面:", err);
-	}
-};

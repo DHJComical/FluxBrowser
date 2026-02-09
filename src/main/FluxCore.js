@@ -5,147 +5,74 @@ const {
 	app,
 	globalShortcut,
 } = require("electron");
-const path = require("path"); // 引入 path 模块
-const fs = require("fs"); // 引入 fs 模块
+const path = require("path");
 const configManager = require("./ConfigManager");
 const Updater = require("./Updater");
-
-// 使用 path.join 而不是直接用 join
-const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
-const BOUNDS_PATH = path.join(app.getPath("userData"), "window-bounds.json");
 
 class FluxCore {
 	constructor() {
 		this.window = null;
+		this.settingsWindow = null;
 		this.pluginLoader = null;
 		this.savedBounds = configManager.getBoundsConfig();
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 	}
 
-	// 保存配置
-	saveKeyConfig(newMap) {
-		configManager.saveKeyConfig(newMap);
-		this.pluginLoader.reloadShortcuts();
-		console.log("快捷键已更新并重载");
-	}
-
-	// 保存当前窗口状态
-	saveWindowBounds() {
-		if (this.window) {
-			configManager.saveBoundsConfig(this.window.getBounds());
-		}
-	}
-
-	// 启动核心
 	launch(PluginLoaderClass) {
 		this.createWindow();
 		this.setupResizeHandler();
 		this.setupIpc();
 		new Updater(this);
-		// 初始化插件加载器，把核心实例传给插件
 		this.pluginLoader = new PluginLoaderClass(this);
 		this.pluginLoader.loadAll();
 	}
 
-	setupIpc() {
-		// 前端请求获取当前快捷键
-		ipcMain.handle("get-shortcuts", () => {
-			return configManager.getKeyConfig();
-		});
-
-		// 前端请求保存快捷键
-		ipcMain.on("save-shortcuts", (e, newMap) => {
-			this.saveKeyConfig(newMap);
-		});
-
-		// 暂停所有快捷键 (打开设置时调用)
-		ipcMain.on("suspend-shortcuts", () => {
-			globalShortcut.unregisterAll();
-			console.log("已暂停所有全局快捷键，准备录制...");
-		});
-
-		// 恢复所有快捷键 (关闭设置时调用)
-		ipcMain.on("resume-shortcuts", () => {
-			this.pluginLoader.reloadShortcuts();
-			console.log("已恢复所有全局快捷键");
-		});
-
-		// 监听退出
-		ipcMain.on("app-exit", () => {
-			this.saveWindowBounds();
-			app.quit();
-		});
-	}
-
 	createWindow() {
 		let { x, y, width, height } = this.savedBounds;
-
-		// 如果有保存的坐标，检查它是否在当前可见的屏幕范围内
-		if (x !== undefined && y !== undefined) {
-			const visible = screen.getDisplayMatching(this.savedBounds);
-			if (!visible) {
-				// 如果坐标不可见，重置为居中
-				x = undefined;
-				y = undefined;
-			}
-		}
-
 		this.window = new BrowserWindow({
 			x: x,
 			y: y,
 			width: width || 800,
 			height: height || 600,
-			frame: false, // 无边框
-			transparent: true, // 透明背景
+			frame: false,
+			transparent: true,
 			alwaysOnTop: false,
 			hasShadow: false,
+			icon: path.join(__dirname, "../../build/icon.png"),
 			webPreferences: {
-				nodeIntegration: true,
-				contextIsolation: false,
-				webviewTag: true, // 允许 <webview>
-			},
+            nodeIntegration: true,
+            contextIsolation: false,
+            webviewTag: true,
+            javascript: true
+        }
 		});
 
-		this.window.webContents.on("did-finish-load", () => {
-			this.sendToRenderer("set-opacity", this.currentOpacity);
-		});
-
-		this.window.setMenu(null); // 去掉默认菜单
+		this.window.setMenu(null);
+		this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
 
 		this.window.on("close", () => {
 			this.saveWindowBounds();
+			if (this.settingsWindow) this.settingsWindow.close();
 		});
 
-		this.window.webContents.on("did-attach-webview", (event, webContents) => {
-			// webContents 是 webview 内部的页面对象
-			// setWindowOpenHandler 是 Electron 官方推荐的最强拦截方式
-			webContents.setWindowOpenHandler(({ url }) => {
-				// console.log("主进程拦截到跳转:", url);
-
-				// 强制让 webview 自身加载这个 URL
-				webContents.loadURL(url);
-
-				// 返回 deny 彻底禁止系统创建新窗口
+		// 拦截新窗口跳转
+		this.window.webContents.on("did-attach-webview", (event, wc) => {
+			wc.setWindowOpenHandler(({ url }) => {
+				wc.loadURL(url);
 				return { action: "deny" };
 			});
 		});
-
-		this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
-
-		// 监听前端的鼠标穿透请求（智能穿透）
-		ipcMain.on("set-ignore-mouse", (e, ignore) => {
-			this.setIgnoreMouse(ignore);
-		});
 	}
 
+	// 缩放处理逻辑
 	setupResizeHandler() {
-		let resizeInterval;
+		let resizeInterval = null;
 
 		ipcMain.on("start-resizing", (event, direction) => {
+			if (resizeInterval) clearInterval(resizeInterval);
+
 			const startMousePos = screen.getCursorScreenPoint();
 			const startBounds = this.window.getBounds();
-
-			if (resizeInterval) clearInterval(resizeInterval);
 
 			resizeInterval = setInterval(() => {
 				if (!this.window || this.window.isDestroyed()) {
@@ -160,7 +87,6 @@ class FluxCore {
 				let newWidth = startBounds.width;
 				let newHeight = startBounds.height;
 
-				// 根据方向计算新尺寸
 				if (direction === "right" || direction === "both") {
 					newWidth = Math.max(300, startBounds.width + deltaX);
 				}
@@ -185,71 +111,134 @@ class FluxCore {
 		});
 	}
 
-	// 调整透明度的核心方法
-	// delta: 变化量 (例如 +0.1 或 -0.1)
-	adjustOpacity(delta) {
-		let newOp = this.currentOpacity + delta;
-
-		// 限制范围：最低 0.2 (防止完全看不见)，最高 1.0
-		if (newOp > 1.0) newOp = 1.0;
-		if (newOp < 0.2) newOp = 0.2;
-
-		// 保留一位小数，防止 JS 浮点数精度问题 (0.1 + 0.2 = 0.3000004)
-		newOp = parseFloat(newOp.toFixed(1));
-
-		this.currentOpacity = newOp;
-
-		// 发送给前端应用视觉效果
-		this.sendToRenderer("set-opacity", newOp);
-
-		// 保存到配置文件 (复用 bounds config)
-		// 注意：这里我们只更新 opacity 字段，ConfigManager 会合并
-		configManager.saveBoundsConfig({ opacity: newOp });
-
-		console.log(`当前透明度: ${newOp}`);
+	// 设置并打开设置窗口
+	openSettingsWindow() {
+		if (this.settingsWindow) {
+			this.settingsWindow.focus();
+			return;
+		}
+		this.settingsWindow = new BrowserWindow({
+			width: 450,
+			height: 650,
+			parent: this.window,
+			title: "FluxBrowser 设置",
+			backgroundColor: "#1e1e1e",
+			webPreferences: {
+				nodeIntegration: true,
+				contextIsolation: false,
+			},
+		});
+		this.settingsWindow.setMenu(null);
+		this.settingsWindow.loadFile(
+			path.join(__dirname, "../renderer/settings.html"),
+		);
+		this.settingsWindow.on("closed", () => {
+			this.settingsWindow = null;
+		});
 	}
 
-	// --- 开放给插件使用的 API ---
+	// 设置 IPC 通信
+	setupIpc() {
 
-	// 1. 发送指令给前端 (View层)
+		// 打开设置窗口
+		ipcMain.on("open-settings", () => this.openSettingsWindow());
+
+		// 获取快捷键配置
+		ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
+
+		// 保存快捷键配置
+		ipcMain.on("save-shortcuts", (e, map) => {
+			configManager.saveKeyConfig(map);
+			this.pluginLoader.reloadShortcuts();
+		});
+
+		// 调整透明度
+		ipcMain.on("suspend-shortcuts", () => globalShortcut.unregisterAll());
+
+		// 恢复快捷键
+		ipcMain.on("resume-shortcuts", () => this.pluginLoader.reloadShortcuts());
+
+		// 退出应用
+		ipcMain.on("app-exit", () => {
+			this.saveWindowBounds();
+			app.quit();
+		});
+
+		// 设置鼠标穿透
+		ipcMain.on("set-ignore-mouse", (e, ignore) => {
+			if (this.window)
+				this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
+		});
+	}
+
+	// 广播消息到所有窗口
+	broadcast(channel, data) {
+		const windows = [this.window, this.settingsWindow];
+		windows.forEach((win) => {
+			if (win && !win.isDestroyed()) win.webContents.send(channel, data);
+		});
+	}
+
+	// 保存窗口尺寸和位置
+	saveWindowBounds() {
+		if (this.window) {
+			configManager.saveBoundsConfig(this.window.getBounds());
+		}
+	}
+
+	// 获取快捷键
+	getKey(id) {
+		return configManager.getKeyConfig()[id];
+	}
+
+	// 发送消息到渲染进程
 	sendToRenderer(channel, data) {
-		if (this.window && !this.window.isDestroyed()) {
-			this.window.webContents.send(channel, data);
-		}
+		this.broadcast(channel, data);
 	}
 
-	// 2. 控制窗口显隐
+	// 发送指令给前端
+    sendToRenderer(channel, data) { 
+        this.broadcast(channel, data); 
+    }
+
+    // 执行网页内的 JS (用于视频控制插件)
+    executeOnWebview(jsCode) {
+        this.sendToRenderer("execute-webview-js", jsCode);
+    }
+
+	// 切换窗口显示状态
 	toggleVisibility() {
-		if (this.window.isVisible()) this.window.hide();
-		else this.window.show();
+		if (!this.window) return;
+		this.window.isVisible() ? this.window.hide() : this.window.show();
 	}
 
-	// 3. 设置鼠标穿透 (核心技术)
-	setIgnoreMouse(ignore) {
-		if (this.window) {
-			// forward: true 让鼠标事件能穿透到后面的窗口
-			this.window.setIgnoreMouseEvents(ignore, { forward: true });
-		}
-	}
-
-	// 4. 执行网页内的 JS (控制视频用)
-	executeOnWebview(jsCode) {
-		this.sendToRenderer("execute-webview-js", jsCode);
-	}
-
-	// 5. 设置窗口是否置顶
+	// 设置窗口置顶状态
 	setAlwaysOnTop(flag) {
-		if (this.window) {
-			// level 参数 "screen-saver" 可以让置顶更高级，普通置顶用 flag 即可
-			this.window.setAlwaysOnTop(flag);
-		}
+		if (this.window) this.window.setAlwaysOnTop(flag, "screen-saver");
 	}
 
-	// 给 PluginLoader 用的辅助函数
-	getKey(actionId) {
-		const currentKeyMap = configManager.getKeyConfig();
-		return currentKeyMap[actionId];
-	}
+	// 控制视频 (供 video-ctrl.js 调用)
+    executeOnWebview(jsCode) {
+        this.sendToRenderer("execute-webview-js", jsCode);
+    }
+
+    // 设置鼠标穿透 (供 immersion.js 调用)
+    setIgnoreMouse(ignore) {
+        if (this.window) {
+            this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
+        }
+    }
+
+    // 调整透明度 (供 opacity.js 调用)
+    adjustOpacity(delta) {
+        let newOp = parseFloat((this.currentOpacity + delta).toFixed(1));
+        if (newOp > 1.0) newOp = 1.0;
+        if (newOp < 0.2) newOp = 0.2;
+        this.currentOpacity = newOp;
+        this.broadcast("set-opacity", newOp);
+        configManager.saveBoundsConfig({ opacity: newOp });
+    }
+
 }
 
 module.exports = new FluxCore();

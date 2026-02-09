@@ -3,7 +3,68 @@ body {
 	padding: 0;
 	overflow: hidden;
 	background: transparent;
-	font-family: "Segoe UI", sans-serif;
+	font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+/* 隐藏类 */
+.hidden {
+	display: none !important;
+}
+
+/* 按钮通用 */
+button {
+	background: transparent;
+	border: none;
+	color: white;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+button:hover {
+	color: #00d2ff;
+}
+
+/* ========================================== */
+/*                主窗口 (index.html)          */
+/* ========================================== */
+
+/* 玻璃拟态控制栏 */
+#flux-bar {
+	display: flex;
+	height: 40px;
+	background: rgba(20, 20, 20, 0.85);
+	backdrop-filter: blur(10px);
+	align-items: center;
+	padding: 0 10px;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	transition: transform 0.3s ease;
+	position: relative;
+	z-index: 10000;
+}
+
+.drag-region {
+	-webkit-app-region: drag;
+	flex: 0 0 100px;
+	color: #00d2ff;
+	font-weight: bold;
+	font-size: 14px;
+	cursor: default;
+}
+
+.input-group {
+	flex: 1;
+	display: flex;
+	-webkit-app-region: no-drag;
+}
+
+.input-group input {
+	flex: 1;
+	background: rgba(255, 255, 255, 0.1);
+	border: none;
+	color: white;
+	padding: 5px 10px;
+	border-radius: 4px;
+	outline: none;
 }
 
 /* 菜单容器 */
@@ -15,10 +76,6 @@ body {
 #menu-btn {
 	margin-right: 10px;
 	color: #ccc;
-}
-
-#menu-btn:hover {
-	color: #00d2ff;
 }
 
 /* 下拉菜单 */
@@ -34,13 +91,6 @@ body {
 	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 	z-index: 10001;
 	overflow: hidden;
-	transition:
-		opacity 0.2s,
-		transform 0.2s;
-}
-
-.hidden {
-	display: none !important;
 }
 
 .menu-item {
@@ -58,214 +108,6 @@ body {
 	color: #00d2ff;
 }
 
-/* 设置模态框 */
-.modal {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100vw;
-	height: 100vh;
-	background: rgba(0, 0, 0, 0.6);
-	backdrop-filter: blur(5px);
-	z-index: 20000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-.modal-content {
-	width: 500px;
-	background: #1e1e1e;
-	border: 1px solid #00d2ff;
-	border-radius: 8px;
-	box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
-	color: white;
-	display: flex;
-	flex-direction: column;
-}
-
-.modal-header {
-	padding: 15px 20px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.modal-body {
-	padding: 20px;
-	max-height: 300px;
-	overflow-y: auto;
-}
-
-.shortcut-item {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 15px;
-}
-
-.shortcut-item label {
-	color: #ccc;
-	font-size: 14px;
-}
-
-.shortcut-input {
-	background: rgba(0, 0, 0, 0.3);
-	border: 1px solid #444;
-	color: #00d2ff;
-	padding: 5px 10px;
-	border-radius: 4px;
-	text-align: center;
-	width: 150px;
-	cursor: pointer;
-	font-family: monospace;
-}
-
-.shortcut-input:focus {
-	border-color: #00d2ff;
-	outline: none;
-	background: rgba(0, 210, 255, 0.1);
-}
-
-.shortcut-input.recording {
-	background: #ff004c;
-	color: white;
-	border-color: white;
-	box-shadow: 0 0 10px #ff004c;
-}
-
-.modal-footer {
-	padding: 15px;
-	border-top: 1px solid rgba(255, 255, 255, 0.1);
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.tip {
-	font-size: 12px;
-	color: #666;
-}
-
-.divider {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 20px 0;
-}
-
-#update-section {
-    padding-top: 10px;
-}
-
-.update-info {
-    margin-bottom: 10px;
-    font-size: 13px;
-    color: #00d2ff;
-}
-
-.update-actions {
-    display: flex;
-    gap: 10px;
-}
-
-/* 按钮样式优化 */
-.secondary-btn {
-    background: transparent;
-    border: 1px solid #00d2ff;
-    color: #00d2ff;
-    padding: 6px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.secondary-btn:hover {
-    background: rgba(0, 210, 255, 0.1);
-}
-
-#update-progress-container {
-    width: 100%;
-    height: 4px;
-    background: #333;
-    border-radius: 2px;
-    margin: 10px 0;
-    overflow: hidden;
-}
-
-#update-progress-bar {
-    width: 0%;
-    height: 100%;
-    background: #00d2ff;
-    transition: width 0.3s;
-}
-
-#save-shortcuts {
-	background: #00d2ff;
-	color: black;
-	border: none;
-	padding: 8px 20px;
-	border-radius: 4px;
-	cursor: pointer;
-	font-weight: bold;
-}
-
-#save-shortcuts:hover {
-	background: #fff;
-	box-shadow: 0 0 10px #00d2ff;
-}
-
-/* 玻璃拟态控制栏 */
-#flux-bar {
-	display: flex;
-	height: 40px;
-	background: rgba(20, 20, 20, 0.85);
-	backdrop-filter: blur(10px); /* 毛玻璃特效 */
-	align-items: center;
-	padding: 0 10px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	transition: transform 0.3s ease;
-	position: relative;
-	z-index: 10000;
-	overflow: visible;
-}
-
-.drag-region {
-	-webkit-app-region: drag; /* 可拖拽 */
-	flex: 0 0 100px;
-	color: #00d2ff; /* 赛博朋克蓝 */
-	font-weight: bold;
-	font-size: 14px;
-	cursor: default;
-}
-
-.input-group {
-	flex: 1;
-	display: flex;
-	-webkit-app-region: no-drag;
-}
-
-input {
-	flex: 1;
-	background: rgba(255, 255, 255, 0.1);
-	border: none;
-	color: white;
-	padding: 5px 10px;
-	border-radius: 4px;
-	outline: none;
-}
-
-button {
-	background: transparent;
-	border: none;
-	color: white;
-	cursor: pointer;
-	margin-left: 5px;
-}
-
-button:hover {
-	color: #00d2ff;
-}
-
 /* 浏览器视图 */
 #browser-view {
 	width: 100vw;
@@ -275,7 +117,7 @@ button:hover {
 	z-index: 1;
 }
 
-/* 沉浸模式样式：控制栏向上收起 */
+/* 沉浸模式 */
 body.immersion #flux-bar {
 	transform: translateY(-100%);
 	position: absolute;
@@ -285,14 +127,22 @@ body.immersion #browser-view {
 	height: 100vh;
 }
 
-/* 所有的调整手柄通用样式 */
+/* 禁用状态（打开设置时网页变模糊） */
+.webview-disabled {
+	pointer-events: none !important;
+	filter: grayscale(100%) blur(2px);
+	opacity: 0.5;
+}
+
+/* ========================================== */
+/*               窗口缩放 (主窗口专用)          */
+/* ========================================== */
 .resize-handle {
 	position: absolute;
 	z-index: 99999;
-	background: transparent; /* 调试时可以设为 rgba(0,210,255,0.2) 看看位置 */
+	background: transparent;
 }
 
-/* 右边框：宽 10px，高 100% */
 .resize-handle.right {
 	top: 0;
 	right: 0;
@@ -301,7 +151,6 @@ body.immersion #browser-view {
 	cursor: e-resize;
 }
 
-/* 下边框：高 10px，宽 100% */
 .resize-handle.bottom {
 	bottom: 0;
 	left: 0;
@@ -310,28 +159,138 @@ body.immersion #browser-view {
 	cursor: s-resize;
 }
 
-/* 右下角：20x20 的方块 */
 .resize-handle.corner {
 	bottom: 0;
 	right: 0;
 	width: 15px;
 	height: 15px;
 	cursor: se-resize;
-	/* 给右下角画一个小三角指示器 */
-	background: linear-gradient(
-		135deg,
-		transparent 50%,
-		rgba(0, 210, 255, 0.5) 50%
-	);
+	background: linear-gradient(135deg, transparent 50%, rgba(0, 210, 255, 0.5) 50%);
 }
 
-/* 当 body 拥有 immersion 类时，隐藏所有缩放手柄 */
 body.immersion .resize-handle {
 	display: none !important;
 }
 
-.webview-disabled {
-	pointer-events: none !important; /* 禁止鼠标交互 */
-	filter: grayscale(100%) blur(2px); /* 变灰变模糊，视觉提示用户现在不能操作网页 */
-	opacity: 0.5;
+/* ========================================== */
+/*              设置窗口 (settings.html)       */
+/* ========================================== */
+
+/* 设置窗口背景（不透明） */
+body:not(.immersion):not(:has(#browser-view)) {
+    background: #1e1e1e;
+    color: white;
+    padding: 20px;
+    height: auto;
+    overflow-y: auto;
+    -webkit-app-region: no-drag;
+}
+
+/* 设置块（分块显示） */
+.settings-block {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.block-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #00d2ff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 快捷键条目 */
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.shortcut-item span {
+    font-size: 14px;
+    color: #ccc;
+}
+
+.shortcut-input {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
+    color: #00d2ff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    text-align: center;
+    width: 150px;
+    cursor: pointer;
+    font-family: monospace;
+}
+
+.shortcut-input.recording {
+    background: #ff004c !important;
+    color: white !important;
+    border-color: white;
+    box-shadow: 0 0 10px #ff004c;
+}
+
+/* 更新区域 */
+.update-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 13px;
+}
+
+#update-status {
+    color: #00d2ff;
+}
+
+#progress-container {
+    width: 100%;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+#progress-bar {
+    height: 100%;
+    background: #00d2ff;
+    width: 0%;
+    transition: width 0.3s;
+}
+
+/* 独立窗口内的按钮 */
+.primary-btn {
+    background: #00d2ff;
+    color: black;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.secondary-btn {
+    background: transparent;
+    border: 1px solid #00d2ff;
+    color: #00d2ff;
+    padding: 8px 15px;
+    border-radius: 4px;
+}
+
+.primary-btn:hover {
+    background: white;
+    box-shadow: 0 0 10px #00d2ff;
+}
+
+/* 分割线 */
+.divider {
+	height: 1px;
+	background: rgba(255, 255, 255, 0.1);
+	margin: 20px 0;
 }
