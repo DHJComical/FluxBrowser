@@ -32,7 +32,7 @@ body {
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 6px;
 	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-	z-index: 10000;
+	z-index: 10001;
 	overflow: hidden;
 	transition:
 		opacity 0.2s,
@@ -173,6 +173,9 @@ body {
 	padding: 0 10px;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	transition: transform 0.3s ease;
+	position: relative; 
+    z-index: 10000; 
+    overflow: visible; 
 }
 
 .drag-region {
@@ -217,6 +220,8 @@ button:hover {
 	width: 100vw;
 	height: calc(100vh - 40px);
 	background: black;
+	position: relative;
+    z-index: 1; 
 }
 
 /* 沉浸模式样式：控制栏向上收起 */
@@ -232,7 +237,7 @@ body.immersion #browser-view {
 /* 所有的调整手柄通用样式 */
 .resize-handle {
 	position: absolute;
-	z-index: 9999;
+	z-index: 99999;
 	background: transparent; /* 调试时可以设为 rgba(0,210,255,0.2) 看看位置 */
 }
 
