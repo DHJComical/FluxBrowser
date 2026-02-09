@@ -15,14 +15,19 @@ const closeSettings = document.getElementById("close-settings");
 const shortcutList = document.getElementById("shortcut-list");
 const saveShortcutsBtn = document.getElementById("save-shortcuts");
 
+// 更新相关元素
+const checkUpdateBtn = document.getElementById("check-update-btn");
+const installUpdateBtn = document.getElementById("install-update-btn");
+const updateStatus = document.getElementById("update-status");
+const progressBar = document.getElementById("update-progress-bar");
+const progressContainer = document.getElementById("update-progress-container");
+
 // 全局状态
 let isImmersionMode = false;
-// [新增] 定义默认主页
+// 定义默认主页
 const DEFAULT_URL = "https://www.bilibili.com";
 
-// ==========================================
-// [新增] 启动时恢复上次浏览的页面
-// ==========================================
+// 启动时恢复上次浏览的页面
 // 这一步必须在获取 DOM 元素之后立即执行
 const restoreLastSession = () => {
 	// 从本地存储获取
@@ -41,9 +46,7 @@ const restoreLastSession = () => {
 // 执行恢复逻辑
 restoreLastSession();
 
-// ==========================================
-// 2. 导航逻辑
-// ==========================================
+// 导航逻辑
 const navigate = () => {
 	let url = urlInput.value.trim();
 	if (!url) return;
@@ -74,6 +77,37 @@ webview.addEventListener("did-navigate-in-page", syncUrl);
 webview.addEventListener("new-window", (e) => {
 	e.preventDefault(); // 阻止默认开窗
 	webview.src = e.url; // 当前窗口跳转
+});
+
+// 更新检查逻辑
+if (checkUpdateBtn) {
+    checkUpdateBtn.onclick = () => {
+        ipcRenderer.send("check-for-updates");
+        updateStatus.innerText = "正在检查更新...";
+        checkUpdateBtn.disabled = true; // 防止重复点击
+    };
+}
+
+if (installUpdateBtn) {
+    installUpdateBtn.onclick = () => {
+        ipcRenderer.send("quit-and-install");
+    };
+}
+
+ipcRenderer.on('update-message', (e, data) => {
+    updateStatus.innerText = data.msg;
+    if (data.status === 'downloaded') {
+        installUpdateBtn.classList.remove('hidden');
+        checkUpdateBtn.classList.add('hidden');
+    }
+    if (data.status === 'error') {
+        checkUpdateBtn.disabled = false;
+    }
+});
+
+ipcRenderer.on('update-progress', (e, percent) => {
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    if (progressBar) progressBar.style.width = percent + '%';
 });
 
 // 注入 User-Agent (极其重要！)
@@ -135,9 +169,6 @@ resizeHandles.forEach((handle) => {
 ipcRenderer.on("set-opacity", (e, opacity) => {
 	// 设置 webview 的透明度
 	webview.style.opacity = opacity;
-
-	// [可选] 也可以顺便把输入框的背景也变淡一点，保持一致性
-	// fluxBar.style.opacity = Math.max(0.5, opacity);
 });
 
 window.addEventListener("mouseup", () => {

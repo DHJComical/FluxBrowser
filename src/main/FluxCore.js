@@ -8,6 +8,7 @@ const {
 const path = require("path"); // 引入 path 模块
 const fs = require("fs"); // 引入 fs 模块
 const configManager = require("./ConfigManager");
+const Updater = require("./Updater");
 
 // 使用 path.join 而不是直接用 join
 const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
@@ -40,6 +41,7 @@ class FluxCore {
 		this.createWindow();
 		this.setupResizeHandler();
 		this.setupIpc();
+		new Updater(this);
 		// 初始化插件加载器，把核心实例传给插件
 		this.pluginLoader = new PluginLoaderClass(this);
 		this.pluginLoader.loadAll();

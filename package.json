@@ -73,6 +73,13 @@
 	},
 	"build": {
 		"appId": "com.flux.browser",
+		"publish": [
+			{
+				"provider": "github",
+				"owner": "DHJComical",
+				"repo": "FluxBrowser"
+			}
+		],
 		"productName": "FluxBrowser",
 		"directories": {
 			"output": "dist"
@@ -104,5 +111,9 @@
 	"keywords": [],
 	"author": "DHJComical",
 	"license": "MIT",
-	"description": "A floating, immersive, framework-based browser."
+	"description": "A floating, immersive, framework-based browser.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/DHJComical/FluxBrowser.git"
+	}
 }
