@@ -7,6 +7,7 @@ const {
 } = require("electron");
 const path = require("path"); // 引入 path 模块
 const fs = require("fs"); // 引入 fs 模块
+const configManager = require("./ConfigManager");
 
 // 使用 path.join 而不是直接用 join
 const CONFIG_PATH = path.join(app.getPath("userData"), "key-config.json");
@@ -14,71 +15,27 @@ const BOUNDS_PATH = path.join(app.getPath("userData"), "window-bounds.json");
 
 class FluxCore {
 	constructor() {
-		this.window = null;
-		this.pluginLoader = null;
-		// 默认快捷键映射 (ID -> 快捷键)
-		this.keyMap = {
-			BossKey: "Alt+Q",
-			ImmersionMode: "Alt+W",
-			"Video-Pause": "Alt+Space",
-			"Video-Forward": "Alt+Right",
-			"Video-Backward": "Alt+Left",
-		};
-		// 加载保存的窗口位置和大小
-		this.savedBounds = this.loadWindowBounds();
-		this.loadKeyConfig();
-	}
+        this.window = null;
+        this.pluginLoader = null;
+        // 直接从 ConfigManager 获取配置
+        this.keyMap = configManager.getKeyConfig();
+        this.savedBounds = configManager.getBoundsConfig();
+    }
 
-	// 1. 加载本地配置
-	loadKeyConfig() {
-		try {
-			// 必须使用 fs.existsSync
-			if (fs.existsSync(CONFIG_PATH)) {
-				const saved = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
-				this.keyMap = { ...this.keyMap, ...saved };
-				console.log("快捷键配置加载成功");
-			}
-		} catch (e) {
-			console.error("加载快捷键配置失败", e);
-		}
-	}
 
-	// 2. 保存配置
+	// 保存配置
 	saveKeyConfig(newMap) {
-		this.keyMap = { ...this.keyMap, ...newMap };
-		try {
-			fs.writeFileSync(CONFIG_PATH, JSON.stringify(this.keyMap, null, 2));
-			// 重新注册所有快捷键
-			this.pluginLoader.reloadShortcuts();
-		} catch (e) {
-			console.error("保存快捷键配置失败", e);
-		}
-	}
-
-	// 读取本地窗口状态
-	loadWindowBounds() {
-		try {
-			// 必须使用 fs.existsSync
-			if (fs.existsSync(BOUNDS_PATH)) {
-				return JSON.parse(fs.readFileSync(BOUNDS_PATH, "utf-8"));
-			}
-		} catch (e) {
-			console.error("加载窗口位置配置失败", e);
-		}
-		return { width: 600, height: 400 };
-	}
+        configManager.saveKeyConfig(newMap);
+        this.keyMap = configManager.getKeyConfig();
+        this.pluginLoader.reloadShortcuts();
+    }
 
 	// 保存当前窗口状态
 	saveWindowBounds() {
-		if (!this.window) return;
-		try {
-			// 获取当前窗口的坐标和宽高
-			const bounds = this.window.getBounds();
-			fs.writeFileSync(BOUNDS_PATH, JSON.stringify(bounds));
-		} catch (e) {
-			console.error("保存窗口位置失败", e);
-		}
-	}
+        if (this.window) {
+            configManager.saveBoundsConfig(this.window.getBounds());
+        }
+    }
 
 	// 启动核心
 	launch(PluginLoaderClass) {
