@@ -80,7 +80,8 @@
 			"target": [
 				"nsis"
 			],
-			"icon": "resources/image/FluxBrowser-icon.ico"
+			"icon": "resources/image/FluxBrowser-icon.ico",
+			"requestedExecutionLevel": "requireAdministrator"
 		},
 		"nsis": {
 			"oneClick": false,
