@@ -161,6 +161,11 @@ class FluxCore {
 		// 调整透明度
 		ipcMain.on("suspend-shortcuts", () => globalShortcut.unregisterAll());
 
+		// 获取当前透明度
+		ipcMain.handle("get-opacity", () => {
+			return this.currentOpacity;
+		});
+
 		// 恢复快捷键
 		ipcMain.on("resume-shortcuts", () => this.pluginLoader.reloadShortcuts());
 

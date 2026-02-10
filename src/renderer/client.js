@@ -91,6 +91,18 @@ window.addEventListener("mouseup", () => {
 });
 
 // 透明度
+const restoreOpacity = async () => {
+	try {
+		const op = await ipcRenderer.invoke("get-opacity");
+		console.log("启动恢复透明度:", op);
+		webview.style.opacity = op;
+	} catch (err) {
+		console.error("恢复透明度失败:", err);
+	}
+};
+
+restoreOpacity();
+
 ipcRenderer.on("set-opacity", (e, op) => (webview.style.opacity = op));
 
 webview.addEventListener("dom-ready", () => {
