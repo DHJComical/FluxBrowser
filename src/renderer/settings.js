@@ -79,19 +79,32 @@ saveBtn.onclick = () => {
 };
 
 // 检查更新
+checkUpdateBtn.onclick = () => {
+	ipcRenderer.send("check-for-updates");
+
+	// UI 立即变更
+	updateStatus.innerText = "正在检查更新...";
+	checkUpdateBtn.disabled = true; // 变灰并禁止点击
+};
+
 ipcRenderer.on("update-message", (e, data) => {
 	updateStatus.innerText = data.msg;
 
-	// 只有在下载完成后才显示安装按钮
-	if (data.status === "downloaded") {
-		installUpdateBtn.classList.remove("hidden");
-		checkUpdateBtn.classList.add("hidden");
+	// 情况 A: 已经是最新版本，或者检查出错了
+	if (data.status === "not-available" || data.status === "error") {
+		checkUpdateBtn.disabled = false; // 恢复按钮颜色和功能
 	}
 
-	// 如果是“最新版”或“出错”，恢复检查更新按钮的状态，让用户可以再次点击
-	if (data.status === "not-available" || data.status === "error") {
-		checkUpdateBtn.disabled = false;
-		checkUpdateBtn.innerText = "检查更新";
+	// 情况 B: 发现新版本并下载完成了
+	if (data.status === "downloaded") {
+		installUpdateBtn.classList.remove("hidden");
+		checkUpdateBtn.classList.add("hidden"); // 既然要安装了，就隐藏检查按钮
+	}
+
+	// 情况 C: 发现新版本正在下载中
+	if (data.status === "available") {
+		// 保持 checkUpdateBtn.disabled = true; 不让用户乱点
+		updateStatus.innerText = data.msg;
 	}
 });
 
