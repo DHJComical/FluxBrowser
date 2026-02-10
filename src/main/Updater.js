@@ -1,5 +1,5 @@
 const { autoUpdater } = require("electron-updater");
-const { ipcMain } = require("electron");
+const { ipcMain, app } = require("electron");
 
 class Updater {
 	constructor(core) {
