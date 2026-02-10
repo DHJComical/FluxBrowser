@@ -4,10 +4,20 @@ const { app } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
-// 定义所有配置文件的路径
+// 检测是否为开发环境 (IDE 调试时 app.isPackaged 为 false)
+const isDev = !app.isPackaged;
+
+// 根据环境定义文件名前缀
+const prefix = isDev ? "dev-" : "";
+
+// 动态拼接路径
 const USER_DATA_PATH = app.getPath("userData");
-const KEY_CONFIG_PATH = path.join(USER_DATA_PATH, "key-config.json");
-const BOUNDS_CONFIG_PATH = path.join(USER_DATA_PATH, "window-bounds.json");
+const KEY_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}key-config.json`);
+const BOUNDS_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}window-bounds.json`);
+
+// 终端输出提示，方便你确认当前加载的是哪一套
+console.log(`[ConfigManager] 当前运行环境: ${isDev ? "开发模式 (DEV)" : "生产模式 (PROD)"}`);
+console.log(`[ConfigManager] 配置文件路径: ${KEY_CONFIG_PATH}`);
 
 // 默认配置
 const DEFAULT_KEY_CONFIG = {
