@@ -27,16 +27,64 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Build and Publish Electron App
-        run: npm run build -- --publish always
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 新增步骤：自动生成并写入 Release 说明
-      - name: Generate Release Notes
-        shell: bash
+        shell: pwsh
         run: |
-          # 使用 GitHub CLI 为当前 Tag 自动生成基于 PR 和 Commit 的说明
-          gh release edit ${{ github.ref_name }} --generate-notes
+          # 1. 安全地获取提交范围
+          $currentTag = "${{ github.ref_name }}"
+          # 使用引号包裹变量和 ^，防止 PowerShell 解析错误
+          $prevTag = git describe --tags --abbrev=0 "$currentTag^" 2>$null
+          
+          # 2. 根据是否有上一个标签决定 log 范围
+          if ($prevTag) {
+              $range = "$prevTag..$currentTag"
+              $commits = git log $range --pretty=format:"%s"
+          } else {
+              $commits = git log --pretty=format:"%s"
+          }
+
+          # 3. 定义提取函数 (增加对空提交记录的防御)
+          function Get-Group($prefix, $title) {
+              if (-not $commits) { return "" }
+              $pattern = "^$prefix[:\(]"
+              $matched = $commits | Where-Object { $_ -match $pattern }
+              if ($matched) {
+                  $lines = $matched | ForEach-Object { "* $_" }
+                  return "### $title`n$($lines -join "`n")`n`n"
+              }
+              return ""
+          }
+
+          # 4. 拼装内容
+          $body = "## 📝 更新日志 ($currentTag)`n`n"
+          $body += Get-Group "feat" "🚀 新特性"
+          $body += Get-Group "improve" "⚡ 改进"
+          $body += Get-Group "fix" "🐛 修复"
+          $body += Get-Group "refactor" "🛠️ 重构"
+          $body += Get-Group "chore" "🧹 琐事"
+          $body += Get-Group "version" "🔖 版本更新"
+
+          # 5. 兜底：抓取不符合规范的提交
+          if ($commits) {
+              $others = $commits | Where-Object { 
+                  $_ -notmatch "^(feat|fix|improve|chore|refactor|version)[:\(]" 
+              }
+              if ($others) {
+                  $otherLines = $others | ForEach-Object { "* $_" }
+                  $body += "### 🔍 其他改动`n$($otherLines -join "`n")"
+              }
+          }
+
+          # 6. 写入文件 (强制 UTF-8 无 BOM)
+          $path = "$PWD/release_notes.md"
+          [System.IO.File]::WriteAllText($path, $body, [System.Text.Encoding]::UTF8)
+
+          # 7. 创建 Release
+          gh release create $currentTag --title "Release $currentTag" --notes-file $path --latest
+
+      - name: Build and Publish Electron App
+        run: npm run build -- --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
