@@ -4,7 +4,7 @@
 		"electron-builder": "^24.13.3"
 	},
 	"name": "fluxbrowser",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"main": "src/main/main.js",
 	"dependencies": {
 		"boolean": "^3.2.0",
@@ -74,7 +74,6 @@
 	},
 	"build": {
 		"appId": "com.flux.browser",
-		"appName": "FluxBrowser",
 		"publish": [
 			{
 				"provider": "github",
