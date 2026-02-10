@@ -4,7 +4,7 @@
 		"electron-builder": "^24.13.3"
 	},
 	"name": "fluxbrowser",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"main": "src/main/main.js",
 	"dependencies": {
 		"boolean": "^3.2.0",
