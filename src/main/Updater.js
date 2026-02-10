@@ -1,9 +1,11 @@
 const { autoUpdater } = require("electron-updater");
 const { ipcMain } = require("electron");
+const logger = require("./Logger");
 
 class Updater {
 	constructor(core) {
 		this.core = core;
+		autoUpdater.logger = this.core.logger;
 		this.setup();
 	}
 

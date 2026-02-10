@@ -107,3 +107,10 @@ ipcRenderer.on("execute-webview-js", (e, code) => {
 		webview.executeJavaScript(code);
 	}
 });
+
+// 捕获网页内的未处理错误
+window.onerror = (msg, url, line) => {
+	log.error(`[Renderer Error] ${msg} at ${url}:${line}`);
+};
+
+console.log("主渲染进程已加载");

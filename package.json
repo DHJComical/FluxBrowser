@@ -18,6 +18,7 @@
 		"define-data-property": "^1.1.4",
 		"define-properties": "^1.2.1",
 		"detect-node": "^2.1.0",
+		"electron-log": "^5.4.3",
 		"electron-updater": "^6.7.3",
 		"end-of-stream": "^1.4.5",
 		"env-paths": "^2.2.1",
@@ -73,6 +74,7 @@
 	},
 	"build": {
 		"appId": "com.flux.browser",
+		"appName": "FluxBrowser",
 		"publish": [
 			{
 				"provider": "github",

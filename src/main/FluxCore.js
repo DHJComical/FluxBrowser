@@ -8,9 +8,16 @@ const {
 const path = require("path");
 const configManager = require("./ConfigManager");
 const Updater = require("./Updater");
+const setupLogger = require("./Logger");
 
 class FluxCore {
 	constructor() {
+		this.logger = setupLogger();
+
+		console.log("--- FluxCore 启动 ---");
+		console.log(`运行环境: ${app.isPackaged ? "生产" : "开发"}`);
+		console.log(`存储路径: ${app.getPath("userData")}`);
+
 		this.window = null;
 		this.settingsWindow = null;
 		this.pluginLoader = null;

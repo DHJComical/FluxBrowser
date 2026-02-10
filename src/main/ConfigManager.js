@@ -1,5 +1,3 @@
-// src/main/ConfigManager.js
-
 const { app } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -13,11 +11,10 @@ const prefix = isDev ? "dev-" : "";
 // 动态拼接路径
 const USER_DATA_PATH = app.getPath("userData");
 const KEY_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}key-config.json`);
-const BOUNDS_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}window-bounds.json`);
-
-// 终端输出提示，方便你确认当前加载的是哪一套
-console.log(`[ConfigManager] 当前运行环境: ${isDev ? "开发模式 (DEV)" : "生产模式 (PROD)"}`);
-console.log(`[ConfigManager] 配置文件路径: ${KEY_CONFIG_PATH}`);
+const BOUNDS_CONFIG_PATH = path.join(
+	USER_DATA_PATH,
+	`${prefix}window-bounds.json`,
+);
 
 // 默认配置
 const DEFAULT_KEY_CONFIG = {
