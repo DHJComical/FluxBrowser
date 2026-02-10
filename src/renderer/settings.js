@@ -79,10 +79,21 @@ saveBtn.onclick = () => {
 };
 
 // 检查更新
-checkUpdateBtn.onclick = () => {
-	ipcRenderer.send("check-for-updates");
-	updateStatus.innerText = "正在检查更新...";
-};
+ipcRenderer.on("update-message", (e, data) => {
+	updateStatus.innerText = data.msg;
+
+	// 只有在下载完成后才显示安装按钮
+	if (data.status === "downloaded") {
+		installUpdateBtn.classList.remove("hidden");
+		checkUpdateBtn.classList.add("hidden");
+	}
+
+	// 如果是“最新版”或“出错”，恢复检查更新按钮的状态，让用户可以再次点击
+	if (data.status === "not-available" || data.status === "error") {
+		checkUpdateBtn.disabled = false;
+		checkUpdateBtn.innerText = "检查更新";
+	}
+});
 
 // 安装更新
 ipcRenderer.on("update-message", (e, data) => {
@@ -91,9 +102,9 @@ ipcRenderer.on("update-message", (e, data) => {
 });
 
 // 安装更新按钮
-ipcRenderer.on("update-progress", (e, percent) => {
-	document.getElementById("progress-container").classList.remove("hidden");
-	document.getElementById("progress-bar").style.width = percent + "%";
-});
-
+checkUpdateBtn.onclick = () => {
+	ipcRenderer.send("check-for-updates");
+	updateStatus.innerText = "正在检查更新...";
+	checkUpdateBtn.disabled = true; // 暂时禁用，等待后端回传结果
+};
 init();
