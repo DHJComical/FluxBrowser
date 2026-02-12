@@ -1,4 +1,5 @@
 const { ipcRenderer } = require("electron");
+const log = require("electron-log");
 
 const webview = document.getElementById("browser-view");
 const urlInput = document.getElementById("url-input");
@@ -94,10 +95,10 @@ window.addEventListener("mouseup", () => {
 const restoreOpacity = async () => {
 	try {
 		const op = await ipcRenderer.invoke("get-opacity");
-		console.log("启动恢复透明度:", op);
+		log.info("启动恢复透明度:", op);
 		webview.style.opacity = op;
 	} catch (err) {
-		console.error("恢复透明度失败:", err);
+		log.error("恢复透明度失败:", err);
 	}
 };
 
@@ -114,7 +115,7 @@ webview.addEventListener("dom-ready", () => {
 
 // 执行 Webview JS 代码
 ipcRenderer.on("execute-webview-js", (e, code) => {
-	console.log("收到视频控制指令"); // 调试用
+	log.info("收到视频控制指令，执行代码:", code); // 调试用，显示具体执行的代码
 	if (webview) {
 		webview.executeJavaScript(code);
 	}
@@ -125,4 +126,4 @@ window.onerror = (msg, url, line) => {
 	log.error(`[Renderer Error] ${msg} at ${url}:${line}`);
 };
 
-console.log("主渲染进程已加载");
+log.info("主渲染进程已加载");
