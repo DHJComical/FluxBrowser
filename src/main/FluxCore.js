@@ -124,9 +124,23 @@ class FluxCore {
 			this.settingsWindow.focus();
 			return;
 		}
+
+		// 获取屏幕尺寸
+		const primaryDisplay = screen.getPrimaryDisplay();
+		const { width: screenWidth, height: screenHeight } =
+			primaryDisplay.workAreaSize;
+
+		// 计算窗口居中位置
+		const windowWidth = 450;
+		const windowHeight = 650;
+		const x = Math.round((screenWidth - windowWidth) / 2);
+		const y = Math.round((screenHeight - windowHeight) / 2);
+
 		this.settingsWindow = new BrowserWindow({
-			width: 450,
-			height: 650,
+			x: x,
+			y: y,
+			width: windowWidth,
+			height: windowHeight,
 			parent: this.window,
 			title: "FluxBrowser 设置",
 			backgroundColor: "#1e1e1e",
