@@ -15,6 +15,8 @@ const labelMap = {
 	"Video-Backward": "视频 快退",
 	"Opacity-Up": "透明度 +",
 	"Opacity-Down": "透明度 -",
+	GoBack: "网页后退",
+	GoForward: "网页前进",
 };
 
 async function init() {

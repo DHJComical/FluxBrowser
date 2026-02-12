@@ -13,10 +13,12 @@ class PluginLoader {
 			require("../plugins/immersion"),
 			require("../plugins/video-ctrl"),
 			require("../plugins/opacity"),
+			require("../plugins/web-nav"),
 		];
 
 		this.plugins.forEach((p) => {
-			if (p.init) p.init(this.core);
+			if (p.initialize) p.initialize(this.core);
+			else if (p.init) p.init(this.core);
 		});
 
 		this.reloadShortcuts();

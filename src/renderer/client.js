@@ -54,6 +54,28 @@ ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
 	isImmersionMode = isImmersion;
 	document.body.classList.toggle("immersion", isImmersion);
 	if (!isImmersion) ipcRenderer.send("set-ignore-mouse", false);
+
+	// 通知主进程当前的沉浸模式状态
+	ipcRenderer.send("immersion-mode-changed", isImmersion);
+});
+
+// 监听网页导航事件
+ipcRenderer.on("web-go-back", () => {
+	if (webview.canGoBack()) {
+		webview.goBack();
+		log.info("执行网页后退操作");
+	} else {
+		log.info("无法后退，已到达历史记录起点");
+	}
+});
+
+ipcRenderer.on("web-go-forward", () => {
+	if (webview.canGoForward()) {
+		webview.goForward();
+		log.info("执行网页前进操作");
+	} else {
+		log.info("无法前进，已到达历史记录终点");
+	}
 });
 
 [fluxBar, ...resizeHandles].forEach((el) => {
@@ -71,7 +93,6 @@ resizeHandles.forEach((h) => {
 		ipcRenderer.send("start-resizing", h.getAttribute("data-direction"));
 	};
 });
-window.onmouseup = () => ipcRenderer.send("stop-resizing");
 
 // 原生拖拽
 if (dragRegion) {
@@ -86,10 +107,10 @@ if (dragRegion) {
 }
 
 // 统一使用已有的 window.onmouseup 来停止所有动作（缩放和移动）
-window.addEventListener("mouseup", () => {
+window.onmouseup = (e) => {
 	ipcRenderer.send("stop-moving"); // 新增：停止移动
 	ipcRenderer.send("stop-resizing");
-});
+};
 
 // 透明度
 const restoreOpacity = async () => {

@@ -25,6 +25,8 @@ const DEFAULT_KEY_CONFIG = {
 	"Video-Backward": "Alt+Left",
 	"Opacity-Up": "Alt+Up",
 	"Opacity-Down": "Alt+Down",
+	GoBack: "Alt+Left",
+	GoForward: "Alt+Right",
 };
 
 const DEFAULT_BOUNDS_CONFIG = {
