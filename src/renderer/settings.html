@@ -5,62 +5,459 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        body { background: #1e1e1e; color: white; padding: 20px; overflow-y: auto; height: auto; }
-        .settings-block {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* 设置容器 - 左右布局 */
+        .settings-container {
+            display: flex;
+            height: 100vh;
+            background: #1a1a2e;
         }
-        .block-title {
-            font-size: 16px;
+
+        /* 左侧Tab栏 */
+        .settings-sidebar {
+            width: 220px;
+            background: #16162a;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-sidebar-title {
+            padding: 0 20px 20px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 15px;
             color: #00d2ff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .shortcut-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .shortcut-input { width: 140px; text-align: center; }
-        .update-row { display: flex; flex-direction: column; gap: 10px; }
-        #save-btn { width: 100%; padding: 10px; background: #00d2ff; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+
+        .settings-sidebar-title i {
+            font-size: 24px;
+        }
+
+        .settings-tab {
+            padding: 14px 20px;
+            color: #8a8a9a;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .settings-tab:hover {
+            background: rgba(0, 210, 255, 0.08);
+            color: #ccc;
+        }
+
+        .settings-tab.active {
+            background: rgba(0, 210, 255, 0.12);
+            color: #00d2ff;
+            border-left-color: #00d2ff;
+        }
+
+        .settings-tab i {
+            font-size: 20px;
+        }
+
+        /* 右侧内容区 */
+        .settings-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        .settings-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .panel-subtitle {
+            font-size: 13px;
+            color: #6a6a7a;
+            margin-bottom: 30px;
+        }
+
+        /* 设置卡片 */
+        .settings-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .settings-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 210, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: #00d2ff;
+        }
+
+        /* 快捷键列表 */
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shortcut-item:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-item span {
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+
+        .shortcut-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            color: #00d2ff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-align: center;
+            width: 160px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .shortcut-input:hover {
+            border-color: #00d2ff;
+            background: rgba(0, 210, 255, 0.1);
+        }
+
+        .shortcut-input.recording {
+            background: #ff004c !important;
+            color: white !important;
+            border-color: white !important;
+            box-shadow: 0 0 15px rgba(255, 0, 76, 0.5);
+        }
+
+        /* 开关按钮 */
+        .toggle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        .toggle-desc {
+            font-size: 12px;
+            color: #6a6a7a;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: #333;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #00d2ff 0%, #00a8cc 100%);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(22px);
+        }
+
+        /* 更新区域 */
+        .update-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .version-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(0, 210, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+
+        .version-info i {
+            color: #00d2ff;
+            font-size: 24px;
+        }
+
+        .version-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .version-label {
+            font-size: 12px;
+            color: #6a6a7a;
+        }
+
+        .version-number {
+            font-size: 16px;
+            color: #00d2ff;
+            font-weight: 600;
+        }
+
+        .update-progress {
+            width: 100%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .update-progress.active {
+            display: block;
+        }
+
+        .update-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff, #00ffcc);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .update-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d2ff 0%, #00a8cc 100%);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #00d2ff;
+            color: #00d2ff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 210, 255, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: #000;
+        }
+
+        /* 保存按钮 */
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 220px;
+            padding: 15px 30px;
+            background: rgba(22, 22, 42, 0.95);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .save-bar .btn {
+            padding: 10px 30px;
+        }
+
+        /* 底部内边距 */
+        .settings-content-bottom {
+            padding-bottom: 80px;
+        }
     </style>
 </head>
 <body>
-    <!-- 块 1: 快捷键 -->
-    <div class="settings-block">
-        <div class="block-title"><i class="material-icons">keyboard</i> 设置快捷键</div>
-        <ul id="shortcut-list"></ul>
-    </div>
-
-    <!-- 块 2: 更新检查 -->
-    <div class="settings-block">
-        <div class="block-title"><i class="material-icons">system_update</i> 软件更新</div>
-        <div class="update-row">
-            <span id="update-status"></span>
-            <div id="update-progress-container" class="hidden">
-                <div id="update-progress-bar" style="width: 0%; height: 4px; background: #00d2ff;"></div>
+    <div class="settings-container">
+        <!-- 左侧Tab栏 -->
+        <div class="settings-sidebar">
+            <div class="settings-sidebar-title">
+                <i class="material-icons">settings</i>
+                设置
             </div>
-            <button id="check-update-btn" class="secondary-btn">检查更新</button>
-            <button id="install-update-btn" class="primary-btn hidden">立即重启并安装</button>
+            
+            <div class="settings-tab active" data-panel="shortcuts">
+                <i class="material-icons">keyboard</i>
+                快捷键
+            </div>
+            
+            <div class="settings-tab" data-panel="updates">
+                <i class="material-icons">system_update</i>
+                软件更新
+            </div>
+            
+            <div class="settings-tab" data-panel="debug">
+                <i class="material-icons">bug_report</i>
+                调试模式
+            </div>
+        </div>
+
+        <!-- 右侧内容区 -->
+        <div class="settings-content">
+            <!-- 快捷键设置面板 -->
+            <div class="settings-panel active" id="panel-shortcuts">
+                <div class="panel-title">快捷键设置</div>
+                <div class="panel-subtitle">配置全局快捷键以快速触发各种功能</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">flash_on</i>
+                        功能快捷键
+                    </div>
+                    <div id="shortcut-list"></div>
+                </div>
+            </div>
+
+            <!-- 软件更新面板 -->
+            <div class="settings-panel" id="panel-updates">
+                <div class="panel-title">软件更新</div>
+                <div class="panel-subtitle">检查新版本以获得最新功能和修复</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">info</i>
+                        版本信息
+                    </div>
+                    <div class="update-section">
+                        <div class="version-info">
+                            <i class="material-icons">new_releases</i>
+                            <div class="version-text">
+                                <span class="version-label">当前版本</span>
+                                <span class="version-number" id="version-number">v1.0.0</span>
+                            </div>
+                        </div>
+                        <div class="update-status" id="update-status">点击下方按钮检查更新</div>
+                        <div class="update-progress" id="update-progress-container">
+                            <div class="update-progress-bar" id="update-progress-bar"></div>
+                        </div>
+                        <div class="update-actions">
+                            <button id="check-update-btn" class="btn btn-secondary">检查更新</button>
+                            <button id="install-update-btn" class="btn btn-success hidden">立即安装</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 调试模式面板 -->
+            <div class="settings-panel" id="panel-debug">
+                <div class="panel-title">调试模式</div>
+                <div class="panel-subtitle">用于排查问题和开发调试的选项</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">developer_mode</i>
+                        调试选项
+                    </div>
+                    <div class="toggle-item">
+                        <div class="toggle-info">
+                            <span class="toggle-label">启用调试日志</span>
+                            <span class="toggle-desc">在控制台输出窗口位置和大小相关的调试信息</span>
+                        </div>
+                        <div class="toggle-switch" id="debug-mode-toggle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-content-bottom"></div>
         </div>
     </div>
 
-    <!-- 块 3: 调试模式 -->
-    <div class="settings-block">
-        <div class="block-title"><i class="material-icons">bug_report</i> 调试模式</div>
-        <div class="update-row">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" id="debug-mode-checkbox">
-                <span>启用调试日志</span>
-            </label>
-            <span style="font-size: 12px; color: #888;">启用后将在控制台输出窗口位置和大小相关的调试信息</span>
-        </div>
+    <!-- 底部保存栏 -->
+    <div class="save-bar">
+        <button id="cancel-btn" class="btn btn-secondary">取消</button>
+        <button id="save-btn" class="btn btn-primary">保存设置</button>
     </div>
-
-    <button id="save-btn">保存并退出</button>
 
     <script src="settings.js"></script>
 </body>
