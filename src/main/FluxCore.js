@@ -221,17 +221,18 @@ class FluxCore {
 				this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
 		});
 
-		// 设置窗口大小 (分辨率预设)
+		// 设置窗口大小 (分辨率预设，height是webview区域高度，需要加上标题栏40px)
 		ipcMain.on("set-window-size", (e, { width, height }) => {
 			if (this.window) {
 				const currentBounds = this.window.getBounds();
+				const titleBarHeight = 40; // 控制栏高度
 				this.window.setBounds({
 					x: currentBounds.x,
 					y: currentBounds.y,
 					width: width,
-					height: height,
+					height: height + titleBarHeight,
 				});
-				this.debugLog(`窗口分辨率已设置为: ${width} × ${height}`);
+				this.debugLog(`窗口分辨率已设置为: ${width} × ${height} (webview区域)`);
 			}
 		});
 
