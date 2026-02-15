@@ -221,6 +221,20 @@ class FluxCore {
 				this.window.setIgnoreMouseEvents(ignore, { forward: ignore });
 		});
 
+		// 设置窗口大小 (分辨率预设)
+		ipcMain.on("set-window-size", (e, { width, height }) => {
+			if (this.window) {
+				const currentBounds = this.window.getBounds();
+				this.window.setBounds({
+					x: currentBounds.x,
+					y: currentBounds.y,
+					width: width,
+					height: height,
+				});
+				this.debugLog(`窗口分辨率已设置为: ${width} × ${height}`);
+			}
+		});
+
 		// 获取应用版本号
 		ipcMain.handle("get-app-version", () => {
 			return app.getVersion(); // 自动从 package.json 读取 version 字段

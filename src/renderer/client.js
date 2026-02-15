@@ -67,6 +67,17 @@ document.onclick = () => dropdownMenu.classList.add("hidden");
 settingsBtn.onclick = () => ipcRenderer.send("open-settings");
 exitBtn.onclick = () => ipcRenderer.send("app-exit");
 
+// 分辨率预设点击事件
+document.querySelectorAll(".resolution-item").forEach((item) => {
+	item.addEventListener("click", (e) => {
+		e.stopPropagation();
+		const width = parseInt(item.getAttribute("data-width"));
+		const height = parseInt(item.getAttribute("data-height"));
+		ipcRenderer.send("set-window-size", { width, height });
+		dropdownMenu.classList.add("hidden");
+	});
+});
+
 // 穿透与沉浸
 ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
 	isImmersionMode = isImmersion;

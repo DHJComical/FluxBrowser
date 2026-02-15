@@ -90,14 +90,14 @@ button:hover {
 	position: absolute;
 	top: 35px;
 	left: 0;
-	width: 150px;
+	width: 180px;
 	background: rgba(30, 30, 30, 0.95);
 	backdrop-filter: blur(10px);
 	border: 1px solid rgba(255, 255, 255, 0.1);
 	border-radius: 6px;
 	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 	z-index: 10001;
-	overflow: hidden;
+	overflow: visible;
 }
 
 .menu-item {
@@ -113,6 +113,51 @@ button:hover {
 .menu-item:hover {
 	background: rgba(0, 210, 255, 0.2);
 	color: #00d2ff;
+}
+
+/* 菜单分割线 */
+.menu-divider {
+	height: 1px;
+	background: rgba(255, 255, 255, 0.1);
+	margin: 4px 0;
+}
+
+/* 子菜单容器 */
+.menu-submenu {
+	position: relative;
+}
+
+.submenu-arrow {
+	margin-left: auto;
+	font-size: 16px;
+}
+
+/* 子菜单内容 */
+.submenu-content {
+	position: absolute;
+	left: 100%;
+	top: 0;
+	width: 200px;
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 6px;
+	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+	display: none;
+}
+
+.menu-submenu:hover .submenu-content {
+	display: block;
+}
+
+/* 分辨率选项 */
+.resolution-item {
+	justify-content: flex-start;
+	white-space: nowrap;
+}
+
+.resolution-item:hover {
+	background: rgba(0, 210, 255, 0.15);
 }
 
 /* 浏览器视图 */
