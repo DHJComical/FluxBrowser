@@ -16,15 +16,15 @@ let debugModeState = false;
 
 // 快捷键标签映射
 const labelMap = {
-	BossKey: "老板键",
-	ImmersionMode: "沉浸模式",
-	"Video-Pause": "视频 播放/暂停",
-	"Video-Forward": "视频 快进",
-	"Video-Backward": "视频 快退",
-	"Opacity-Up": "透明度 +",
-	"Opacity-Down": "透明度 -",
-	GoBack: "网页后退",
-	GoForward: "网页前进",
+    BossKey: "老板键 (隐藏窗口)",
+    ImmersionMode: "沉浸模式",
+    "Video-Pause": "视频 暂停/播放",
+    "Video-Forward": "视频 快进",
+    "Video-Backward": "视频 快退",
+    "Opacity-Up": "透明度 +",
+    "Opacity-Down": "透明度 -",
+    GoBack: "网页后退",
+    GoForward: "网页前进",
 };
 
 // 初始化
@@ -137,9 +137,17 @@ function renderShortcuts() {
 			if (e.ctrlKey) keys.push("Ctrl");
 			if (e.altKey) keys.push("Alt");
 			if (e.shiftKey) keys.push("Shift");
-			let k = e.key.toUpperCase();
-			if (k === " ") k = "Space";
-			if (k.startsWith("ARROW")) k = k.replace("ARROW", "");
+			let k = e.key;
+			// 处理特殊按键显示
+			if (k === " ") {
+				k = "Space";
+			} else if (k.startsWith("Arrow")) {
+				k = k.replace("Arrow", "");
+			} else if (k === "Home" || k === "End" || k === "PageUp" || k === "PageDown" || k === "Insert" || k === "Delete") {
+				// 这些按键直接显示英文
+			} else {
+				k = k.toUpperCase();
+			}
 			keys.push(k);
 			const str = keys.join("+");
 			input.value = str;

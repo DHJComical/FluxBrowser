@@ -19,11 +19,11 @@ const APP_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}app-config.json`);
 
 // 默认配置
 const DEFAULT_KEY_CONFIG = {
-	BossKey: "Alt+Q",
-	ImmersionMode: "Alt+W",
-	"Video-Pause": "Alt+Space",
-	"Video-Forward": "Alt+Right",
-	"Video-Backward": "Alt+Left",
+	BossKey: "Delete",
+	ImmersionMode: "Home",
+	"Video-Pause": "Down",
+	"Video-Forward": "Right",
+	"Video-Backward": "Left",
 	"Opacity-Up": "Alt+Up",
 	"Opacity-Down": "Alt+Down",
 	GoBack: "Alt+Left",
