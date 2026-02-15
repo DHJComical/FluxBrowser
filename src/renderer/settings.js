@@ -96,6 +96,11 @@ checkUpdateBtn.onclick = () => {
 	checkUpdateBtn.disabled = true; // 变灰并禁止点击
 };
 
+// 安装更新按钮
+installUpdateBtn.onclick = () => {
+	ipcRenderer.send("quit-and-install");
+};
+
 ipcRenderer.on("update-message", (e, data) => {
 	updateStatus.innerText = data.msg;
 
@@ -117,16 +122,4 @@ ipcRenderer.on("update-message", (e, data) => {
 	}
 });
 
-// 安装更新
-ipcRenderer.on("update-message", (e, data) => {
-	updateStatus.innerText = data.msg;
-	if (data.status === "downloaded") installUpdateBtn.classList.remove("hidden");
-});
-
-// 安装更新按钮
-checkUpdateBtn.onclick = () => {
-	ipcRenderer.send("check-for-updates");
-	updateStatus.innerText = "正在检查更新...";
-	checkUpdateBtn.disabled = true; // 暂时禁用，等待后端回传结果
-};
 init();
