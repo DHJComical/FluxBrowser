@@ -234,6 +234,8 @@ class FluxCore {
 		// 设置调试模式状态
 		ipcMain.on("set-debug-mode", (e, enabled) => {
 			configManager.saveAppConfig({ debugMode: enabled });
+			// 更新 Logger 模块的调试模式状态
+			this.logger.setDebugMode(enabled);
 		});
 
 		// 手动窗口移动监听
