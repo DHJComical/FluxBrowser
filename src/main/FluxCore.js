@@ -26,8 +26,12 @@ class FluxCore {
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 
 		// 输出启动时的窗口位置和大小到日志
-		this.debugLog(`启动窗口位置: X=${this.savedBounds.x}, Y=${this.savedBounds.y}`);
-		this.debugLog(`启动窗口大小: Width=${this.savedBounds.width}, Height=${this.savedBounds.height}`);
+		this.debugLog(
+			`启动窗口位置: X=${this.savedBounds.x}, Y=${this.savedBounds.y}`,
+		);
+		this.debugLog(
+			`启动窗口大小: Width=${this.savedBounds.width}, Height=${this.savedBounds.height}`,
+		);
 	}
 
 	// 调试模式日志输出
@@ -132,7 +136,9 @@ class FluxCore {
 			// 只有真正在调整大小时才输出日志
 			if (this.isResizing && this.window) {
 				const bounds = this.window.getBounds();
-				this.debugLog(`窗口大小已调整: Width=${bounds.width}, Height=${bounds.height}`);
+				this.debugLog(
+					`窗口大小已调整: Width=${bounds.width}, Height=${bounds.height}`,
+				);
 			}
 			this.isResizing = false;
 		});
@@ -290,7 +296,9 @@ class FluxCore {
 		if (this.window) {
 			const bounds = this.window.getBounds();
 			this.debugLog(`窗口位置已保存: X=${bounds.x}, Y=${bounds.y}`);
-			this.debugLog(`窗口大小已保存: Width=${bounds.width}, Height=${bounds.height}`);
+			this.debugLog(
+				`窗口大小已保存: Width=${bounds.width}, Height=${bounds.height}`,
+			);
 			configManager.saveBoundsConfig(bounds);
 		}
 	}

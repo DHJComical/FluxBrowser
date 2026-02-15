@@ -15,10 +15,7 @@ const BOUNDS_CONFIG_PATH = path.join(
 	USER_DATA_PATH,
 	`${prefix}window-bounds.json`,
 );
-const APP_CONFIG_PATH = path.join(
-	USER_DATA_PATH,
-	`${prefix}app-config.json`,
-);
+const APP_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}app-config.json`);
 
 // 默认配置
 const DEFAULT_KEY_CONFIG = {
