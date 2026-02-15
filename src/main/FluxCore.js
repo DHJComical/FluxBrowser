@@ -14,9 +14,10 @@ class FluxCore {
 	constructor() {
 		this.logger = setupLogger();
 
-		console.log("--- FluxCore 启动 ---");
-		console.log(`运行环境: ${app.isPackaged ? "生产" : "开发"}`);
-		console.log(`存储路径: ${app.getPath("userData")}`);
+		// 调试日志输出
+		this.debugLog("--- FluxCore 启动 ---");
+		this.debugLog(`运行环境: ${app.isPackaged ? "生产" : "开发"}`);
+		this.debugLog(`存储路径: ${app.getPath("userData")}`);
 
 		this.window = null;
 		this.settingsWindow = null;
@@ -25,8 +26,15 @@ class FluxCore {
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 
 		// 输出启动时的窗口位置和大小到日志
-		console.log(`启动窗口位置: X=${this.savedBounds.x}, Y=${this.savedBounds.y}`);
-		console.log(`启动窗口大小: Width=${this.savedBounds.width}, Height=${this.savedBounds.height}`);
+		this.debugLog(`启动窗口位置: X=${this.savedBounds.x}, Y=${this.savedBounds.y}`);
+		this.debugLog(`启动窗口大小: Width=${this.savedBounds.width}, Height=${this.savedBounds.height}`);
+	}
+
+	// 调试模式日志输出
+	debugLog(...args) {
+		if (configManager.isDebugMode()) {
+			console.log(...args);
+		}
 	}
 
 	launch(PluginLoaderClass) {
@@ -124,7 +132,7 @@ class FluxCore {
 			// 只有真正在调整大小时才输出日志
 			if (this.isResizing && this.window) {
 				const bounds = this.window.getBounds();
-				console.log(`窗口大小已调整: Width=${bounds.width}, Height=${bounds.height}`);
+				this.debugLog(`窗口大小已调整: Width=${bounds.width}, Height=${bounds.height}`);
 			}
 			this.isResizing = false;
 		});
@@ -212,6 +220,16 @@ class FluxCore {
 			return app.getVersion(); // 自动从 package.json 读取 version 字段
 		});
 
+		// 获取调试模式状态
+		ipcMain.handle("get-debug-mode", () => {
+			return configManager.isDebugMode();
+		});
+
+		// 设置调试模式状态
+		ipcMain.on("set-debug-mode", (e, enabled) => {
+			configManager.saveAppConfig({ debugMode: enabled });
+		});
+
 		// 手动窗口移动监听
 		let moveInterval = null;
 		let startWindowBounds = null;
@@ -254,7 +272,7 @@ class FluxCore {
 			// 输出移动后的窗口位置
 			if (this.window) {
 				const bounds = this.window.getBounds();
-				console.log(`窗口位置已移动: X=${bounds.x}, Y=${bounds.y}`);
+				this.debugLog(`窗口位置已移动: X=${bounds.x}, Y=${bounds.y}`);
 			}
 		});
 	}
@@ -271,8 +289,8 @@ class FluxCore {
 	saveWindowBounds() {
 		if (this.window) {
 			const bounds = this.window.getBounds();
-			console.log(`窗口位置已保存: X=${bounds.x}, Y=${bounds.y}`);
-			console.log(`窗口大小已保存: Width=${bounds.width}, Height=${bounds.height}`);
+			this.debugLog(`窗口位置已保存: X=${bounds.x}, Y=${bounds.y}`);
+			this.debugLog(`窗口大小已保存: Width=${bounds.width}, Height=${bounds.height}`);
 			configManager.saveBoundsConfig(bounds);
 		}
 	}

@@ -3,6 +3,34 @@ const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
 
+// 全局调试模式标志（需要从 ConfigManager 获取）
+let debugMode = false;
+
+/**
+ * 设置调试模式
+ */
+function setDebugMode(enabled) {
+	debugMode = enabled;
+}
+
+/**
+ * 调试日志输出 - 仅在调试模式下输出
+ */
+const debugLog = {
+	log: (...args) => {
+		if (debugMode) console.log(...args);
+	},
+	info: (...args) => {
+		if (debugMode) console.log(...args);
+	},
+	warn: (...args) => {
+		if (debugMode) console.warn(...args);
+	},
+	error: (...args) => {
+		if (debugMode) console.error(...args);
+	},
+};
+
 /**
  * 导出初始化函数
  */
@@ -39,5 +67,10 @@ module.exports = function () {
 	// 接管全局 console
 	Object.assign(console, log.functions);
 
-	return log;
+	// 导出模块
+	return {
+		log,
+		debugLog,
+		setDebugMode,
+	};
 };

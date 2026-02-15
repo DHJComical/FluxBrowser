@@ -72,11 +72,18 @@ async function init() {
 		// 添加到列表
 		shortcutList.appendChild(div);
 	});
+
+	// 加载调试模式状态
+	const debugMode = await ipcRenderer.invoke("get-debug-mode");
+	document.getElementById("debug-mode-checkbox").checked = debugMode;
 }
 
 // 保存快捷键配置
 saveBtn.onclick = () => {
 	ipcRenderer.send("save-shortcuts", tempKeyMap);
+	// 保存调试模式状态
+	const debugMode = document.getElementById("debug-mode-checkbox").checked;
+	ipcRenderer.send("set-debug-mode", debugMode);
 	window.close();
 };
 

@@ -1,4 +1,5 @@
 const { globalShortcut } = require("electron");
+const configManager = require("./ConfigManager");
 
 class PluginLoader {
 	constructor(core) {
@@ -28,7 +29,17 @@ class PluginLoader {
 		// 1. 先注销所有，防止冲突
 		globalShortcut.unregisterAll();
 
-		console.log("正在重载快捷键...");
+		// 调试日志辅助函数
+		const debugLog = {
+			log: (...args) => {
+				if (configManager.isDebugMode()) console.log(...args);
+			},
+			error: (...args) => {
+				if (configManager.isDebugMode()) console.error(...args);
+			},
+		};
+
+		debugLog.log("正在重载快捷键...");
 
 		// 2. 遍历所有插件，去 Core 里查配置
 		this.plugins.forEach((plugin) => {
@@ -50,9 +61,9 @@ class PluginLoader {
 					if (userKey) {
 						try {
 							globalShortcut.register(userKey, () => actionFunc(this.core));
-							console.log(`注册成功: [${actionId}] -> ${userKey}`);
+							debugLog.log(`注册成功: [${actionId}] -> ${userKey}`);
 						} catch (e) {
-							console.error(`注册失败: ${userKey}`, e);
+							debugLog.error(`注册失败: ${userKey}`, e);
 						}
 					}
 				}

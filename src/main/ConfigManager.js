@@ -15,6 +15,10 @@ const BOUNDS_CONFIG_PATH = path.join(
 	USER_DATA_PATH,
 	`${prefix}window-bounds.json`,
 );
+const APP_CONFIG_PATH = path.join(
+	USER_DATA_PATH,
+	`${prefix}app-config.json`,
+);
 
 // 默认配置
 const DEFAULT_KEY_CONFIG = {
@@ -35,10 +39,15 @@ const DEFAULT_BOUNDS_CONFIG = {
 	opacity: 1.0,
 };
 
+const DEFAULT_APP_CONFIG = {
+	debugMode: false,
+};
+
 class ConfigManager {
 	constructor() {
 		this.keyConfig = DEFAULT_KEY_CONFIG;
 		this.boundsConfig = DEFAULT_BOUNDS_CONFIG;
+		this.appConfig = DEFAULT_APP_CONFIG;
 		this.init();
 	}
 
@@ -49,6 +58,14 @@ class ConfigManager {
 			BOUNDS_CONFIG_PATH,
 			DEFAULT_BOUNDS_CONFIG,
 		);
+		this.appConfig = this._loadConfig(APP_CONFIG_PATH, DEFAULT_APP_CONFIG);
+	}
+
+	// 调试日志辅助函数
+	_debugLog(...args) {
+		if (this.appConfig.debugMode === true) {
+			console.log(...args);
+		}
 	}
 
 	// 内部私有方法：读取
@@ -60,7 +77,7 @@ class ConfigManager {
 				return { ...defaultConfig, ...savedConfig };
 			}
 		} catch (e) {
-			console.error(`加载配置文件 [${path.basename(filePath)}] 失败:`, e);
+			this._debugLog(`加载配置文件 [${path.basename(filePath)}] 失败:`, e);
 		}
 		return defaultConfig;
 	}
@@ -70,7 +87,7 @@ class ConfigManager {
 		try {
 			fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 		} catch (e) {
-			console.error(`保存配置文件 [${path.basename(filePath)}] 失败:`, e);
+			this._debugLog(`保存配置文件 [${path.basename(filePath)}] 失败:`, e);
 		}
 	}
 
@@ -96,6 +113,22 @@ class ConfigManager {
 	saveBoundsConfig(config) {
 		this.boundsConfig = { ...this.boundsConfig, ...config };
 		this._saveConfig(BOUNDS_CONFIG_PATH, this.boundsConfig);
+	}
+
+	// 获取应用配置
+	getAppConfig() {
+		return this.appConfig;
+	}
+
+	// 保存应用配置
+	saveAppConfig(config) {
+		this.appConfig = { ...this.appConfig, ...config };
+		this._saveConfig(APP_CONFIG_PATH, this.appConfig);
+	}
+
+	// 获取调试模式状态
+	isDebugMode() {
+		return this.appConfig.debugMode === true;
 	}
 }
 

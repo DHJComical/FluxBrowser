@@ -1,5 +1,6 @@
 const { autoUpdater } = require("electron-updater");
 const { ipcMain, app } = require("electron");
+const configManager = require("./ConfigManager");
 
 class Updater {
 	constructor(core) {
@@ -13,13 +14,23 @@ class Updater {
 		autoUpdater.autoDownload = true;
 		autoUpdater.autoInstallOnAppQuit = true;
 
+		// 调试日志辅助函数
+		const debugLog = {
+			log: (...args) => {
+				if (configManager.isDebugMode()) console.log(...args);
+			},
+			error: (...args) => {
+				if (configManager.isDebugMode()) console.error(...args);
+			},
+		};
+
 		// 监听事件并发送给前端
 		autoUpdater.on("checking-for-update", () => {
-			console.log("正在检查更新...");
+			debugLog.log("正在检查更新...");
 		});
 
 		autoUpdater.on("update-available", (info) => {
-			console.log("发现新版本:", info.version);
+			debugLog.log("发现新版本:", info.version);
 			this.core.broadcast("update-message", {
 				status: "available",
 				msg: `发现新版本 v${info.version} (当前: v${app.getVersion()})`,
@@ -27,7 +38,7 @@ class Updater {
 		});
 
 		autoUpdater.on("update-not-available", () => {
-			console.log("当前已是最新版本");
+			debugLog.log("当前已是最新版本");
 			this.core.broadcast("update-message", {
 				status: "not-available",
 				msg: "当前已是最新版本",
@@ -39,7 +50,7 @@ class Updater {
 		});
 
 		autoUpdater.on("update-downloaded", (info) => {
-			console.log("更新已下载完成:", info);
+			debugLog.log("更新已下载完成:", info);
 			this.core.sendToRenderer("update-message", {
 				status: "downloaded",
 				msg: "更新已下载完成，重启应用即可应用更新。",
@@ -47,19 +58,19 @@ class Updater {
 		});
 
 		autoUpdater.on("error", (err) => {
-			console.error("更新错误:", err);
+			debugLog.error("更新错误:", err);
 			this.core.broadcast("update-message", {
 				status: "error",
 				msg: "检查更新失败，请稍后再试",
 			});
 		});
 
-		// 接收前端的“检查更新”请求
+		// 接收前端的"检查更新"请求
 		ipcMain.on("check-for-updates", () => {
 			autoUpdater.checkForUpdatesAndNotify();
 		});
 
-		// 接收前端的“立即重启安装”请求
+		// 接收前端的"立即重启安装"请求
 		ipcMain.on("quit-and-install", () => {
 			autoUpdater.quitAndInstall();
 		});

@@ -13,13 +13,29 @@ const resizeHandles = document.querySelectorAll(".resize-handle");
 const dragRegion = document.querySelector(".drag-region");
 
 let isImmersionMode = false;
+let debugMode = false;
+
+// 调试模式日志
+const debugLog = {
+	info: (...args) => {
+		if (debugMode) log.info(...args);
+	},
+	error: (...args) => {
+		if (debugMode) log.error(...args);
+	},
+};
+
+(async () => {
+	// 获取调试模式状态
+	debugMode = await ipcRenderer.invoke("get-debug-mode");
+})();
 
 // 恢复 Session
 const lastUrl =
 	localStorage.getItem("flux-last-url") || "https://space.bilibili.com/563138217";
 webview.src = lastUrl;
 urlInput.value = lastUrl;
-log.info("已恢复上次访问的 URL:", lastUrl);
+debugLog.info("已恢复上次访问的 URL:", lastUrl);
 
 // 导航
 const navigate = () => {
@@ -64,18 +80,18 @@ ipcRenderer.on("toggle-immersion-ui", (e, isImmersion) => {
 ipcRenderer.on("web-go-back", () => {
 	if (webview.canGoBack()) {
 		webview.goBack();
-		log.info("执行网页后退操作");
+		debugLog.info("执行网页后退操作");
 	} else {
-		log.info("无法后退，已到达历史记录起点");
+		debugLog.info("无法后退，已到达历史记录起点");
 	}
 });
 
 ipcRenderer.on("web-go-forward", () => {
 	if (webview.canGoForward()) {
 		webview.goForward();
-		log.info("执行网页前进操作");
+		debugLog.info("执行网页前进操作");
 	} else {
-		log.info("无法前进，已到达历史记录终点");
+		debugLog.info("无法前进，已到达历史记录终点");
 	}
 });
 
@@ -117,10 +133,10 @@ window.onmouseup = (e) => {
 const restoreOpacity = async () => {
 	try {
 		const op = await ipcRenderer.invoke("get-opacity");
-		log.info("启动恢复透明度:", op);
+		debugLog.info("启动恢复透明度:", op);
 		webview.style.opacity = op;
 	} catch (err) {
-		log.error("恢复透明度失败:", err);
+		debugLog.error("恢复透明度失败:", err);
 	}
 };
 
@@ -137,7 +153,7 @@ webview.addEventListener("dom-ready", () => {
 
 // 执行 Webview JS 代码
 ipcRenderer.on("execute-webview-js", (e, code) => {
-	log.info("收到视频控制指令，执行代码:", code); // 调试用，显示具体执行的代码
+	debugLog.info("收到视频控制指令，执行代码:", code); // 调试用，显示具体执行的代码
 	if (webview) {
 		webview.executeJavaScript(code);
 	}
@@ -145,7 +161,7 @@ ipcRenderer.on("execute-webview-js", (e, code) => {
 
 // 捕获网页内的未处理错误
 window.onerror = (msg, url, line) => {
-	log.error(`[Renderer Error] ${msg} at ${url}:${line}`);
+	debugLog.error(`[Renderer Error] ${msg} at ${url}:${line}`);
 };
 
-log.info("主渲染进程已加载");
+debugLog.info("主渲染进程已加载");
