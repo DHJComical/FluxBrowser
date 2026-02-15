@@ -5,7 +5,18 @@ const configManager = require("./ConfigManager");
 class Updater {
 	constructor(core) {
 		this.core = core;
-		autoUpdater.logger = this.core.logger;
+		// 为 electron-updater 设置 logger，需要有 info 方法
+		autoUpdater.logger = {
+			info: (...args) => {
+				if (configManager.isDebugMode()) console.log("[Updater]", ...args);
+			},
+			warn: (...args) => {
+				if (configManager.isDebugMode()) console.warn("[Updater]", ...args);
+			},
+			error: (...args) => {
+				if (configManager.isDebugMode()) console.error("[Updater]", ...args);
+			},
+		};
 		this.setup();
 	}
 
