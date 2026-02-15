@@ -157,8 +157,8 @@ class FluxCore {
 			primaryDisplay.workAreaSize;
 
 		// 计算窗口居中位置
-		const windowWidth = 450;
-		const windowHeight = 650;
+		const windowWidth = 800;
+		const windowHeight = 600;
 		const x = Math.round((screenWidth - windowWidth) / 2);
 		const y = Math.round((screenHeight - windowHeight) / 2);
 
