@@ -169,6 +169,7 @@ class FluxCore {
 			height: windowHeight,
 			parent: this.window,
 			title: "FluxBrowser 设置",
+			icon: path.join(__dirname, "../../resources/image/FluxBrowser-icon.ico"),
 			backgroundColor: "#1e1e1e",
 			webPreferences: {
 				nodeIntegration: true,
