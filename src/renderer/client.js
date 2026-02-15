@@ -16,9 +16,10 @@ let isImmersionMode = false;
 
 // 恢复 Session
 const lastUrl =
-	localStorage.getItem("flux-last-url") || "https://www.bilibili.com";
+	localStorage.getItem("flux-last-url") || "https://space.bilibili.com/563138217";
 webview.src = lastUrl;
 urlInput.value = lastUrl;
+log.info("已恢复上次访问的 URL:", lastUrl);
 
 // 导航
 const navigate = () => {

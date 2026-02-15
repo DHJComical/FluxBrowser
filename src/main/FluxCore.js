@@ -23,6 +23,10 @@ class FluxCore {
 		this.pluginLoader = null;
 		this.savedBounds = configManager.getBoundsConfig();
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
+
+		// 输出启动时的窗口位置和大小到日志
+		console.log(`启动窗口位置: X=${this.savedBounds.x}, Y=${this.savedBounds.y}`);
+		console.log(`启动窗口大小: Width=${this.savedBounds.width}, Height=${this.savedBounds.height}`);
 	}
 
 	launch(PluginLoaderClass) {
@@ -45,7 +49,7 @@ class FluxCore {
 			transparent: true,
 			alwaysOnTop: false,
 			hasShadow: false,
-			icon: path.join(__dirname, "../../build/icon.png"),
+			icon: path.join(__dirname, "../../resources/image/FluxBrowser-icon.ico"),
 			webPreferences: {
 				nodeIntegration: true,
 				contextIsolation: false,
@@ -74,8 +78,10 @@ class FluxCore {
 	// 缩放处理逻辑
 	setupResizeHandler() {
 		let resizeInterval = null;
+		this.isResizing = false; // 标志：是否正在调整大小
 
 		ipcMain.on("start-resizing", (event, direction) => {
+			this.isResizing = true; // 标记为正在调整大小
 			if (resizeInterval) clearInterval(resizeInterval);
 
 			const startMousePos = screen.getCursorScreenPoint();
@@ -115,6 +121,12 @@ class FluxCore {
 				clearInterval(resizeInterval);
 				resizeInterval = null;
 			}
+			// 只有真正在调整大小时才输出日志
+			if (this.isResizing && this.window) {
+				const bounds = this.window.getBounds();
+				console.log(`窗口大小已调整: Width=${bounds.width}, Height=${bounds.height}`);
+			}
+			this.isResizing = false;
 		});
 	}
 
@@ -202,13 +214,14 @@ class FluxCore {
 
 		// 手动窗口移动监听
 		let moveInterval = null;
+		let startWindowBounds = null;
 		ipcMain.on("start-moving", (event) => {
 			if (moveInterval) clearInterval(moveInterval);
 			if (!this.window) return;
 
-			// 获取初始鼠标位置和初始窗口位置
+			// 获取初始鼠标位置和初始窗口 bounds（包含大小）
 			const startMousePos = screen.getCursorScreenPoint();
-			const startWindowPos = this.window.getPosition();
+			startWindowBounds = this.window.getBounds();
 
 			moveInterval = setInterval(() => {
 				if (!this.window || this.window.isDestroyed()) {
@@ -222,11 +235,13 @@ class FluxCore {
 				const deltaX = currentMousePos.x - startMousePos.x;
 				const deltaY = currentMousePos.y - startMousePos.y;
 
-				// 设置窗口新位置
-				this.window.setPosition(
-					startWindowPos[0] + deltaX,
-					startWindowPos[1] + deltaY,
-				);
+				// 使用 setBounds 设置窗口新位置，同时保持原有大小不变
+				this.window.setBounds({
+					x: startWindowBounds.x + deltaX,
+					y: startWindowBounds.y + deltaY,
+					width: startWindowBounds.width,
+					height: startWindowBounds.height,
+				});
 			}, 10); // 10ms 刷新率，保证拖拽丝滑
 		});
 
@@ -235,6 +250,11 @@ class FluxCore {
 			if (moveInterval) {
 				clearInterval(moveInterval);
 				moveInterval = null;
+			}
+			// 输出移动后的窗口位置
+			if (this.window) {
+				const bounds = this.window.getBounds();
+				console.log(`窗口位置已移动: X=${bounds.x}, Y=${bounds.y}`);
 			}
 		});
 	}
@@ -250,7 +270,10 @@ class FluxCore {
 	// 保存窗口尺寸和位置
 	saveWindowBounds() {
 		if (this.window) {
-			configManager.saveBoundsConfig(this.window.getBounds());
+			const bounds = this.window.getBounds();
+			console.log(`窗口位置已保存: X=${bounds.x}, Y=${bounds.y}`);
+			console.log(`窗口大小已保存: Width=${bounds.width}, Height=${bounds.height}`);
+			configManager.saveBoundsConfig(bounds);
 		}
 	}
 
