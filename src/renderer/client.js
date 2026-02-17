@@ -68,8 +68,9 @@ document.onclick = () => dropdownMenu.classList.add("hidden");
 settingsBtn.onclick = () => ipcRenderer.send("open-settings");
 exitBtn.onclick = () => ipcRenderer.send("app-exit");
 
-// 分辨率预设点击事件
+// 分辨率预设点击事件和子菜单展开
 document.addEventListener("click", (e) => {
+	// 处理分辨率预设点击
 	if (e.target && e.target.classList.contains("resolution-item")) {
 		e.stopPropagation();
 		const width = parseInt(e.target.getAttribute("data-width"));
@@ -77,11 +78,10 @@ document.addEventListener("click", (e) => {
 		debugLog.info(`应用分辨率预设: ${e.target.textContent} (${width} × ${height})`);
 		ipcRenderer.send("set-window-size", { width, height });
 		dropdownMenu.classList.add("hidden");
+		return;
 	}
-});
 
-// 子菜单展开
-document.addEventListener("click", (e) => {
+	// 处理子菜单展开/收起
 	if (e.target && e.target.classList.contains("menu-item")) {
 		const parent = e.target.closest(".menu-submenu");
 		if (parent) {
