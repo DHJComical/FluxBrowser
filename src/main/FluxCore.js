@@ -41,6 +41,38 @@ class FluxCore {
 		}
 	}
 
+	// 清理日志文件
+	clearLogFiles() {
+		try {
+			const { app } = require("electron");
+			const path = require("path");
+			const fs = require("fs");
+
+			const isDev = !app.isPackaged;
+			const prefix = isDev ? "dev-" : "";
+
+			// 获取日志文件路径
+			const logFolder = path.join(app.getPath("userData"), "logs");
+			const logPath = path.join(logFolder, "main.log");
+
+			// 删除日志文件
+			if (fs.existsSync(logPath)) {
+				fs.unlinkSync(logPath);
+				this.debugLog("日志文件已删除");
+			}
+
+			// 如果日志文件不存在，创建空的日志文件夹
+			if (!fs.existsSync(logFolder)) {
+				fs.mkdirSync(logFolder, { recursive: true });
+				this.debugLog("日志文件夹已创建");
+			}
+
+			this.debugLog("日志清理完成");
+		} catch (error) {
+			this.debugLog("清理日志文件时出错:", error.message);
+		}
+	}
+
 	launch(PluginLoaderClass) {
 		this.createWindow();
 		this.setupResizeHandler();
@@ -267,6 +299,54 @@ class FluxCore {
 			configManager.saveAppConfig({ debugMode: enabled });
 			// 更新 Logger 模块的调试模式状态
 			this.logger.setDebugMode(enabled);
+		});
+
+		// 清理缓存
+		ipcMain.on("clear-cache", (e, options) => {
+			this.debugLog("开始清理缓存...");
+			this.debugLog(`清理选项: ${JSON.stringify(options)}`);
+			
+			// 清理日志文件
+			if (options.clearLogs) {
+				this.debugLog("正在清理日志文件...");
+				this.clearLogFiles();
+			}
+			
+			// 重置配置文件
+			if (options.clearKeyConfig) {
+				this.debugLog("正在重置快捷键配置...");
+				configManager.saveKeyConfig(configManager.DEFAULT_KEY_CONFIG);
+			}
+			
+			if (options.clearWindowConfig) {
+				this.debugLog("正在重置窗口配置...");
+				configManager.saveBoundsConfig(configManager.DEFAULT_BOUNDS_CONFIG);
+			}
+			
+			if (options.clearAppConfig) {
+				this.debugLog("正在重置应用配置...");
+				configManager.saveAppConfig(configManager.DEFAULT_APP_CONFIG);
+			}
+			
+			if (options.clearResolutionPresets) {
+				this.debugLog("正在重置分辨率预设为默认值...");
+				configManager.saveResolutionPresets(configManager.DEFAULT_RESOLUTION_PRESETS);
+			}
+			
+			this.debugLog("缓存清理完成");
+			
+			// 发送清理完成消息
+			this.broadcast("cache-cleared", {
+				success: true,
+				message: "缓存清理完成"
+			});
+		});
+
+		// 重启应用
+		ipcMain.on("restart-after-save", () => {
+			this.debugLog("收到重启请求，准备重启应用...");
+			app.relaunch();
+			app.exit(0);
 		});
 
 		// 手动窗口移动监听

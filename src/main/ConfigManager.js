@@ -153,13 +153,25 @@ this._debugLog(`获取分辨率预设，当前共有 ${this.resolutionPresets.le
 return this.resolutionPresets;
 }
 
-// 保存分辨率预设
-saveResolutionPresets(presets) {
-this._debugLog(`保存分辨率预设，共有 ${presets.length} 个预设`);
-this.resolutionPresets = presets;
-this._saveConfig(RESOLUTION_PRESET_PATH, this.resolutionPresets);
-}
+	// 保存分辨率预设
+	saveResolutionPresets(presets) {
+		// 确保presets参数有效
+		if (!presets || !Array.isArray(presets)) {
+			this._debugLog('保存分辨率预设时接收到无效参数，使用默认值');
+			presets = DEFAULT_RESOLUTION_PRESETS;
+		}
+		
+		this._debugLog(`保存分辨率预设，共有 ${presets.length} 个预设`);
+		this.resolutionPresets = presets;
+		this._saveConfig(RESOLUTION_PRESET_PATH, this.resolutionPresets);
+	}
 }
 
 // 导出单例
 module.exports = new ConfigManager();
+
+// 导出默认配置供其他模块使用
+module.exports.DEFAULT_KEY_CONFIG = DEFAULT_KEY_CONFIG;
+module.exports.DEFAULT_BOUNDS_CONFIG = DEFAULT_BOUNDS_CONFIG;
+module.exports.DEFAULT_APP_CONFIG = DEFAULT_APP_CONFIG;
+module.exports.DEFAULT_RESOLUTION_PRESETS = DEFAULT_RESOLUTION_PRESETS;

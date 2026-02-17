@@ -352,6 +352,46 @@
             padding: 10px 30px;
         }
 
+        /* 缓存清理相关样式 */
+        .cache-warning {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255, 165, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .warning-icon {
+            font-size: 18px;
+            color: #ff9900;
+        }
+
+        .warning-text {
+            font-size: 13px;
+            color: #ff9900;
+            font-weight: 500;
+        }
+
+        .auto-restart-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(0, 200, 0, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(0, 200, 0, 0.2);
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #00cc66;
+        }
+
+        .auto-restart-info i {
+            font-size: 16px;
+        }
+
         /* 底部内边距 */
         .settings-content-bottom {
             padding-bottom: 80px;
@@ -385,6 +425,11 @@
             <div class="settings-tab" data-panel="resolution">
                 <i class="material-icons">aspect_ratio</i>
                 分辨率预设
+            </div>
+            
+            <div class="settings-tab" data-panel="cache">
+                <i class="material-icons">memory</i>
+                缓存清理
             </div>
         </div>
 
@@ -496,6 +541,78 @@
                             </div>
                         </div>
                         <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 缓存清理面板 -->
+            <div class="settings-panel" id="panel-cache">
+                <div class="panel-title">缓存清理</div>
+                <div class="panel-subtitle">清理应用缓存和日志文件以释放空间和解决潜在问题</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">delete_forever</i>
+                        清理缓存文件
+                    </div>
+                    <div class="cache-section">
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">日志文件</span>
+                                <span class="toggle-desc">清理所有日志文件，包括主日志和调试日志</span>
+                            </div>
+                            <div class="toggle-switch" id="clear-logs-toggle"></div>
+                        </div>
+                        
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">快捷键配置</span>
+                                <span class="toggle-desc">重置所有快捷键配置为默认值</span>
+                            </div>
+                            <div class="toggle-switch" id="clear-key-config-toggle"></div>
+                        </div>
+                        
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">窗口配置</span>
+                                <span class="toggle-desc">重置窗口位置、大小和透明度为默认值</span>
+                            </div>
+                            <div class="toggle-switch" id="clear-window-config-toggle"></div>
+                        </div>
+                        
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">应用配置</span>
+                                <span class="toggle-desc">重置应用设置，包括调试模式</span>
+                            </div>
+                            <div class="toggle-switch" id="clear-app-config-toggle"></div>
+                        </div>
+                        
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">分辨率预设</span>
+                                <span class="toggle-desc">重置所有分辨率预设为默认值</span>
+                            </div>
+                            <div class="toggle-switch" id="clear-resolution-presets-toggle"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">warning</i>
+                        操作确认
+                    </div>
+                    <div class="cache-actions">
+                        <div class="cache-warning">
+                            <span class="warning-icon">⚠️</span>
+                            <span class="warning-text">注意：清理配置文件后需要重启应用才能生效</span>
+                        </div>
+                        <div class="auto-restart-info">
+                            <i class="material-icons">autorenew</i>
+                            <span>应用将在保存后自动重启</span>
+                        </div>
+                        <button id="cache-clear-btn" class="btn btn-success">开始清理</button>
                     </div>
                 </div>
             </div>
