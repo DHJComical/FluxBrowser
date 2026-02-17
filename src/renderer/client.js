@@ -75,7 +75,9 @@ document.addEventListener("click", (e) => {
 		e.stopPropagation();
 		const width = parseInt(e.target.getAttribute("data-width"));
 		const height = parseInt(e.target.getAttribute("data-height"));
-		debugLog.info(`应用分辨率预设: ${e.target.textContent} (${width} × ${height})`);
+		debugLog.info(
+			`应用分辨率预设: ${e.target.textContent} (${width} × ${height})`,
+		);
 		ipcRenderer.send("set-window-size", { width, height });
 		dropdownMenu.classList.add("hidden");
 		return;
@@ -174,10 +176,10 @@ const loadResolutionPresets = async () => {
 		debugLog.info("开始加载分辨率预设");
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
 		debugLog.info(`获取到 ${presets ? presets.length : 0} 个分辨率预设`);
-		
+
 		resolutionSubmenu.innerHTML = "";
 		if (presets && Array.isArray(presets)) {
-			presets.forEach(preset => {
+			presets.forEach((preset) => {
 				const div = document.createElement("div");
 				div.className = "menu-item resolution-item";
 				div.textContent = preset.name;

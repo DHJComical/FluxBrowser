@@ -13,9 +13,13 @@ const versionNumber = document.getElementById("version-number");
 // 缓存清理相关元素
 const clearLogsToggle = document.getElementById("clear-logs-toggle");
 const clearKeyConfigToggle = document.getElementById("clear-key-config-toggle");
-const clearWindowConfigToggle = document.getElementById("clear-window-config-toggle");
+const clearWindowConfigToggle = document.getElementById(
+	"clear-window-config-toggle",
+);
 const clearAppConfigToggle = document.getElementById("clear-app-config-toggle");
-const clearResolutionPresetsToggle = document.getElementById("clear-resolution-presets-toggle");
+const clearResolutionPresetsToggle = document.getElementById(
+	"clear-resolution-presets-toggle",
+);
 const cacheClearBtn = document.getElementById("cache-clear-btn");
 
 // 分辨率预设相关元素
@@ -36,7 +40,7 @@ const debugLog = {
 	},
 	warn: (...args) => {
 		console.warn(...args);
-	}
+	},
 };
 
 // 临时存储数据
@@ -48,24 +52,24 @@ let lockedAspectRatio = null;
 
 // 缓存清理相关状态
 let cacheClearOptions = {
-    clearLogs: false,
-    clearKeyConfig: false,
-    clearWindowConfig: false,
-    clearAppConfig: false,
-    clearResolutionPresets: false
+	clearLogs: false,
+	clearKeyConfig: false,
+	clearWindowConfig: false,
+	clearAppConfig: false,
+	clearResolutionPresets: false,
 };
 
 // 快捷键标签映射
 const labelMap = {
-    BossKey: "老板键 (隐藏窗口)",
-    ImmersionMode: "沉浸模式",
-    "Video-Pause": "视频 暂停/播放",
-    "Video-Forward": "视频 快进",
-    "Video-Backward": "视频 快退",
-    "Opacity-Up": "透明度 +",
-    "Opacity-Down": "透明度 -",
-    GoBack: "网页后退",
-    GoForward: "网页前进",
+	BossKey: "老板键 (隐藏窗口)",
+	ImmersionMode: "沉浸模式",
+	"Video-Pause": "视频 暂停/播放",
+	"Video-Forward": "视频 快进",
+	"Video-Backward": "视频 快退",
+	"Opacity-Up": "透明度 +",
+	"Opacity-Down": "透明度 -",
+	GoBack: "网页后退",
+	GoForward: "网页前进",
 };
 
 // 初始化
@@ -128,7 +132,9 @@ function bindButtonEvents() {
 			ipcRenderer.send("check-for-updates");
 			updateStatus.innerText = "正在检查更新...";
 			checkUpdateBtn.disabled = true;
-			const progressContainer = document.getElementById("update-progress-container");
+			const progressContainer = document.getElementById(
+				"update-progress-container",
+			);
 			if (progressContainer) {
 				progressContainer.classList.add("active");
 			}
@@ -192,7 +198,14 @@ function renderShortcuts() {
 				k = "Space";
 			} else if (k.startsWith("Arrow")) {
 				k = k.replace("Arrow", "");
-			} else if (k === "Home" || k === "End" || k === "PageUp" || k === "PageDown" || k === "Insert" || k === "Delete") {
+			} else if (
+				k === "Home" ||
+				k === "End" ||
+				k === "PageUp" ||
+				k === "PageDown" ||
+				k === "Insert" ||
+				k === "Delete"
+			) {
 				// 这些按键直接显示英文
 			} else {
 				k = k.toUpperCase();
@@ -269,7 +282,9 @@ function renderResolutionPresets() {
 		const deleteBtn = div.querySelector(".delete-btn");
 
 		useBtn.addEventListener("click", () => {
-			debugLog.info(`应用分辨率预设: ${preset.name} (${preset.width} × ${preset.height})`);
+			debugLog.info(
+				`应用分辨率预设: ${preset.name} (${preset.width} × ${preset.height})`,
+			);
 			ipcRenderer.send("set-window-size", {
 				width: preset.width,
 				height: preset.height,
@@ -294,7 +309,8 @@ function bindResolutionEvents() {
 		e.preventDefault();
 		if (presetWidth.value && presetHeight.value) {
 			aspectLocked = !aspectLocked;
-			lockedAspectRatio = parseFloat(presetWidth.value) / parseFloat(presetHeight.value);
+			lockedAspectRatio =
+				parseFloat(presetWidth.value) / parseFloat(presetHeight.value);
 			updateAspectLockButton();
 		}
 	});
@@ -405,7 +421,7 @@ ipcRenderer.on("update-message", (e, data) => {
 ipcRenderer.on("cache-cleared", async (e, data) => {
 	if (data.success) {
 		alert("缓存清理完成！");
-		
+
 		// 重新加载被清理的配置数据
 		try {
 			// 如果清理了快捷键配置，重新加载快捷键
@@ -414,14 +430,14 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 				tempKeyMap = { ...map };
 				renderShortcuts();
 			}
-			
+
 			// 如果清理了应用配置，重新加载调试模式状态
 			if (cacheClearOptions.clearAppConfig) {
 				const debugMode = await ipcRenderer.invoke("get-debug-mode");
 				debugModeState = debugMode;
 				updateDebugToggle();
 			}
-			
+
 			// 如果清理了分辨率预设，重新加载分辨率预设数据
 			if (cacheClearOptions.clearResolutionPresets) {
 				const presets = await ipcRenderer.invoke("get-resolution-presets");
@@ -431,12 +447,14 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 		} catch (error) {
 			console.error("重新加载配置数据失败:", error);
 		}
-		
+
 		// 重置清理选项
-		Object.keys(cacheClearOptions).forEach(key => cacheClearOptions[key] = false);
+		Object.keys(cacheClearOptions).forEach(
+			(key) => (cacheClearOptions[key] = false),
+		);
 		bindCacheToggleEvents();
 		// 重置UI状态
-		document.querySelectorAll('[id$="-toggle"]').forEach(toggle => {
+		document.querySelectorAll('[id$="-toggle"]').forEach((toggle) => {
 			toggle.classList.remove("active");
 		});
 		// 重置按钮状态
@@ -457,18 +475,19 @@ function handleSaveWithRestart() {
 	try {
 		// 保存快捷键配置
 		ipcRenderer.send("save-shortcuts", tempKeyMap);
-		
+
 		// 保存调试模式状态
 		ipcRenderer.send("set-debug-mode", debugModeState);
-		
+
 		// 保存分辨率预设
 		ipcRenderer.send("save-resolution-presets", tempResolutionPresets);
 
 		// 检查是否需要重启
-		const needsRestart = cacheClearOptions.clearKeyConfig ||
-						   cacheClearOptions.clearWindowConfig ||
-						   cacheClearOptions.clearAppConfig ||
-						   cacheClearOptions.clearResolutionPresets;
+		const needsRestart =
+			cacheClearOptions.clearKeyConfig ||
+			cacheClearOptions.clearWindowConfig ||
+			cacheClearOptions.clearAppConfig ||
+			cacheClearOptions.clearResolutionPresets;
 
 		if (needsRestart) {
 			// 需要重启，发送重启命令
@@ -505,8 +524,12 @@ function bindCacheToggleEvents() {
 	// 窗口配置清理开关
 	if (clearWindowConfigToggle) {
 		clearWindowConfigToggle.addEventListener("click", () => {
-			cacheClearOptions.clearWindowConfig = !cacheClearOptions.clearWindowConfig;
-			updateToggleState(clearWindowConfigToggle, cacheClearOptions.clearWindowConfig);
+			cacheClearOptions.clearWindowConfig =
+				!cacheClearOptions.clearWindowConfig;
+			updateToggleState(
+				clearWindowConfigToggle,
+				cacheClearOptions.clearWindowConfig,
+			);
 		});
 	}
 
@@ -521,8 +544,12 @@ function bindCacheToggleEvents() {
 	// 分辨率预设清理开关
 	if (clearResolutionPresetsToggle) {
 		clearResolutionPresetsToggle.addEventListener("click", () => {
-			cacheClearOptions.clearResolutionPresets = !cacheClearOptions.clearResolutionPresets;
-			updateToggleState(clearResolutionPresetsToggle, cacheClearOptions.clearResolutionPresets);
+			cacheClearOptions.clearResolutionPresets =
+				!cacheClearOptions.clearResolutionPresets;
+			updateToggleState(
+				clearResolutionPresetsToggle,
+				cacheClearOptions.clearResolutionPresets,
+			);
 		});
 	}
 
@@ -547,7 +574,9 @@ function updateToggleState(toggleElement, isActive) {
 async function performCacheClear() {
 	try {
 		// 检查是否有清理选项被选中
-		const hasAnyOption = Object.values(cacheClearOptions).some(option => option);
+		const hasAnyOption = Object.values(cacheClearOptions).some(
+			(option) => option,
+		);
 		if (!hasAnyOption) {
 			alert("请至少选择一个要清理的项目");
 			return;
@@ -564,7 +593,6 @@ async function performCacheClear() {
 		// 禁用按钮防止重复点击
 		cacheClearBtn.disabled = true;
 		cacheClearBtn.textContent = "清理中...";
-
 	} catch (error) {
 		console.error("执行缓存清理失败:", error);
 		alert("清理过程中出现错误，请重试");

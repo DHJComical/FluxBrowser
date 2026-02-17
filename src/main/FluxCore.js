@@ -219,32 +219,32 @@ class FluxCore {
 
 	// 设置 IPC 通信
 	setupIpc() {
-        // 打开设置窗口
-        ipcMain.on("open-settings", () => this.openSettingsWindow());
+		// 打开设置窗口
+		ipcMain.on("open-settings", () => this.openSettingsWindow());
 
-        // 获取快捷键配置
-        ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
+		// 获取快捷键配置
+		ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
 
-        // 保存快捷键配置
-        ipcMain.on("save-shortcuts", (e, map) => {
-            configManager.saveKeyConfig(map);
-            this.pluginLoader.reloadShortcuts();
-        });
+		// 保存快捷键配置
+		ipcMain.on("save-shortcuts", (e, map) => {
+			configManager.saveKeyConfig(map);
+			this.pluginLoader.reloadShortcuts();
+		});
 
-        // 获取分辨率预设
-        ipcMain.handle("get-resolution-presets", () => {
-            const presets = configManager.getResolutionPresets();
-            this.debugLog(`IPC: 返回分辨率预设，数量: ${presets.length}`);
-            return presets;
-        });
+		// 获取分辨率预设
+		ipcMain.handle("get-resolution-presets", () => {
+			const presets = configManager.getResolutionPresets();
+			this.debugLog(`IPC: 返回分辨率预设，数量: ${presets.length}`);
+			return presets;
+		});
 
-        // 保存分辨率预设
-        ipcMain.on("save-resolution-presets", (e, presets) => {
-            this.debugLog(`IPC: 收到保存分辨率预设请求，数量: ${presets.length}`);
-            configManager.saveResolutionPresets(presets);
-            // 通知所有窗口更新分辨率预设
-            this.broadcast("resolution-presets-updated");
-        });
+		// 保存分辨率预设
+		ipcMain.on("save-resolution-presets", (e, presets) => {
+			this.debugLog(`IPC: 收到保存分辨率预设请求，数量: ${presets.length}`);
+			configManager.saveResolutionPresets(presets);
+			// 通知所有窗口更新分辨率预设
+			this.broadcast("resolution-presets-updated");
+		});
 
 		// 调整透明度
 		ipcMain.on("suspend-shortcuts", () => globalShortcut.unregisterAll());
@@ -305,40 +305,42 @@ class FluxCore {
 		ipcMain.on("clear-cache", (e, options) => {
 			this.debugLog("开始清理缓存...");
 			this.debugLog(`清理选项: ${JSON.stringify(options)}`);
-			
+
 			// 清理日志文件
 			if (options.clearLogs) {
 				this.debugLog("正在清理日志文件...");
 				this.clearLogFiles();
 			}
-			
+
 			// 重置配置文件
 			if (options.clearKeyConfig) {
 				this.debugLog("正在重置快捷键配置...");
 				configManager.saveKeyConfig(configManager.DEFAULT_KEY_CONFIG);
 			}
-			
+
 			if (options.clearWindowConfig) {
 				this.debugLog("正在重置窗口配置...");
 				configManager.saveBoundsConfig(configManager.DEFAULT_BOUNDS_CONFIG);
 			}
-			
+
 			if (options.clearAppConfig) {
 				this.debugLog("正在重置应用配置...");
 				configManager.saveAppConfig(configManager.DEFAULT_APP_CONFIG);
 			}
-			
+
 			if (options.clearResolutionPresets) {
 				this.debugLog("正在重置分辨率预设为默认值...");
-				configManager.saveResolutionPresets(configManager.DEFAULT_RESOLUTION_PRESETS);
+				configManager.saveResolutionPresets(
+					configManager.DEFAULT_RESOLUTION_PRESETS,
+				);
 			}
-			
+
 			this.debugLog("缓存清理完成");
-			
+
 			// 发送清理完成消息
 			this.broadcast("cache-cleared", {
 				success: true,
-				message: "缓存清理完成"
+				message: "缓存清理完成",
 			});
 		});
 
