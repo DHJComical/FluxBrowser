@@ -187,17 +187,32 @@ class FluxCore {
 
 	// 设置 IPC 通信
 	setupIpc() {
-		// 打开设置窗口
-		ipcMain.on("open-settings", () => this.openSettingsWindow());
+        // 打开设置窗口
+        ipcMain.on("open-settings", () => this.openSettingsWindow());
 
-		// 获取快捷键配置
-		ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
+        // 获取快捷键配置
+        ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
 
-		// 保存快捷键配置
-		ipcMain.on("save-shortcuts", (e, map) => {
-			configManager.saveKeyConfig(map);
-			this.pluginLoader.reloadShortcuts();
-		});
+        // 保存快捷键配置
+        ipcMain.on("save-shortcuts", (e, map) => {
+            configManager.saveKeyConfig(map);
+            this.pluginLoader.reloadShortcuts();
+        });
+
+        // 获取分辨率预设
+        ipcMain.handle("get-resolution-presets", () => {
+            const presets = configManager.getResolutionPresets();
+            this.debugLog(`IPC: 返回分辨率预设，数量: ${presets.length}`);
+            return presets;
+        });
+
+        // 保存分辨率预设
+        ipcMain.on("save-resolution-presets", (e, presets) => {
+            this.debugLog(`IPC: 收到保存分辨率预设请求，数量: ${presets.length}`);
+            configManager.saveResolutionPresets(presets);
+            // 通知所有窗口更新分辨率预设
+            this.broadcast("resolution-presets-updated");
+        });
 
 		// 调整透明度
 		ipcMain.on("suspend-shortcuts", () => globalShortcut.unregisterAll());

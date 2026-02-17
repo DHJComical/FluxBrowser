@@ -381,6 +381,11 @@
                 <i class="material-icons">bug_report</i>
                 调试模式
             </div>
+            
+            <div class="settings-tab" data-panel="resolution">
+                <i class="material-icons">aspect_ratio</i>
+                分辨率预设
+            </div>
         </div>
 
         <!-- 右侧内容区 -->
@@ -445,6 +450,52 @@
                             <span class="toggle-desc">在控制台输出窗口位置和大小相关的调试信息</span>
                         </div>
                         <div class="toggle-switch" id="debug-mode-toggle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分辨率预设面板 -->
+            <div class="settings-panel" id="panel-resolution">
+                <div class="panel-title">分辨率预设</div>
+                <div class="panel-subtitle">管理窗口分辨率预设，快速切换常用分辨率</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">list</i>
+                        当前预设
+                    </div>
+                    <div id="resolution-list"></div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">add_circle</i>
+                        添加新预设
+                    </div>
+                    <div class="resolution-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>名称</label>
+                                <input type="text" id="preset-name" placeholder="例如: 16:9 720P" maxlength="30">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>宽度 (px)</label>
+                                <input type="number" id="preset-width" placeholder="例如: 1280" min="200" max="4000">
+                            </div>
+                            <div class="form-group">
+                                <label>高度 (px)</label>
+                                <input type="number" id="preset-height" placeholder="例如: 720" min="150" max="3000">
+                            </div>
+                            <div class="form-group aspect-ratio-group">
+                                <label>纵横比锁定</label>
+                                <button id="aspect-ratio-lock" class="aspect-lock-btn" title="锁定纵横比，修改一边会自动计算另一边">
+                                    <i class="material-icons">lock_open</i>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
                     </div>
                 </div>
             </div>

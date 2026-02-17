@@ -11,6 +11,7 @@ const settingsBtn = document.getElementById("settings-btn");
 const exitBtn = document.getElementById("exit-btn");
 const resizeHandles = document.querySelectorAll(".resize-handle");
 const dragRegion = document.querySelector(".drag-region");
+const resolutionSubmenu = document.getElementById("resolution-submenu");
 
 let isImmersionMode = false;
 let debugMode = false;
@@ -68,14 +69,29 @@ settingsBtn.onclick = () => ipcRenderer.send("open-settings");
 exitBtn.onclick = () => ipcRenderer.send("app-exit");
 
 // 分辨率预设点击事件
-document.querySelectorAll(".resolution-item").forEach((item) => {
-	item.addEventListener("click", (e) => {
+document.addEventListener("click", (e) => {
+	if (e.target && e.target.classList.contains("resolution-item")) {
 		e.stopPropagation();
-		const width = parseInt(item.getAttribute("data-width"));
-		const height = parseInt(item.getAttribute("data-height"));
+		const width = parseInt(e.target.getAttribute("data-width"));
+		const height = parseInt(e.target.getAttribute("data-height"));
+		debugLog.info(`应用分辨率预设: ${e.target.textContent} (${width} × ${height})`);
 		ipcRenderer.send("set-window-size", { width, height });
 		dropdownMenu.classList.add("hidden");
-	});
+	}
+});
+
+// 子菜单展开
+document.addEventListener("click", (e) => {
+	if (e.target && e.target.classList.contains("menu-item")) {
+		const parent = e.target.closest(".menu-submenu");
+		if (parent) {
+			e.stopPropagation();
+			const submenu = parent.querySelector(".submenu-content");
+			if (submenu) {
+				submenu.classList.toggle("hidden");
+			}
+		}
+	}
 });
 
 // 穿透与沉浸
@@ -152,7 +168,37 @@ const restoreOpacity = async () => {
 	}
 };
 
+// 加载分辨率预设
+const loadResolutionPresets = async () => {
+	try {
+		debugLog.info("开始加载分辨率预设");
+		const presets = await ipcRenderer.invoke("get-resolution-presets");
+		debugLog.info(`获取到 ${presets ? presets.length : 0} 个分辨率预设`);
+		
+		resolutionSubmenu.innerHTML = "";
+		if (presets && Array.isArray(presets)) {
+			presets.forEach(preset => {
+				const div = document.createElement("div");
+				div.className = "menu-item resolution-item";
+				div.textContent = preset.name;
+				div.setAttribute("data-width", preset.width);
+				div.setAttribute("data-height", preset.height);
+				resolutionSubmenu.appendChild(div);
+			});
+			debugLog.info(`已渲染 ${presets.length} 个分辨率预设到下拉菜单`);
+		} else {
+			debugLog.warn("分辨率预设数据无效或为空");
+		}
+	} catch (err) {
+		debugLog.error("加载分辨率预设失败:", err);
+	}
+};
+
+// 监听分辨率预设更新
+ipcRenderer.on("resolution-presets-updated", loadResolutionPresets);
+
 restoreOpacity();
+loadResolutionPresets();
 
 ipcRenderer.on("set-opacity", (e, op) => (webview.style.opacity = op));
 
