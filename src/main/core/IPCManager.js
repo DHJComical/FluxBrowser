@@ -198,10 +198,10 @@ class IPCManager {
 				let newHeight = startBounds.height;
 
 				if (direction === "right" || direction === "both") {
-					newWidth = Math.max(300, startBounds.width + deltaX);
+					newWidth = Math.max(40, startBounds.width + deltaX); // 最小宽度40
 				}
 				if (direction === "bottom" || direction === "both") {
-					newHeight = Math.max(200, startBounds.height + deltaY);
+					newHeight = Math.max(80, startBounds.height + deltaY); // 最小高度80（40px标题栏 + 40px Webview区域）
 				}
 
 				mainWindow.setBounds({

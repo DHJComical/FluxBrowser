@@ -19,6 +19,8 @@ class WindowManager {
 			y: y,
 			width: width || 800,
 			height: height || 600,
+			minWidth: 40, // 最小宽度（整个窗口）
+			minHeight: 80, // 最小高度：40px标题栏 + 40px Webview区域
 			frame: false,
 			transparent: true,
 			alwaysOnTop: false,
