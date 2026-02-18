@@ -1,4 +1,4 @@
-const { BrowserWindow, screen } = require("electron");
+const { BrowserWindow, screen, app } = require("electron");
 const path = require("path");
 const configManager = require("../ConfigManager");
 
@@ -14,6 +14,10 @@ class WindowManager {
 	createMainWindow() {
 		let { x, y, width, height } = this.savedBounds;
 
+		// 获取应用根目录
+		const appPath = app.getAppPath();
+		const iconPath = path.join(appPath, "resources/image/FluxBrowser-icon.ico");
+
 		this.mainWindow = new BrowserWindow({
 			x: x,
 			y: y,
@@ -25,7 +29,7 @@ class WindowManager {
 			transparent: true,
 			alwaysOnTop: false,
 			hasShadow: false,
-			icon: path.join(__dirname, "../../resources/image/FluxBrowser-icon.ico"),
+			icon: iconPath,
 			webPreferences: {
 				nodeIntegration: true,
 				contextIsolation: false,
@@ -60,6 +64,10 @@ class WindowManager {
 			return this.settingsWindow;
 		}
 
+		// 获取应用根目录
+		const appPath = app.getAppPath();
+		const iconPath = path.join(appPath, "resources/image/FluxBrowser-icon.ico");
+
 		// 获取屏幕尺寸
 		const primaryDisplay = screen.getPrimaryDisplay();
 		const { width: screenWidth, height: screenHeight } =
@@ -80,7 +88,7 @@ class WindowManager {
 			minHeight: 500,
 			parent: parentWindow,
 			title: "FluxBrowser 设置",
-			icon: path.join(__dirname, "../../resources/image/FluxBrowser-icon.ico"),
+			icon: iconPath,
 			backgroundColor: "#1e1e1e",
 			webPreferences: {
 				nodeIntegration: true,
