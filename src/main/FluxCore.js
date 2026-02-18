@@ -199,7 +199,7 @@ class FluxCore {
 			y: y,
 			width: windowWidth,
 			height: windowHeight,
-			minWidth: 700,  // 最小宽度
+			minWidth: 700, // 最小宽度
 			minHeight: 500, // 最小高度
 			parent: this.window,
 			title: "FluxBrowser 设置",
