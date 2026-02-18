@@ -68,7 +68,7 @@ document.onclick = () => dropdownMenu.classList.add("hidden");
 settingsBtn.onclick = () => ipcRenderer.send("open-settings");
 exitBtn.onclick = () => ipcRenderer.send("app-exit");
 
-// 分辨率预设点击事件和子菜单展开
+// 分辨率预设点击事件
 document.addEventListener("click", (e) => {
 	// 处理分辨率预设点击
 	if (e.target && e.target.classList.contains("resolution-item")) {
@@ -81,27 +81,6 @@ document.addEventListener("click", (e) => {
 		ipcRenderer.send("set-window-size", { width, height });
 		dropdownMenu.classList.add("hidden");
 		return;
-	}
-
-	// 处理子菜单展开/收起 - 只处理父级菜单项，不处理子菜单项
-	const menuItem = e.target.closest(".menu-item");
-	if (menuItem) {
-		const parentSubmenu = menuItem.closest(".menu-submenu");
-		if (parentSubmenu && menuItem.parentElement === parentSubmenu) {
-			// 这是子菜单的父级菜单项
-			e.stopPropagation();
-			const submenu = parentSubmenu.querySelector(".submenu-content");
-			if (submenu) {
-				// 切换子菜单显示
-				submenu.classList.toggle("hidden");
-				// 隐藏其他子菜单
-				document.querySelectorAll(".submenu-content").forEach(otherSubmenu => {
-					if (otherSubmenu !== submenu && !otherSubmenu.classList.contains("hidden")) {
-						otherSubmenu.classList.add("hidden");
-					}
-				});
-			}
-		}
 	}
 });
 
