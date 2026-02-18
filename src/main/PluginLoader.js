@@ -45,7 +45,7 @@ class PluginLoader {
 	// 旧版快捷键重载逻辑（兼容性）
 	_legacyReloadShortcuts() {
 		const { globalShortcut } = require("electron");
-		
+
 		// 1. 先注销所有，防止冲突
 		globalShortcut.unregisterAll();
 
@@ -87,18 +87,18 @@ class PluginLoader {
 
 	// 获取特定插件
 	getPlugin(name) {
-		return this.plugins.find(p => p.name === name);
+		return this.plugins.find((p) => p.name === name);
 	}
 
 	// 添加新插件（动态加载）
 	addPlugin(pluginModule) {
 		if (pluginModule) {
 			this.plugins.push(pluginModule);
-			
+
 			// 初始化新插件
 			if (pluginModule.initialize) pluginModule.initialize(this.core);
 			else if (pluginModule.init) pluginModule.init(this.core);
-			
+
 			return true;
 		}
 		return false;
@@ -106,7 +106,7 @@ class PluginLoader {
 
 	// 移除插件
 	removePlugin(name) {
-		const index = this.plugins.findIndex(p => p.name === name);
+		const index = this.plugins.findIndex((p) => p.name === name);
 		if (index !== -1) {
 			this.plugins.splice(index, 1);
 			return true;
@@ -117,7 +117,7 @@ class PluginLoader {
 	// 获取所有插件的快捷键配置
 	getAllPluginShortcuts() {
 		const shortcuts = {};
-		this.plugins.forEach(plugin => {
+		this.plugins.forEach((plugin) => {
 			if (plugin.shortcuts) {
 				Object.assign(shortcuts, plugin.shortcuts);
 			}
@@ -128,17 +128,17 @@ class PluginLoader {
 	// 验证插件结构
 	validatePlugin(plugin) {
 		if (!plugin) return false;
-		
+
 		// 插件必须有name属性
-		if (!plugin.name || typeof plugin.name !== 'string') {
+		if (!plugin.name || typeof plugin.name !== "string") {
 			return false;
 		}
-		
+
 		// 插件应该有shortcuts属性（可选，但推荐）
-		if (plugin.shortcuts && typeof plugin.shortcuts !== 'object') {
+		if (plugin.shortcuts && typeof plugin.shortcuts !== "object") {
 			return false;
 		}
-		
+
 		return true;
 	}
 }

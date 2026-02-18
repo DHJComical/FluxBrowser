@@ -52,24 +52,33 @@ const DEV_CONFIG_PREFIX = "dev-";
 // 窗口相关常量
 const WINDOW_CONSTANTS = {
 	TITLE_BAR_HEIGHT: 40, // 标题栏高度（像素）
-	MIN_WIDTH: 300,       // 最小宽度
-	MIN_HEIGHT: 200,      // 最小高度
-	MAX_WIDTH: 4000,      // 最大宽度
-	MAX_HEIGHT: 3000,     // 最大高度
-	DEFAULT_WIDTH: 800,   // 默认宽度
-	DEFAULT_HEIGHT: 600,  // 默认高度
+	MIN_WIDTH: 300, // 最小宽度
+	MIN_HEIGHT: 200, // 最小高度
+	MAX_WIDTH: 4000, // 最大宽度
+	MAX_HEIGHT: 3000, // 最大高度
+	DEFAULT_WIDTH: 800, // 默认宽度
+	DEFAULT_HEIGHT: 600, // 默认高度
 };
 
 // 透明度相关常量
 const OPACITY_CONSTANTS = {
-	MIN: 0.2,   // 最小透明度
-	MAX: 1.0,   // 最大透明度
-	STEP: 0.1,  // 调整步长
+	MIN: 0.2, // 最小透明度
+	MAX: 1.0, // 最大透明度
+	STEP: 0.1, // 调整步长
 };
 
 // 快捷键相关常量
 const SHORTCUT_CONSTANTS = {
-	MODIFIERS: ["Control", "Ctrl", "Alt", "Shift", "Command", "Cmd", "Option", "Opt"],
+	MODIFIERS: [
+		"Control",
+		"Ctrl",
+		"Alt",
+		"Shift",
+		"Command",
+		"Cmd",
+		"Option",
+		"Opt",
+	],
 	SEPARATOR: "+",
 };
 
@@ -84,7 +93,7 @@ const IPC_CHANNELS = {
 	STOP_RESIZING: "stop-resizing",
 	START_MOVING: "start-moving",
 	STOP_MOVING: "stop-moving",
-	
+
 	// 配置相关
 	GET_SHORTCUTS: "get-shortcuts",
 	SAVE_SHORTCUTS: "save-shortcuts",
@@ -94,15 +103,15 @@ const IPC_CHANNELS = {
 	GET_APP_VERSION: "get-app-version",
 	GET_DEBUG_MODE: "get-debug-mode",
 	SET_DEBUG_MODE: "set-debug-mode",
-	
+
 	// 快捷键相关
 	SUSPEND_SHORTCUTS: "suspend-shortcuts",
 	RESUME_SHORTCUTS: "resume-shortcuts",
-	
+
 	// 应用相关
 	CLEAR_CACHE: "clear-cache",
 	RESTART_AFTER_SAVE: "restart-after-save",
-	
+
 	// 广播消息
 	RESOLUTION_PRESETS_UPDATED: "resolution-presets-updated",
 	CACHE_CLEARED: "cache-cleared",

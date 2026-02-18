@@ -37,7 +37,9 @@ class IPCManager {
 		// 设置窗口大小
 		ipcMain.on("set-window-size", (e, { width, height }) => {
 			this.windowManager.setWindowSize(width, height);
-			this.logger.debug(`窗口分辨率已设置为: ${width} × ${height} (webview区域)`);
+			this.logger.debug(
+				`窗口分辨率已设置为: ${width} × ${height} (webview区域)`,
+			);
 		});
 
 		// 退出应用
@@ -214,7 +216,7 @@ class IPCManager {
 				clearInterval(resizeInterval);
 				resizeInterval = null;
 			}
-			
+
 			const mainWindow = this.windowManager.getMainWindow();
 			if (isResizing && mainWindow) {
 				const bounds = mainWindow.getBounds();
@@ -233,7 +235,7 @@ class IPCManager {
 
 		ipcMain.on("start-moving", (event) => {
 			if (moveInterval) clearInterval(moveInterval);
-			
+
 			const mainWindow = this.windowManager.getMainWindow();
 			if (!mainWindow) return;
 
@@ -265,7 +267,7 @@ class IPCManager {
 				clearInterval(moveInterval);
 				moveInterval = null;
 			}
-			
+
 			const mainWindow = this.windowManager.getMainWindow();
 			if (mainWindow) {
 				const bounds = mainWindow.getBounds();

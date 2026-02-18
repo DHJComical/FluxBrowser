@@ -10,15 +10,15 @@
  * @returns {string} 格式化后的文件大小
  */
 function formatFileSize(bytes, decimals = 2) {
-	if (bytes === 0) return '0 Bytes';
-	
+	if (bytes === 0) return "0 Bytes";
+
 	const k = 1024;
 	const dm = decimals < 0 ? 0 : decimals;
-	const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-	
+	const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
-	
-	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+
+	return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
 
 /**
@@ -29,9 +29,9 @@ function formatFileSize(bytes, decimals = 2) {
  */
 function deepMerge(target, source) {
 	const output = Object.assign({}, target);
-	
+
 	if (isObject(target) && isObject(source)) {
-		Object.keys(source).forEach(key => {
+		Object.keys(source).forEach((key) => {
 			if (isObject(source[key])) {
 				if (!(key in target)) {
 					Object.assign(output, { [key]: source[key] });
@@ -43,7 +43,7 @@ function deepMerge(target, source) {
 			}
 		});
 	}
-	
+
 	return output;
 }
 
@@ -53,7 +53,7 @@ function deepMerge(target, source) {
  * @returns {boolean} 是否为对象
  */
 function isObject(item) {
-	return (item && typeof item === 'object' && !Array.isArray(item));
+	return item && typeof item === "object" && !Array.isArray(item);
 }
 
 /**
@@ -82,11 +82,11 @@ function debounce(func, wait) {
  */
 function throttle(func, limit) {
 	let inThrottle;
-	return function(...args) {
+	return function (...args) {
 		if (!inThrottle) {
 			func.apply(this, args);
 			inThrottle = true;
-			setTimeout(() => inThrottle = false, limit);
+			setTimeout(() => (inThrottle = false), limit);
 		}
 	};
 }
@@ -97,8 +97,9 @@ function throttle(func, limit) {
  * @returns {string} 唯一ID
  */
 function generateId(length = 8) {
-	const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	let result = '';
+	const chars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+	let result = "";
 	for (let i = 0; i < length; i++) {
 		result += chars.charAt(Math.floor(Math.random() * chars.length));
 	}
@@ -125,21 +126,30 @@ function safeJsonParse(jsonString, defaultValue = null) {
  * @returns {boolean} 是否有效
  */
 function validateShortcut(shortcut) {
-	if (!shortcut || typeof shortcut !== 'string') {
+	if (!shortcut || typeof shortcut !== "string") {
 		return false;
 	}
-	
+
 	// 简单的格式验证
 	const invalidChars = /[<>:"|?*]/;
 	if (invalidChars.test(shortcut)) {
 		return false;
 	}
-	
+
 	// 至少需要一个非修饰键
-	const modifiers = ['Control', 'Ctrl', 'Alt', 'Shift', 'Command', 'Cmd', 'Option', 'Opt'];
-	const parts = shortcut.split('+').map(part => part.trim());
-	const hasNonModifier = parts.some(part => !modifiers.includes(part));
-	
+	const modifiers = [
+		"Control",
+		"Ctrl",
+		"Alt",
+		"Shift",
+		"Command",
+		"Cmd",
+		"Option",
+		"Opt",
+	];
+	const parts = shortcut.split("+").map((part) => part.trim());
+	const hasNonModifier = parts.some((part) => !modifiers.includes(part));
+
 	return hasNonModifier;
 }
 
@@ -151,5 +161,5 @@ module.exports = {
 	throttle,
 	generateId,
 	safeJsonParse,
-	validateShortcut
+	validateShortcut,
 };

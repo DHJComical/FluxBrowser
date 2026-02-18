@@ -13,7 +13,7 @@ class WindowManager {
 	// 创建主窗口
 	createMainWindow() {
 		let { x, y, width, height } = this.savedBounds;
-		
+
 		this.mainWindow = new BrowserWindow({
 			x: x,
 			y: y,
@@ -85,12 +85,12 @@ class WindowManager {
 				contextIsolation: false,
 			},
 		});
-		
+
 		this.settingsWindow.setMenu(null);
 		this.settingsWindow.loadFile(
 			path.join(__dirname, "../../renderer/settings.html"),
 		);
-		
+
 		this.settingsWindow.on("closed", () => {
 			this.settingsWindow = null;
 		});
@@ -119,7 +119,9 @@ class WindowManager {
 	// 切换窗口显示状态
 	toggleVisibility() {
 		if (!this.mainWindow) return;
-		this.mainWindow.isVisible() ? this.mainWindow.hide() : this.mainWindow.show();
+		this.mainWindow.isVisible()
+			? this.mainWindow.hide()
+			: this.mainWindow.show();
 	}
 
 	// 设置窗口置顶状态

@@ -136,31 +136,31 @@ class ShortcutManager {
 
 	// 验证快捷键格式
 	validateShortcut(key) {
-		if (!key || typeof key !== 'string') {
+		if (!key || typeof key !== "string") {
 			return false;
 		}
-		
+
 		// 简单的格式验证：不能为空，不能包含非法字符
 		const invalidChars = /[<>:"|?*]/;
 		if (invalidChars.test(key)) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	// 格式化快捷键显示
 	formatShortcut(key) {
-		if (!key) return '';
-		
+		if (!key) return "";
+
 		// 将常见的修饰键转换为更友好的显示
 		return key
-			.replace(/Control|Ctrl/gi, 'Ctrl')
-			.replace(/Alt/gi, 'Alt')
-			.replace(/Shift/gi, 'Shift')
-			.replace(/Command|Cmd/gi, 'Cmd')
-			.replace(/Option/gi, 'Opt')
-			.replace(/\+/g, ' + ')
+			.replace(/Control|Ctrl/gi, "Ctrl")
+			.replace(/Alt/gi, "Alt")
+			.replace(/Shift/gi, "Shift")
+			.replace(/Command|Cmd/gi, "Cmd")
+			.replace(/Option/gi, "Opt")
+			.replace(/\+/g, " + ")
 			.trim();
 	}
 }

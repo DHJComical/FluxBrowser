@@ -28,7 +28,9 @@ class FluxCore {
 		// 输出启动时的窗口位置和大小到日志
 		const savedBounds = configManager.getBoundsConfig();
 		this.debugLog(`启动窗口位置: X=${savedBounds.x}, Y=${savedBounds.y}`);
-		this.debugLog(`启动窗口大小: Width=${savedBounds.width}, Height=${savedBounds.height}`);
+		this.debugLog(
+			`启动窗口大小: Width=${savedBounds.width}, Height=${savedBounds.height}`,
+		);
 	}
 
 	// 调试模式日志输出
@@ -73,11 +75,11 @@ class FluxCore {
 	launch(PluginLoaderClass) {
 		// 创建主窗口
 		this.windowManager.createMainWindow();
-		
+
 		// 初始化插件加载器
 		this.pluginLoader = new PluginLoaderClass(this);
 		this.pluginLoader.loadAll();
-		
+
 		// 创建logger对象
 		const logger = {
 			debug: (...args) => this.debugLog(...args),
@@ -87,24 +89,28 @@ class FluxCore {
 				if (this.logger && this.logger.setDebugMode) {
 					this.logger.setDebugMode(enabled);
 				}
-			}
+			},
 		};
-		
+
 		// 初始化快捷键管理器
 		this.shortcutManager = new ShortcutManager(this, this.pluginLoader, logger);
-		
+
 		// 初始化IPC管理器
-		this.ipcManager = new IPCManager(this.windowManager, this.pluginLoader, logger);
-		
+		this.ipcManager = new IPCManager(
+			this.windowManager,
+			this.pluginLoader,
+			logger,
+		);
+
 		// 设置IPC处理器
 		this.ipcManager.setupAllHandlers();
-		
+
 		// 初始化快捷键
 		this.shortcutManager.reloadShortcuts();
-		
+
 		// 启动更新器
 		new Updater(this);
-		
+
 		this.debugLog("FluxCore 启动完成");
 	}
 

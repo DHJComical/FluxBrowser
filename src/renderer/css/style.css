@@ -270,7 +270,7 @@ button:hover {
 
 /* 在子菜单和父菜单项之间添加不可见的连接区域 */
 .menu-submenu::after {
-	content: '';
+	content: "";
 	position: absolute;
 	left: 100%;
 	top: 0;
