@@ -6,7 +6,9 @@ class IPCManager {
 		this.windowManager = windowManager;
 		this.pluginLoader = pluginLoader;
 		this.logger = logger;
-		this.currentOpacity = 1.0;
+		// 从配置加载透明度
+		const boundsConfig = configManager.getBoundsConfig();
+		this.currentOpacity = boundsConfig.opacity || 1.0;
 	}
 
 	// 初始化所有IPC处理器
