@@ -243,8 +243,8 @@ button:hover {
 /* 现代化子菜单内容 */
 .submenu-content {
 	position: absolute;
-	left: 100%;
-	top: -8px;
+	left: 0;
+	top: 0;
 	width: 220px;
 	background: rgba(25, 25, 40, 0.95);
 	backdrop-filter: blur(25px) saturate(180%);
@@ -254,12 +254,33 @@ button:hover {
 	box-shadow:
 		0 10px 40px rgba(0, 0, 0, 0.3),
 		0 0 0 1px rgba(255, 255, 255, 0.05);
-	display: none;
+	display: block;
 	padding: 8px;
+	opacity: 0;
+	transform: translateX(10px);
+	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+	pointer-events: none;
+	z-index: 10002;
+	visibility: hidden;
 }
 
-.menu-submenu:hover .submenu-content {
-	display: block;
+.submenu-content:not(.hidden) {
+	opacity: 1;
+	transform: translateX(0);
+	pointer-events: auto;
+	visibility: visible;
+}
+
+/* 子菜单容器 - 确保子菜单正确定位 */
+.menu-submenu {
+	position: relative;
+}
+
+/* 调整子菜单位置，使其在父菜单右侧显示 */
+.menu-submenu .submenu-content {
+	left: 100%;
+	top: -8px;
+	margin-left: 4px;
 }
 
 /* 分辨率选项 */

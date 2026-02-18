@@ -2,56 +2,34 @@ const { app } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
+// 导入常量
+const {
+	DEFAULT_KEY_CONFIG,
+	DEFAULT_BOUNDS_CONFIG,
+	DEFAULT_APP_CONFIG,
+	DEFAULT_RESOLUTION_PRESETS,
+	CONFIG_FILE_NAMES,
+	DEV_CONFIG_PREFIX
+} = require("../constants/config");
+
 // 检测是否为开发环境 (IDE 调试时 app.isPackaged 为 false)
 const isDev = !app.isPackaged;
 
 // 根据环境定义文件名前缀
-const prefix = isDev ? "dev-" : "";
+const prefix = isDev ? DEV_CONFIG_PREFIX : "";
 
 // 动态拼接路径
 const USER_DATA_PATH = app.getPath("userData");
-const KEY_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}key-config.json`);
+const KEY_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}${CONFIG_FILE_NAMES.KEY_CONFIG}`);
 const BOUNDS_CONFIG_PATH = path.join(
 	USER_DATA_PATH,
-	`${prefix}window-bounds.json`,
+	`${prefix}${CONFIG_FILE_NAMES.BOUNDS_CONFIG}`,
 );
-const APP_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}app-config.json`);
+const APP_CONFIG_PATH = path.join(USER_DATA_PATH, `${prefix}${CONFIG_FILE_NAMES.APP_CONFIG}`);
 const RESOLUTION_PRESET_PATH = path.join(
 	USER_DATA_PATH,
-	`${prefix}resolution-presets.json`,
+	`${prefix}${CONFIG_FILE_NAMES.RESOLUTION_PRESETS}`,
 );
-
-// 默认配置
-const DEFAULT_KEY_CONFIG = {
-	BossKey: "Delete",
-	ImmersionMode: "Home",
-	"Video-Pause": "Down",
-	"Video-Forward": "Right",
-	"Video-Backward": "Left",
-	"Opacity-Up": "Alt+Up",
-	"Opacity-Down": "Alt+Down",
-	GoBack: "Alt+Left",
-	GoForward: "Alt+Right",
-};
-
-const DEFAULT_BOUNDS_CONFIG = {
-	width: 800,
-	height: 600,
-	opacity: 1.0,
-};
-
-const DEFAULT_APP_CONFIG = {
-	debugMode: false,
-};
-
-const DEFAULT_RESOLUTION_PRESETS = [
-	{ width: 480, height: 270, name: "480 × 270" },
-	{ width: 640, height: 360, name: "640 × 360" },
-	{ width: 800, height: 450, name: "800 × 450" },
-	{ width: 960, height: 540, name: "960 × 540" },
-	{ width: 1024, height: 576, name: "1024 × 576" },
-	{ width: 1280, height: 720, name: "1280 × 720 (HD)" },
-];
 
 class ConfigManager {
 	constructor() {
