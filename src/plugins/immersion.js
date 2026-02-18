@@ -7,13 +7,20 @@ module.exports = {
 		ImmersionMode: (core) => {
 			isImmersion = !isImmersion;
 
+			// 获取主窗口
+			const mainWindow = core.windowManager.getMainWindow();
+			if (!mainWindow) {
+				console.error("无法获取主窗口");
+				return;
+			}
+
 			if (isImmersion) {
 				// 进入沉浸模式前保存当前窗口大小
-				const currentBounds = core.window.getBounds();
+				const currentBounds = mainWindow.getBounds();
 
 				// 调整窗口大小和位置，减去标题栏的高度以保持webview内容区域不变
 				// 同时调整y坐标，确保webview的顶部保持在原来位置
-				core.window.setBounds({
+				mainWindow.setBounds({
 					x: currentBounds.x,
 					y: currentBounds.y + TITLE_BAR_HEIGHT,
 					width: currentBounds.width,
@@ -25,11 +32,11 @@ module.exports = {
 				core.setAlwaysOnTop(true);
 			} else {
 				// 退出沉浸模式，恢复原来的窗口大小和位置
-				const currentBounds = core.window.getBounds();
+				const currentBounds = mainWindow.getBounds();
 
 				// 恢复窗口大小和位置，加上标题栏的高度
 				// 同时调整y坐标，确保webview回到原来的位置
-				core.window.setBounds({
+				mainWindow.setBounds({
 					x: currentBounds.x,
 					y: currentBounds.y - TITLE_BAR_HEIGHT,
 					width: currentBounds.width,
