@@ -126,17 +126,17 @@ button:hover {
 	position: absolute;
 	top: 36px;
 	left: 0;
-	width: 200px;
+	width: 160px; /* 进一步减小宽度 */
 	background: rgba(25, 25, 40, 0.95);
 	backdrop-filter: blur(25px) saturate(180%);
 	-webkit-backdrop-filter: blur(25px) saturate(180%);
 	border: 1px solid rgba(255, 255, 255, 0.12);
-	border-radius: 14px;
+	border-radius: 12px; /* 减小圆角 */
 	box-shadow:
 		0 10px 40px rgba(0, 0, 0, 0.3),
 		0 0 0 1px rgba(255, 255, 255, 0.05);
 	z-index: 10001;
-	padding: 8px;
+	padding: 6px; /* 减小内边距 */
 	opacity: 0;
 	transform: translateY(-20px) scale(0.9);
 	transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1.5);
@@ -176,14 +176,14 @@ button:hover {
 }
 
 .menu-item {
-	padding: 10px 14px;
+	padding: 8px 12px; /* 减小内边距 */
 	color: #e0e0ff;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	font-size: 13px;
-	border-radius: 8px;
+	gap: 8px; /* 减小间距 */
+	font-size: 13px; /* 恢复字体大小 */
+	border-radius: 6px; /* 减小圆角 */
 	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 	position: relative;
 	overflow: hidden;
@@ -192,8 +192,8 @@ button:hover {
 .menu-item:hover {
 	background: rgba(108, 140, 255, 0.15);
 	color: #6c8cff;
-	transform: translateX(4px);
-	box-shadow: 0 2px 8px rgba(108, 140, 255, 0.2);
+	transform: translateX(3px); /* 减小悬停移动距离 */
+	box-shadow: 0 2px 6px rgba(108, 140, 255, 0.2); /* 减小阴影 */
 }
 
 /* 菜单项悬停效果 */
@@ -226,7 +226,7 @@ button:hover {
 		rgba(255, 255, 255, 0.1),
 		transparent
 	);
-	margin: 6px 0;
+	margin: 4px 0; /* 减小分割线间距 */
 }
 
 /* 子菜单容器 */
@@ -236,25 +236,25 @@ button:hover {
 
 .submenu-arrow {
 	margin-left: auto;
-	font-size: 16px;
+	font-size: 14px; /* 减小箭头大小 */
 }
 
 /* 现代化子菜单内容 */
 .submenu-content {
 	position: absolute;
 	left: 100%; /* 将子菜单放在父菜单右侧 */
-	top: -8px;
-	width: 220px;
+	top: -6px; /* 调整位置 */
+	width: 170px; /* 进一步减小宽度 */
 	background: rgba(25, 25, 40, 0.95);
 	backdrop-filter: blur(25px) saturate(180%);
 	-webkit-backdrop-filter: blur(25px) saturate(180%);
 	border: 1px solid rgba(255, 255, 255, 0.12);
-	border-radius: 14px;
+	border-radius: 12px; /* 减小圆角 */
 	box-shadow:
 		0 10px 40px rgba(0, 0, 0, 0.3),
 		0 0 0 1px rgba(255, 255, 255, 0.05);
 	display: none;
-	padding: 8px;
+	padding: 6px; /* 减小内边距 */
 	opacity: 0;
 	transform: translateX(-10px);
 	transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -274,7 +274,7 @@ button:hover {
 	position: absolute;
 	left: 100%;
 	top: 0;
-	width: 20px; /* 连接区域宽度 */
+	width: 15px; /* 减小连接区域宽度 */
 	height: 100%;
 	background: transparent;
 	z-index: 10001;

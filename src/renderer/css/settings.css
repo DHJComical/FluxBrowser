@@ -7,26 +7,26 @@
 
 /* 现代化左侧Tab栏 */
 .settings-sidebar {
-	width: 240px;
+	width: 200px; /* 减小宽度 */
 	background: rgba(18, 18, 30, 0.8);
 	backdrop-filter: blur(20px) saturate(180%);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	border-right: 1px solid rgba(255, 255, 255, 0.1);
-	padding: 24px 0;
+	padding: 20px 0; /* 减小内边距 */
 	display: flex;
 	flex-direction: column;
 }
 
 .settings-sidebar-title {
-	padding: 0 24px 24px;
-	font-size: 20px;
+	padding: 0 20px 20px; /* 减小内边距 */
+	font-size: 18px; /* 减小字体大小 */
 	font-weight: 600;
 	color: #6c8cff;
 	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	margin-bottom: 16px;
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 10px; /* 减小间距 */
 	background: linear-gradient(135deg, #6c8cff 0%, #4dccff 100%);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -38,17 +38,17 @@
 }
 
 .settings-tab {
-	padding: 12px 20px;
+	padding: 10px 16px; /* 减小内边距 */
 	color: #a0a0c0;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	font-size: 13px;
+	gap: 10px; /* 减小间距 */
+	font-size: 12px; /* 减小字体大小 */
 	font-weight: 500;
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	border-left: 3px solid transparent;
-	border-radius: 0 10px 10px 0;
+	border-radius: 0 8px 8px 0; /* 减小圆角 */
 	margin-right: 6px;
 }
 
@@ -410,15 +410,15 @@
 	position: fixed;
 	bottom: 0;
 	right: 0;
-	left: 240px;
-	padding: 16px 24px;
+	left: 200px; /* 调整左侧位置以匹配新的侧边栏宽度 */
+	padding: 14px 20px; /* 减小内边距 */
 	background: rgba(18, 18, 30, 0.9);
 	backdrop-filter: blur(20px) saturate(180%);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	border-top: 1px solid rgba(255, 255, 255, 0.1);
 	display: flex;
 	justify-content: flex-end;
-	gap: 12px;
+	gap: 10px; /* 减小间距 */
 	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
 }
 
