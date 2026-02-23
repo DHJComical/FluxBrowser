@@ -14,6 +14,7 @@ class PluginLoader {
 			require("../plugins/video-ctrl"),
 			require("../plugins/opacity"),
 			require("../plugins/web-nav"),
+			require("../plugins/site-fixes"),
 		];
 
 		// 初始化所有插件
