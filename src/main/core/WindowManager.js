@@ -190,9 +190,22 @@ class WindowManager {
 		const appPath = app.getAppPath();
 		const iconPath = path.join(appPath, "resources/image/FluxBrowser-icon.ico");
 
+		// 获取屏幕尺寸
+		const primaryDisplay = screen.getPrimaryDisplay();
+		const { width: screenWidth, height: screenHeight } =
+			primaryDisplay.workAreaSize;
+
+		// 计算窗口居中位置
+		const windowWidth = 600;
+		const windowHeight = 400;
+		const x = Math.round((screenWidth - windowWidth) / 2);
+		const y = Math.round((screenHeight - windowHeight) / 2);
+
 		this.bookmarksWindow = new BrowserWindow({
-			width: 600,
-			height: 400,
+			x: x,
+			y: y,
+			width: windowWidth,
+			height: windowHeight,
 			parent: parentWindow,
 			title: "书签管理",
 			icon: iconPath,
