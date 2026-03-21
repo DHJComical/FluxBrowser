@@ -256,13 +256,18 @@ class IPCManager {
 
 		// 执行 Git 命令的辅助函数
 		// 使用 --git-dir 和 --work-tree 确保 Git 操作在指定目录下进行
+		// 注意：此函数中的日志会过滤掉包含 PAT 的敏感信息
 		const runGitCommand = (cwd, subCmd) => {
 			return new Promise((resolve, reject) => {
 				const gitCmd = `git --git-dir="${path.join(cwd, ".git")}" --work-tree="${cwd}" ${subCmd}`;
-				this.logger.debug(`执行 Git 命令: ${subCmd}`);
+				// 过滤日志中的 PAT 敏感信息
+				const safeSubCmd = subCmd.replace(/https:\/\/[^@]+@/g, "https://***@");
+				this.logger.debug(`执行 Git 命令: ${safeSubCmd}`);
 				exec(gitCmd, { cwd }, (err, stdout, stderr) => {
 					if (err) {
-						this.logger.debug(`Git 命令失败: ${subCmd}, 错误: ${stderr || err.message}`);
+						// 同样过滤错误信息中的 PAT
+						const safeError = (stderr || err.message).replace(/https:\/\/[^@]+@/g, "https://***@");
+						this.logger.debug(`Git 命令失败: ${safeSubCmd}, 错误: ${safeError}`);
 						reject(err);
 					} else {
 						resolve(stdout);
@@ -389,7 +394,8 @@ class IPCManager {
 						this.broadcast("bookmark-sync-status", { success: true, message: "没有变更需要同步" });
 					}
 				} catch (err) {
-					this.logger.debug(`Git 同步失败: ${err.message}`);
+					const safeError = err.message.replace(/https:\/\/[^@]+@/g, "https://***@");
+					this.logger.debug(`Git 同步失败: ${safeError}`);
 					this.broadcast("bookmark-sync-status", { success: false, message: `同步失败: ${err.message}` });
 				}
 			})();
@@ -444,7 +450,8 @@ class IPCManager {
 						return [];
 					})());
 				} catch (err) {
-					this.logger.debug(`Git 拉取失败: ${err.message}`);
+					const safeError = err.message.replace(/https:\/\/[^@]+@/g, "https://***@");
+					this.logger.debug(`Git 拉取失败: ${safeError}`);
 					// 检查是否是网络错误
 					if (err.message.includes("Couldn") || err.message.includes("connection") || err.message.includes("connect")) {
 						this.broadcast("bookmark-sync-status", { success: false, message: "网络连接失败，请检查网络或代理设置" });
