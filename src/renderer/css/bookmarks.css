@@ -1,0 +1,198 @@
+/* 书签页面样式 - 与软件整体风格统一 */
+body {
+    font-family: "Segoe UI", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+    min-height: 100vh;
+    color: white;
+    overflow-y: auto;
+}
+
+.bookmarks-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+}
+
+.bookmarks-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bookmarks-header i {
+    font-size: 36px;
+    color: #6c8cff;
+    filter: drop-shadow(0 0 10px rgba(108, 140, 255, 0.5));
+}
+
+.bookmarks-header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #b0b0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bookmarks-count {
+    margin-left: auto;
+    font-size: 14px;
+    color: #6a6a7a;
+    background: rgba(108, 140, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(108, 140, 255, 0.2);
+}
+
+.bookmark-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bookmark-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.bookmark-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(108, 140, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(108, 140, 255, 0.15);
+}
+
+.bookmark-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #6c8cff 0%, #4dccff 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(108, 140, 255, 0.3);
+}
+
+.bookmark-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.bookmark-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.bookmark-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e0e0ff;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bookmark-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 13px;
+    color: #6a6a7a;
+}
+
+.bookmark-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bookmark-time i {
+    font-size: 14px;
+    color: #4dccff;
+}
+
+.bookmark-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.bookmark-item:hover .bookmark-actions {
+    opacity: 1;
+}
+
+.bookmark-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: #a0a0c0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bookmark-btn:hover {
+    transform: scale(1.1);
+}
+
+.bookmark-btn.delete:hover {
+    background: rgba(255, 107, 139, 0.15);
+    border-color: rgba(255, 107, 139, 0.4);
+    color: #ff6b8b;
+    box-shadow: 0 0 15px rgba(255, 107, 139, 0.3);
+}
+
+.bookmark-btn i {
+    font-size: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #3a3a5a;
+    margin-bottom: 16px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: #6a6a7a;
+    margin: 0;
+}
+
+.bookmark-url {
+    font-size: 12px;
+    color: #4a4a6a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 300px;
+}
