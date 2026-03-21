@@ -326,6 +326,16 @@ class IPCManager {
 			}
 		});
 
+		ipcMain.on("delete-bookmark", (e, index) => {
+			const localBookmarksPath = getBookmarksPath();
+			if (fs.existsSync(localBookmarksPath)) {
+				let bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+				bookmarks.splice(index, 1);
+				fs.writeFileSync(localBookmarksPath, JSON.stringify(bookmarks, null, 2));
+				e.sender.send("bookmarks-data", bookmarks);
+			}
+		});
+
 		ipcMain.on("open-bookmark", (e, bookmark) => {
 			const mainWindow = this.windowManager.getMainWindow();
 			if (mainWindow) {

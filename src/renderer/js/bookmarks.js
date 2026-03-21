@@ -7,10 +7,22 @@ ipcRenderer.on("bookmarks-data", (e, bookmarks) => {
     bookmarks.forEach((b, index) => {
         const div = document.createElement("div");
         div.className = "bookmark-item";
-        div.innerHTML = `<div class="title">${b.title}</div><div class="time">进度: ${Math.floor(b.time)}秒</div>`;
-        div.onclick = () => {
+        div.innerHTML = `
+            <div class="content" style="flex: 1;">
+                <div class="title">${b.title}</div>
+                <div class="time">进度: ${Math.floor(b.time)}秒</div>
+            </div>
+            <button class="delete-btn" data-index="${index}">删除</button>
+        `;
+        
+        div.querySelector(".content").onclick = () => {
             ipcRenderer.send("open-bookmark", b);
             window.close();
+        };
+
+        div.querySelector(".delete-btn").onclick = (e) => {
+            e.stopPropagation();
+            ipcRenderer.send("delete-bookmark", index);
         };
         bookmarkList.appendChild(div);
     });
