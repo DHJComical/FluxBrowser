@@ -173,7 +173,6 @@ function bindButtonEvents() {
 	if (syncBookmarksBtn) {
 		syncBookmarksBtn.addEventListener("click", () => {
 			ipcRenderer.send("sync-bookmarks");
-			alert("上传请求已发送");
 		});
 	}
 
@@ -182,7 +181,6 @@ function bindButtonEvents() {
 		pullBookmarksBtn.addEventListener("click", () => {
 			if (confirm("确定要从远程仓库覆盖本地书签吗？此操作不可逆。")) {
 				ipcRenderer.send("pull-bookmarks");
-				alert("覆盖请求已发送");
 			}
 		});
 	}
@@ -445,6 +443,45 @@ ipcRenderer.on("update-message", (e, data) => {
 	// 更新下载进度（如果有进度百分比）
 	if (data.percent !== undefined && progressBarInner) {
 		progressBarInner.style.width = `${data.percent}%`;
+	}
+});
+
+// 书签同步状态监听
+ipcRenderer.on("bookmark-sync-status", (e, data) => {
+	const syncBtn = document.getElementById("sync-bookmarks-btn");
+	const pullBtn = document.getElementById("pull-bookmarks-btn");
+
+	if (data.status === "syncing") {
+		// 正在同步
+		if (syncBtn) {
+			syncBtn.disabled = true;
+			syncBtn.textContent = "同步中...";
+		}
+		if (pullBtn) pullBtn.disabled = true;
+	} else if (data.status === "pulling") {
+		// 正在拉取
+		if (pullBtn) {
+			pullBtn.disabled = true;
+			pullBtn.textContent = "拉取中...";
+		}
+		if (syncBtn) syncBtn.disabled = true;
+	} else {
+		// 同步或拉取完成
+		if (syncBtn) {
+			syncBtn.disabled = false;
+			syncBtn.textContent = "上传书签";
+		}
+		if (pullBtn) {
+			pullBtn.disabled = false;
+			pullBtn.textContent = "从远程覆盖本地";
+		}
+
+		// 显示结果
+		if (data.success) {
+			alert(data.message);
+		} else {
+			alert("操作失败: " + data.message);
+		}
 	}
 });
 

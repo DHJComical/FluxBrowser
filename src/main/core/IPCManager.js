@@ -254,11 +254,86 @@ class IPCManager {
 		const getBookmarksFileName = () => (!app.isPackaged ? "bookmarks-dev.json" : "bookmarks.json");
 		const getBookmarksPath = () => path.join(getBookmarksDir(), getBookmarksFileName());
 
+		// 执行 Git 命令的辅助函数
+		// 使用 --git-dir 和 --work-tree 确保 Git 操作在指定目录下进行
+		const runGitCommand = (cwd, subCmd) => {
+			return new Promise((resolve, reject) => {
+				const gitCmd = `git --git-dir="${path.join(cwd, ".git")}" --work-tree="${cwd}" ${subCmd}`;
+				this.logger.debug(`执行 Git 命令: ${subCmd}`);
+				exec(gitCmd, { cwd }, (err, stdout, stderr) => {
+					if (err) {
+						this.logger.debug(`Git 命令失败: ${subCmd}, 错误: ${stderr || err.message}`);
+						reject(err);
+					} else {
+						resolve(stdout);
+					}
+				});
+			});
+		};
+
+		// 初始化 Git 仓库
+		const initGitRepo = async (cwd, config) => {
+			const gitDir = path.join(cwd, ".git");
+			const isNewRepo = !fs.existsSync(gitDir);
+
+			if (isNewRepo) {
+				await runGitCommand(cwd, "init");
+			}
+
+			// 设置用户信息
+			await runGitCommand(cwd, `config user.name "${config.gitName || "FluxBrowser"}"`);
+			await runGitCommand(cwd, `config user.email "${config.gitEmail || "fluxbrowser@example.com"}"`);
+			await runGitCommand(cwd, "config credential.helper store");
+
+			return isNewRepo;
+		};
+
+		// 设置远程仓库
+		const setupRemote = async (cwd, remoteUrl) => {
+			try {
+				await runGitCommand(cwd, "remote remove origin");
+			} catch (e) {
+				// 忽略 "remote 不存在" 的错误
+			}
+			await runGitCommand(cwd, `remote add origin ${remoteUrl}`);
+		};
+
+		// 获取远程默认分支名（在 fetch 之后调用）
+		const getRemoteDefaultBranch = async (cwd) => {
+			try {
+				// 首先尝试获取 main 分支
+				await runGitCommand(cwd, "rev-parse --verify origin/main");
+				return "main";
+			} catch (e1) {
+				try {
+					// 如果 main 不存在，尝试 master
+					await runGitCommand(cwd, "rev-parse --verify origin/master");
+					return "master";
+				} catch (e2) {
+					// 如果都失败，尝试获取 HEAD 引用
+					try {
+						const output = await runGitCommand(cwd, "symbolic-ref refs/remotes/origin/HEAD");
+						const match = output.match(/origin\/(\S+)/);
+						if (match) return match[1];
+					} catch (e3) {
+						this.logger.debug("无法确定远程默认分支");
+					}
+					// 默认返回 main
+					return "main";
+				}
+			}
+		};
+
 		ipcMain.on("add-bookmark", (e, bookmark) => {
 			const localBookmarksPath = getBookmarksPath();
 			let bookmarks = [];
 			if (fs.existsSync(localBookmarksPath)) {
-				bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+				try {
+					bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+				} catch (parseErr) {
+					this.logger.debug(`解析书签文件失败: ${parseErr.message}`);
+					bookmarks = [];
+				}
 			}
 			bookmarks.push(bookmark);
 			fs.writeFileSync(localBookmarksPath, JSON.stringify(bookmarks, null, 2));
@@ -267,50 +342,116 @@ class IPCManager {
 
 		ipcMain.on("sync-bookmarks", () => {
 			const config = configManager.getAppConfig();
-			if (!config.gitPat || !config.gitRemote) return;
-			const remoteUrl = config.gitRemote.replace("https://", `https://${config.gitPat}@`);
+			if (!config.gitPat || !config.gitRemote) {
+				this.logger.debug("Git 配置不完整，无法同步");
+				this.broadcast("bookmark-sync-status", { success: false, message: "请先配置 Git 设置" });
+				return;
+			}
+
 			const cwd = getBookmarksDir();
 			const fileName = getBookmarksFileName();
-			
-			const run = (cmd) => new Promise((resolve) => exec(cmd, { cwd }, (err, stdout, stderr) => {
-				if (err) this.logger.debug(`Git 命令失败: ${cmd}, 错误: ${stderr || err.message}`);
-				resolve(!err);
-			}));
+			const bookmarksFile = path.join(cwd, fileName);
+
+			// 检查书签文件是否存在
+			if (!fs.existsSync(bookmarksFile)) {
+				this.logger.debug("书签文件不存在，无法同步");
+				this.broadcast("bookmark-sync-status", { success: false, message: "书签文件不存在" });
+				return;
+			}
+
+			// 构建远程 URL
+			const remoteUrl = `https://${config.gitPat}@${config.gitRemote.replace(/^https:\/\//, "")}`;
+
+			// 广播开始状态
+			this.broadcast("bookmark-sync-status", { status: "syncing", message: "正在同步..." });
 
 			(async () => {
-				await run("git init");
-				await run(`git config user.name "${config.gitName || 'FluxBrowser'}"`);
-				await run(`git config user.email "${config.gitEmail || 'fluxbrowser@example.com'}"`);
-				await run("git config credential.helper store");
-				await run("git remote remove origin");
-				await run(`git remote add origin ${remoteUrl}`);
-				await run(`git add -f ${fileName}`);
-				// 尝试提交，如果没变更则忽略错误
-				await run('git commit -m "Update bookmarks" || true');
-				// 使用 HEAD 推送，自动匹配当前分支并创建远程分支
-				const success = await run("git push -u origin HEAD");
-				this.logger.debug(success ? "Git 同步成功" : "Git 同步失败");
+				try {
+					// 初始化 Git 仓库
+					await initGitRepo(cwd, config);
+
+					// 设置远程仓库
+					await setupRemote(cwd, remoteUrl);
+
+					// 添加文件到暂存区
+					await runGitCommand(cwd, `add -f "${fileName}"`);
+
+					// 检查是否有变更需要提交
+					const status = await runGitCommand(cwd, "status --porcelain");
+					if (status.trim()) {
+						// 有变更，提交并推送
+						await runGitCommand(cwd, 'commit -m "Update bookmarks"');
+						await runGitCommand(cwd, "push -u origin HEAD");
+						this.logger.debug("Git 同步成功");
+						this.broadcast("bookmark-sync-status", { success: true, message: "同步成功" });
+					} else {
+						this.logger.debug("没有变更需要同步");
+						this.broadcast("bookmark-sync-status", { success: true, message: "没有变更需要同步" });
+					}
+				} catch (err) {
+					this.logger.debug(`Git 同步失败: ${err.message}`);
+					this.broadcast("bookmark-sync-status", { success: false, message: `同步失败: ${err.message}` });
+				}
 			})();
 		});
 
 		ipcMain.on("pull-bookmarks", () => {
 			const config = configManager.getAppConfig();
-			if (!config.gitPat || !config.gitRemote) return;
-			const remoteUrl = config.gitRemote.replace("https://", `https://${config.gitPat}@`);
+			if (!config.gitPat || !config.gitRemote) {
+				this.logger.debug("Git 配置不完整，无法拉取");
+				this.broadcast("bookmark-sync-status", { success: false, message: "请先配置 Git 设置" });
+				return;
+			}
+
 			const cwd = getBookmarksDir();
-			
-			const run = (cmd) => new Promise((resolve) => exec(cmd, { cwd }, (err, stdout, stderr) => {
-				if (err) this.logger.debug(`Git 命令失败: ${cmd}, 错误: ${stderr || err.message}`);
-				resolve(!err);
-			}));
+			const remoteUrl = `https://${config.gitPat}@${config.gitRemote.replace(/^https:\/\//, "")}`;
+
+			// 广播开始状态
+			this.broadcast("bookmark-sync-status", { status: "pulling", message: "正在拉取..." });
 
 			(async () => {
-				await run("git init");
-				await run("git remote remove origin");
-				await run(`git remote add origin ${remoteUrl}`);
-				await run("git fetch origin");
-				const success = await run("git reset --hard origin/main");
-				this.logger.debug(success ? "Git 拉取成功" : "Git 拉取失败");
+				try {
+					// 初始化 Git 仓库
+					await initGitRepo(cwd, config);
+
+					// 设置远程仓库
+					await setupRemote(cwd, remoteUrl);
+
+					// 先 fetch 获取远程引用
+					this.logger.debug("正在获取远程分支信息...");
+					await runGitCommand(cwd, "fetch origin");
+
+					// fetch 之后获取远程默认分支
+					const defaultBranch = await getRemoteDefaultBranch(cwd);
+					this.logger.debug(`远程默认分支: ${defaultBranch}`);
+
+					// 重置到远程分支
+					await runGitCommand(cwd, `reset --hard origin/${defaultBranch}`);
+
+					this.logger.debug("Git 拉取成功");
+					this.broadcast("bookmark-sync-status", { success: true, message: "拉取成功" });
+
+					// 通知书签窗口刷新数据
+					this.broadcast("bookmarks-data", (() => {
+						const localBookmarksPath = path.join(cwd, getBookmarksFileName());
+						if (fs.existsSync(localBookmarksPath)) {
+							try {
+								return JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+							} catch (e) {
+								return [];
+							}
+						}
+						return [];
+					})());
+				} catch (err) {
+					this.logger.debug(`Git 拉取失败: ${err.message}`);
+					// 检查是否是网络错误
+					if (err.message.includes("Couldn") || err.message.includes("connection") || err.message.includes("connect")) {
+						this.broadcast("bookmark-sync-status", { success: false, message: "网络连接失败，请检查网络或代理设置" });
+					} else {
+						this.broadcast("bookmark-sync-status", { success: false, message: `拉取失败: ${err.message}` });
+					}
+				}
 			})();
 		});
 
@@ -320,26 +461,43 @@ class IPCManager {
 
 		ipcMain.on("get-bookmarks", (e) => {
 			const localBookmarksPath = getBookmarksPath();
+			let bookmarks = [];
 			if (fs.existsSync(localBookmarksPath)) {
-				const bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
-				e.sender.send("bookmarks-data", bookmarks);
+				try {
+					bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+				} catch (parseErr) {
+					this.logger.debug(`解析书签文件失败: ${parseErr.message}`);
+					bookmarks = [];
+				}
 			}
+			// 始终发送响应，即使是空数组
+			e.sender.send("bookmarks-data", bookmarks);
 		});
 
 		ipcMain.on("delete-bookmark", (e, index) => {
 			const localBookmarksPath = getBookmarksPath();
 			if (fs.existsSync(localBookmarksPath)) {
-				let bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
-				bookmarks.splice(index, 1);
-				fs.writeFileSync(localBookmarksPath, JSON.stringify(bookmarks, null, 2));
+				let bookmarks = [];
+				try {
+					bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+					bookmarks.splice(index, 1);
+					fs.writeFileSync(localBookmarksPath, JSON.stringify(bookmarks, null, 2));
+				} catch (parseErr) {
+					this.logger.debug(`解析书签文件失败: ${parseErr.message}`);
+				}
 				e.sender.send("bookmarks-data", bookmarks);
+			} else {
+				e.sender.send("bookmarks-data", []);
 			}
 		});
 
 		ipcMain.on("open-bookmark", (e, bookmark) => {
 			const mainWindow = this.windowManager.getMainWindow();
 			if (mainWindow) {
-				mainWindow.webContents.send("execute-webview-js", `window.location.href = '${bookmark.url}'; setTimeout(() => { const v = document.querySelector('video'); if(v) v.currentTime = ${bookmark.time}; }, 2000);`);
+				// 转义单引号防止 XSS
+				const escapedUrl = bookmark.url.replace(/'/g, "\\'");
+				const escapedTime = parseFloat(bookmark.time) || 0;
+				mainWindow.webContents.send("execute-webview-js", `window.location.href = '${escapedUrl}'; setTimeout(() => { const v = document.querySelector('video'); if(v) v.currentTime = ${escapedTime}; }, 2000);`);
 			}
 		});
 	}
