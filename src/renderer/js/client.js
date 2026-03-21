@@ -8,6 +8,8 @@ const fluxBar = document.getElementById("flux-bar");
 const menuBtn = document.getElementById("menu-btn");
 const dropdownMenu = document.getElementById("dropdown-menu");
 const settingsBtn = document.getElementById("settings-btn");
+const addBookmarkBtn = document.getElementById("add-bookmark-btn");
+const viewBookmarksBtn = document.getElementById("view-bookmarks-btn");
 const exitBtn = document.getElementById("exit-btn");
 const resizeHandles = document.querySelectorAll(".resize-handle");
 const dragRegion = document.querySelector(".drag-region");
@@ -66,6 +68,33 @@ menuBtn.onclick = (e) => {
 };
 document.onclick = () => dropdownMenu.classList.add("hidden");
 settingsBtn.onclick = () => ipcRenderer.send("open-settings");
+addBookmarkBtn.onclick = async () => {
+    dropdownMenu.classList.add("hidden");
+    const url = webview.getURL();
+    const code = `
+        (function() {
+            const title = document.title;
+            const video = document.querySelector('video');
+            const time = video ? video.currentTime : 0;
+            return { title, time };
+        })()
+    `;
+    try {
+        const videoInfo = await webview.executeJavaScript(code);
+        ipcRenderer.send("add-bookmark", {
+            title: videoInfo.title,
+            url: url,
+            time: videoInfo.time,
+            timestamp: Date.now()
+        });
+    } catch (err) {
+        debugLog.error("获取视频信息失败:", err);
+    }
+};
+viewBookmarksBtn.onclick = () => {
+    dropdownMenu.classList.add("hidden");
+    ipcRenderer.send("open-bookmarks-window");
+};
 exitBtn.onclick = () => ipcRenderer.send("app-exit");
 
 // 分辨率预设点击事件

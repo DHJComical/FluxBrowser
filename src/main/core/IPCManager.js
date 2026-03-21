@@ -19,6 +19,7 @@ class IPCManager {
 		this.setupAppHandlers();
 		this.setupResizeHandlers();
 		this.setupMoveHandlers();
+		this.setupBookmarkHandlers();
 	}
 
 	// 窗口相关处理器
@@ -99,6 +100,14 @@ class IPCManager {
 			if (this.logger && this.logger.setDebugMode) {
 				this.logger.setDebugMode(enabled);
 			}
+		});
+
+		ipcMain.on("save-app-config", (e, config) => {
+			configManager.saveAppConfig(config);
+		});
+
+		ipcMain.handle("get-app-config", () => {
+			return configManager.getAppConfig();
 		});
 	}
 
@@ -227,6 +236,101 @@ class IPCManager {
 				);
 			}
 			isResizing = false;
+		});
+	}
+
+	// 书签处理器
+	setupBookmarkHandlers() {
+		const fs = require("fs");
+		const path = require("path");
+		const { exec } = require("child_process");
+
+		const getBookmarksDir = () => {
+			const userDataDir = path.join(app.getPath("userData"), "bookmarks");
+			if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
+			return userDataDir;
+		};
+
+		const getBookmarksFileName = () => (!app.isPackaged ? "bookmarks-dev.json" : "bookmarks.json");
+		const getBookmarksPath = () => path.join(getBookmarksDir(), getBookmarksFileName());
+
+		ipcMain.on("add-bookmark", (e, bookmark) => {
+			const localBookmarksPath = getBookmarksPath();
+			let bookmarks = [];
+			if (fs.existsSync(localBookmarksPath)) {
+				bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+			}
+			bookmarks.push(bookmark);
+			fs.writeFileSync(localBookmarksPath, JSON.stringify(bookmarks, null, 2));
+			this.logger.debug("书签已保存:", bookmark.title);
+		});
+
+		ipcMain.on("sync-bookmarks", () => {
+			const config = configManager.getAppConfig();
+			if (!config.gitPat || !config.gitRemote) return;
+			const remoteUrl = config.gitRemote.replace("https://", `https://${config.gitPat}@`);
+			const cwd = getBookmarksDir();
+			const fileName = getBookmarksFileName();
+			
+			const run = (cmd) => new Promise((resolve) => exec(cmd, { cwd }, (err, stdout, stderr) => {
+				if (err) this.logger.debug(`Git 命令失败: ${cmd}, 错误: ${stderr || err.message}`);
+				resolve(!err);
+			}));
+
+			(async () => {
+				await run("git init");
+				await run(`git config user.name "${config.gitName || 'FluxBrowser'}"`);
+				await run(`git config user.email "${config.gitEmail || 'fluxbrowser@example.com'}"`);
+				await run("git config credential.helper store");
+				await run("git remote remove origin");
+				await run(`git remote add origin ${remoteUrl}`);
+				await run(`git add -f ${fileName}`);
+				// 尝试提交，如果没变更则忽略错误
+				await run('git commit -m "Update bookmarks" || true');
+				// 使用 HEAD 推送，自动匹配当前分支并创建远程分支
+				const success = await run("git push -u origin HEAD");
+				this.logger.debug(success ? "Git 同步成功" : "Git 同步失败");
+			})();
+		});
+
+		ipcMain.on("pull-bookmarks", () => {
+			const config = configManager.getAppConfig();
+			if (!config.gitPat || !config.gitRemote) return;
+			const remoteUrl = config.gitRemote.replace("https://", `https://${config.gitPat}@`);
+			const cwd = getBookmarksDir();
+			
+			const run = (cmd) => new Promise((resolve) => exec(cmd, { cwd }, (err, stdout, stderr) => {
+				if (err) this.logger.debug(`Git 命令失败: ${cmd}, 错误: ${stderr || err.message}`);
+				resolve(!err);
+			}));
+
+			(async () => {
+				await run("git init");
+				await run("git remote remove origin");
+				await run(`git remote add origin ${remoteUrl}`);
+				await run("git fetch origin");
+				const success = await run("git reset --hard origin/main");
+				this.logger.debug(success ? "Git 拉取成功" : "Git 拉取失败");
+			})();
+		});
+
+		ipcMain.on("open-bookmarks-window", () => {
+			this.windowManager.createBookmarksWindow(this.windowManager.getMainWindow());
+		});
+
+		ipcMain.on("get-bookmarks", (e) => {
+			const localBookmarksPath = getBookmarksPath();
+			if (fs.existsSync(localBookmarksPath)) {
+				const bookmarks = JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
+				e.sender.send("bookmarks-data", bookmarks);
+			}
+		});
+
+		ipcMain.on("open-bookmark", (e, bookmark) => {
+			const mainWindow = this.windowManager.getMainWindow();
+			if (mainWindow) {
+				mainWindow.webContents.send("execute-webview-js", `window.location.href = '${bookmark.url}'; setTimeout(() => { const v = document.querySelector('video'); if(v) v.currentTime = ${bookmark.time}; }, 2000);`);
+			}
 		});
 	}
 

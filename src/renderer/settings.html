@@ -39,6 +39,10 @@
                 <i class="material-icons">memory</i>
                 缓存清理
             </div>
+            <div class="settings-tab" data-panel="git">
+                <i class="material-icons">cloud_sync</i>
+                Git 同步
+            </div>
         </div>
 
         <!-- 右侧内容区 -->
@@ -149,6 +153,39 @@
                             </div>
                         </div>
                         <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Git 同步面板 -->
+            <div class="settings-panel" id="panel-git">
+                <div class="panel-title">Git 同步设置</div>
+                <div class="panel-subtitle">配置 GitHub PAT 和远程仓库以同步书签</div>
+                
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">settings_input_component</i>
+                        Git 配置
+                    </div>
+                    <div class="form-group">
+                        <label>GitHub PAT</label>
+                        <input type="password" id="git-pat" placeholder="输入 GitHub Personal Access Token">
+                    </div>
+                    <div class="form-group">
+                        <label>远程仓库地址 (HTTPS)</label>
+                        <input type="text" id="git-remote" placeholder="https://github.com/username/repo.git">
+                    </div>
+                    <div class="form-group">
+                        <label>Git 用户名</label>
+                        <input type="text" id="git-name" placeholder="例如: YourName">
+                    </div>
+                    <div class="form-group">
+                        <label>Git 邮箱</label>
+                        <input type="email" id="git-email" placeholder="例如: email@example.com">
+                    </div>
+                    <div class="git-actions">
+                        <button id="sync-bookmarks-btn" class="btn btn-primary">上传本地书签</button>
+                        <button id="pull-bookmarks-btn" class="btn btn-warning">从远程覆盖本地</button>
                     </div>
                 </div>
             </div>

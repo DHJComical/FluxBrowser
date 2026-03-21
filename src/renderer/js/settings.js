@@ -9,6 +9,12 @@ const updateStatus = document.getElementById("update-status");
 const installUpdateBtn = document.getElementById("install-update-btn");
 const debugModeToggle = document.getElementById("debug-mode-toggle");
 const versionNumber = document.getElementById("version-number");
+const gitPatInput = document.getElementById("git-pat");
+const gitRemoteInput = document.getElementById("git-remote");
+const gitNameInput = document.getElementById("git-name");
+const gitEmailInput = document.getElementById("git-email");
+const syncBookmarksBtn = document.getElementById("sync-bookmarks-btn");
+const pullBookmarksBtn = document.getElementById("pull-bookmarks-btn");
 
 // 缓存清理相关元素
 const clearLogsToggle = document.getElementById("clear-logs-toggle");
@@ -91,6 +97,13 @@ async function init() {
 		debugModeState = debugMode;
 		updateDebugToggle();
 
+		// 加载 Git 配置
+		const appConfig = await ipcRenderer.invoke("get-app-config");
+		if (gitPatInput) gitPatInput.value = appConfig.gitPat || "";
+		if (gitRemoteInput) gitRemoteInput.value = appConfig.gitRemote || "";
+		if (gitNameInput) gitNameInput.value = appConfig.gitName || "";
+		if (gitEmailInput) gitEmailInput.value = appConfig.gitEmail || "";
+
 		// 加载分辨率预设
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
 		tempResolutionPresets = JSON.parse(JSON.stringify(presets));
@@ -156,7 +169,25 @@ function bindButtonEvents() {
 		});
 	}
 
-	// 缓存清理开关绑定
+	// 手动同步按钮
+	if (syncBookmarksBtn) {
+		syncBookmarksBtn.addEventListener("click", () => {
+			ipcRenderer.send("sync-bookmarks");
+			alert("上传请求已发送");
+		});
+	}
+
+	// 从远程覆盖本地按钮
+	if (pullBookmarksBtn) {
+		pullBookmarksBtn.addEventListener("click", () => {
+			if (confirm("确定要从远程仓库覆盖本地书签吗？此操作不可逆。")) {
+				ipcRenderer.send("pull-bookmarks");
+				alert("覆盖请求已发送");
+			}
+		});
+	}
+
+	// 缓存清理相关开关绑定
 	bindCacheToggleEvents();
 }
 
@@ -478,6 +509,14 @@ function handleSaveWithRestart() {
 
 		// 保存调试模式状态
 		ipcRenderer.send("set-debug-mode", debugModeState);
+
+		// 保存 Git 配置
+		ipcRenderer.send("save-app-config", {
+			gitPat: gitPatInput.value,
+			gitRemote: gitRemoteInput.value,
+			gitName: gitNameInput.value,
+			gitEmail: gitEmailInput.value
+		});
 
 		// 保存分辨率预设
 		ipcRenderer.send("save-resolution-presets", tempResolutionPresets);

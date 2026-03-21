@@ -6,6 +6,7 @@ class WindowManager {
 	constructor() {
 		this.mainWindow = null;
 		this.settingsWindow = null;
+		this.bookmarksWindow = null;
 		this.savedBounds = configManager.getBoundsConfig();
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 	}
@@ -177,6 +178,40 @@ class WindowManager {
 			this.settingsWindow.close();
 			this.settingsWindow = null;
 		}
+	}
+
+	// 创建书签窗口
+	createBookmarksWindow(parentWindow) {
+		if (this.bookmarksWindow) {
+			this.bookmarksWindow.focus();
+			return this.bookmarksWindow;
+		}
+
+		const appPath = app.getAppPath();
+		const iconPath = path.join(appPath, "resources/image/FluxBrowser-icon.ico");
+
+		this.bookmarksWindow = new BrowserWindow({
+			width: 600,
+			height: 400,
+			parent: parentWindow,
+			title: "书签管理",
+			icon: iconPath,
+			webPreferences: {
+				nodeIntegration: true,
+				contextIsolation: false,
+			},
+		});
+
+		this.bookmarksWindow.setMenu(null);
+		this.bookmarksWindow.loadFile(
+			path.join(__dirname, "../../renderer/bookmarks.html"),
+		);
+
+		this.bookmarksWindow.on("closed", () => {
+			this.bookmarksWindow = null;
+		});
+
+		return this.bookmarksWindow;
 	}
 }
 

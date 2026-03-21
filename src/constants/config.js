@@ -26,6 +26,10 @@ const DEFAULT_BOUNDS_CONFIG = {
 // 默认应用配置
 const DEFAULT_APP_CONFIG = {
 	debugMode: false,
+	gitPat: "",
+	gitRemote: "",
+	gitName: "",
+	gitEmail: "",
 };
 
 // 默认分辨率预设
