@@ -15,6 +15,8 @@ const gitNameInput = document.getElementById("git-name");
 const gitEmailInput = document.getElementById("git-email");
 const syncBookmarksBtn = document.getElementById("sync-bookmarks-btn");
 const pullBookmarksBtn = document.getElementById("pull-bookmarks-btn");
+const syncAllBtn = document.getElementById("sync-all-btn");
+const pullAllBtn = document.getElementById("pull-all-btn");
 
 // 缓存清理相关元素
 const clearLogsToggle = document.getElementById("clear-logs-toggle");
@@ -181,6 +183,24 @@ function bindButtonEvents() {
 		pullBookmarksBtn.addEventListener("click", () => {
 			if (confirm("确定要从远程仓库覆盖本地书签吗？此操作不可逆。")) {
 				ipcRenderer.send("pull-bookmarks");
+			}
+		});
+	}
+
+	// 同步所有配置按钮
+	if (syncAllBtn) {
+		syncAllBtn.addEventListener("click", () => {
+			if (confirm("确定要上传所有配置和书签到云端吗？")) {
+				ipcRenderer.send("sync-all");
+			}
+		});
+	}
+
+	// 从云端下载所有配置按钮
+	if (pullAllBtn) {
+		pullAllBtn.addEventListener("click", () => {
+			if (confirm("确定要从云端下载并覆盖本地所有配置吗？此操作不可逆！")) {
+				ipcRenderer.send("pull-all");
 			}
 		});
 	}
@@ -455,26 +475,73 @@ ipcRenderer.on("bookmark-sync-status", (e, data) => {
 		// 正在同步
 		if (syncBtn) {
 			syncBtn.disabled = true;
-			syncBtn.textContent = "同步中...";
+			syncBtn.innerHTML = '<i class="material-icons">sync</i> 同步中...';
 		}
 		if (pullBtn) pullBtn.disabled = true;
 	} else if (data.status === "pulling") {
 		// 正在拉取
 		if (pullBtn) {
 			pullBtn.disabled = true;
-			pullBtn.textContent = "拉取中...";
+			pullBtn.innerHTML = '<i class="material-icons">sync</i> 拉取中...';
 		}
 		if (syncBtn) syncBtn.disabled = true;
 	} else {
 		// 同步或拉取完成
 		if (syncBtn) {
 			syncBtn.disabled = false;
-			syncBtn.textContent = "上传书签";
+			syncBtn.innerHTML = '<i class="material-icons">bookmark</i> 仅上传书签';
 		}
 		if (pullBtn) {
 			pullBtn.disabled = false;
-			pullBtn.textContent = "从远程覆盖本地";
+			pullBtn.innerHTML = '<i class="material-icons">bookmark</i> 仅下载书签';
 		}
+
+		// 显示结果
+		if (data.success) {
+			alert(data.message);
+		} else {
+			alert("操作失败: " + data.message);
+		}
+	}
+});
+
+// 同步所有配置状态监听
+ipcRenderer.on("sync-all-status", (e, data) => {
+	const syncAllBtn = document.getElementById("sync-all-btn");
+	const pullAllBtn = document.getElementById("pull-all-btn");
+	const syncBookmarksBtn = document.getElementById("sync-bookmarks-btn");
+	const pullBookmarksBtn = document.getElementById("pull-bookmarks-btn");
+
+	if (data.status === "syncing") {
+		// 正在同步
+		if (syncAllBtn) {
+			syncAllBtn.disabled = true;
+			syncAllBtn.innerHTML = '<i class="material-icons">sync</i> 同步中...';
+		}
+		if (pullAllBtn) pullAllBtn.disabled = true;
+		if (syncBookmarksBtn) syncBookmarksBtn.disabled = true;
+		if (pullBookmarksBtn) pullBookmarksBtn.disabled = true;
+	} else if (data.status === "pulling") {
+		// 正在拉取
+		if (pullAllBtn) {
+			pullAllBtn.disabled = true;
+			pullAllBtn.innerHTML = '<i class="material-icons">sync</i> 下载中...';
+		}
+		if (syncAllBtn) syncAllBtn.disabled = true;
+		if (syncBookmarksBtn) syncBookmarksBtn.disabled = true;
+		if (pullBookmarksBtn) pullBookmarksBtn.disabled = true;
+	} else {
+		// 操作完成
+		if (syncAllBtn) {
+			syncAllBtn.disabled = false;
+			syncAllBtn.innerHTML = '<i class="material-icons">cloud_upload</i> 上传所有配置到云端';
+		}
+		if (pullAllBtn) {
+			pullAllBtn.disabled = false;
+			pullAllBtn.innerHTML = '<i class="material-icons">cloud_download</i> 从云端下载覆盖本地';
+		}
+		if (syncBookmarksBtn) syncBookmarksBtn.disabled = false;
+		if (pullBookmarksBtn) pullBookmarksBtn.disabled = false;
 
 		// 显示结果
 		if (data.success) {

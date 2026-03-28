@@ -518,4 +518,77 @@
 	display: flex;
 	gap: 10px;
 	margin-top: 15px;
+	flex-wrap: wrap;
+}
+
+.git-actions .btn i {
+	font-size: 16px;
+	vertical-align: middle;
+	margin-right: 4px;
+}
+
+/* 同步信息卡片 */
+.sync-info {
+	background: rgba(108, 140, 255, 0.08);
+	border: 1px solid rgba(108, 140, 255, 0.15);
+	border-radius: 10px;
+	padding: 14px 16px;
+	margin-bottom: 15px;
+}
+
+.sync-info p {
+	font-size: 13px;
+	color: #b0b0c0;
+	margin-bottom: 10px;
+	font-weight: 500;
+}
+
+.sync-info ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+}
+
+.sync-info ul li {
+	font-size: 12px;
+	color: #8a8aa0;
+	padding-left: 16px;
+	position: relative;
+}
+
+.sync-info ul li::before {
+	content: "✓";
+	position: absolute;
+	left: 0;
+	color: #00cc6a;
+	font-size: 11px;
+}
+
+/* 按钮禁用状态 */
+.btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	transform: none !important;
+	box-shadow: none !important;
+}
+
+/* 按钮按下效果 */
+.btn:active:not(:disabled) {
+	transform: translateY(0) scale(0.98);
+}
+
+/* 警告按钮样式 */
+.btn-warning {
+	background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+	color: #ffffff;
+	font-weight: 600;
+	border: none;
+}
+
+.btn-warning:hover {
+	box-shadow: 0 8px 24px rgba(255, 149, 0, 0.4);
+	transform: translateY(-2px);
 }

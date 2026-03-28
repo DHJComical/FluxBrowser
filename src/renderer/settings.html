@@ -160,7 +160,7 @@
             <!-- Git 同步面板 -->
             <div class="settings-panel" id="panel-git">
                 <div class="panel-title">Git 同步设置</div>
-                <div class="panel-subtitle">配置 GitHub PAT 和远程仓库以同步书签</div>
+                <div class="panel-subtitle">配置 GitHub PAT 和远程仓库以同步所有个性化配置和书签</div>
                 
                 <div class="settings-card">
                     <div class="card-title">
@@ -183,9 +183,42 @@
                         <label>Git 邮箱</label>
                         <input type="email" id="git-email" placeholder="例如: email@example.com">
                     </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">cloud_upload</i>
+                        一键同步所有配置
+                    </div>
+                    <div class="sync-info">
+                        <p>同步内容包括：</p>
+                        <ul>
+                            <li>快捷键配置</li>
+                            <li>窗口边界设置</li>
+                            <li>分辨率预设</li>
+                            <li>书签记录</li>
+                        </ul>
+                    </div>
                     <div class="git-actions">
-                        <button id="sync-bookmarks-btn" class="btn btn-primary">上传本地书签</button>
-                        <button id="pull-bookmarks-btn" class="btn btn-warning">从远程覆盖本地</button>
+                        <button id="sync-all-btn" class="btn btn-primary">
+                            <i class="material-icons">cloud_upload</i>
+                            上传所有配置到云端
+                        </button>
+                        <button id="pull-all-btn" class="btn btn-warning">
+                            <i class="material-icons">cloud_download</i>
+                            从云端下载覆盖本地
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-title">
+                        <i class="material-icons">bookmark</i>
+                        书签单独同步
+                    </div>
+                    <div class="git-actions">
+                        <button id="sync-bookmarks-btn" class="btn btn-secondary">仅上传书签</button>
+                        <button id="pull-bookmarks-btn" class="btn btn-secondary">仅下载书签</button>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 const { ipcMain, globalShortcut, app } = require("electron");
 const configManager = require("../ConfigManager");
+const GitSyncManager = require("../GitSyncManager");
 
 class IPCManager {
 	constructor(windowManager, pluginLoader, logger) {
@@ -9,6 +10,8 @@ class IPCManager {
 		// 从配置加载透明度
 		const boundsConfig = configManager.getBoundsConfig();
 		this.currentOpacity = boundsConfig.opacity || 1.0;
+		// 初始化Git同步管理器
+		this.gitSyncManager = new GitSyncManager(logger);
 	}
 
 	// 初始化所有IPC处理器
@@ -20,6 +23,7 @@ class IPCManager {
 		this.setupResizeHandlers();
 		this.setupMoveHandlers();
 		this.setupBookmarkHandlers();
+		this.setupSyncHandlers();
 	}
 
 	// 窗口相关处理器
@@ -236,6 +240,53 @@ class IPCManager {
 				);
 			}
 			isResizing = false;
+		});
+	}
+
+	// 同步处理器 (配置+书签)
+	setupSyncHandlers() {
+		// 同步所有配置（配置+书签）
+		ipcMain.on("sync-all", () => {
+			const broadcast = (data) => {
+				this.broadcast("sync-all-status", data);
+			};
+			this.gitSyncManager.pushAll(broadcast);
+		});
+
+		// 从远程拉取所有配置
+		ipcMain.on("pull-all", () => {
+			const broadcast = (data) => {
+				this.broadcast("sync-all-status", data);
+			};
+			this.gitSyncManager.pullAll(broadcast);
+		});
+
+		// 获取同步文件列表
+		ipcMain.handle("get-sync-files", () => {
+			return this.gitSyncManager.getSyncFiles();
+		});
+
+		// 导出配置到同步目录（不推送）
+		ipcMain.on("export-configs", () => {
+			const result = this.gitSyncManager.exportConfigs();
+			if (result.success) {
+				this.logger.debug("配置已导出到同步目录");
+				this.broadcast("sync-all-status", { success: true, message: "配置已导出" });
+			} else {
+				this.broadcast("sync-all-status", { success: false, message: `导出失败: ${result.error}` });
+			}
+		});
+
+		// 从同步目录导入配置（不拉取）
+		ipcMain.on("import-configs", () => {
+			const result = this.gitSyncManager.importConfigs();
+			if (result.success) {
+				const msg = `已导入: ${result.imported.join(", ")}`;
+				this.logger.debug(msg);
+				this.broadcast("sync-all-status", { success: true, message: msg, imported: result.imported });
+			} else {
+				this.broadcast("sync-all-status", { success: false, message: `导入失败: ${result.error}` });
+			}
 		});
 	}
 
