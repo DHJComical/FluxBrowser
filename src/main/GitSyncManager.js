@@ -12,10 +12,17 @@ const configManager = require("./ConfigManager");
 const CONFIG_FILES = {
 	KEY_CONFIG: "key-config.json",
 	BOUNDS_CONFIG: "window-bounds.json",
+	// APP_CONFIG 包含敏感信息(PAT)，不参与同步
 	APP_CONFIG: "app-config.json",
 	RESOLUTION_PRESETS: "resolution-presets.json",
 	BOOKMARKS: "bookmarks.json"
 };
+
+// 需要排除的文件（包含敏感信息）
+const EXCLUDED_FILES = [
+	"app-config.json",
+	"dev-app-config.json"
+];
 
 class GitSyncManager {
 	constructor(logger) {
@@ -153,10 +160,6 @@ class GitSyncManager {
 				JSON.stringify(boundsConfig, null, 2)
 			);
 			fs.writeFileSync(
-				path.join(this.syncDataPath, `${prefix}${CONFIG_FILES.APP_CONFIG}`),
-				JSON.stringify(appConfig, null, 2)
-			);
-			fs.writeFileSync(
 				path.join(this.syncDataPath, `${prefix}${CONFIG_FILES.RESOLUTION_PRESETS}`),
 				JSON.stringify(resolutionPresets, null, 2)
 			);
@@ -221,18 +224,6 @@ class GitSyncManager {
 					results.imported.push("窗口边界配置");
 				} catch (e) {
 					results.failed.push(`窗口边界配置: ${e.message}`);
-				}
-			}
-
-			// 导入应用配置
-			const appConfigPath = path.join(this.syncDataPath, `${prefix}${CONFIG_FILES.APP_CONFIG}`);
-			if (fs.existsSync(appConfigPath)) {
-				try {
-					const data = JSON.parse(fs.readFileSync(appConfigPath, "utf-8"));
-					configManager.saveAppConfig(data);
-					results.imported.push("应用配置");
-				} catch (e) {
-					results.failed.push(`应用配置: ${e.message}`);
 				}
 			}
 
@@ -328,10 +319,15 @@ class GitSyncManager {
 				// 设置远程仓库
 				await this.setupRemote(this.syncDataPath, remoteUrl);
 
-				// 添加所有文件
-				await this._runGitCommand(this.syncDataPath, "add -A");
+			// 添加文件时排除包含敏感信息的文件
+			for (const excludedFile of EXCLUDED_FILES) {
+				await this._runGitCommand(this.syncDataPath, `update-index --assume-unchanged "${excludedFile}"`).catch(() => {});
+			}
+			
+			// 添加所有文件（除了被排除的）
+			await this._runGitCommand(this.syncDataPath, "add -A");
 
-				// 检查是否有变更
+			// 检查是否有变更
 				const status = await this._runGitCommand(this.syncDataPath, "status --porcelain");
 				
 				if (status.trim()) {
