@@ -27,8 +27,13 @@ class ShortcutManager {
 	}
 
 	// 注册单个插件的快捷键
-	registerPluginShortcuts(plugin) {
+	registerPluginShortcuts(plugin, options = {}) {
+		const skippedActionIds = new Set(options.skipActionIds || []);
 		for (const [actionId, actionFunc] of Object.entries(plugin.shortcuts)) {
+			if (skippedActionIds.has(actionId) || this.isActionRegistered(actionId)) {
+				continue;
+			}
+
 			// 从配置获取用户设置的按键
 			const userKey = this.getKeyFromConfig(actionId);
 			if (userKey) {
@@ -122,6 +127,16 @@ class ShortcutManager {
 		return result;
 	}
 
+	// 检查动作是否已经注册
+	isActionRegistered(actionId) {
+		for (const registeredActionId of this.registeredShortcuts.values()) {
+			if (registeredActionId === actionId) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// 暂停所有快捷键（临时禁用）
 	suspendShortcuts() {
 		this.unregisterAllShortcuts();
@@ -145,6 +160,21 @@ class ShortcutManager {
 	resumeShortcuts() {
 		this.reloadShortcuts();
 		this.logger.debug("快捷键已恢复");
+	}
+
+	// 恢复除指定动作外的快捷键
+	resumeShortcutsExcept(actionIds = []) {
+		const skippedActionIds = new Set(actionIds);
+		if (this.pluginLoader && this.pluginLoader.plugins) {
+			this.pluginLoader.plugins.forEach((plugin) => {
+				if (plugin.shortcuts) {
+					this.registerPluginShortcuts(plugin, { skipActionIds: skippedActionIds });
+				}
+			});
+		}
+		this.logger.debug(
+			`快捷键已部分恢复，跳过: ${Array.from(skippedActionIds).join(", ")}`,
+		);
 	}
 
 	// 验证快捷键格式

@@ -24,6 +24,7 @@ class FluxCore {
 		this.pluginLoader = null;
 		this.ipcManager = null;
 		this.shortcutManager = null;
+		this.lastBossKeyToggleAt = 0;
 
 		// 输出启动时的窗口位置和大小到日志
 		const savedBounds = configManager.getBoundsConfig();
@@ -138,6 +139,10 @@ class FluxCore {
 
 	// 触发老板键
 	toggleBossKey() {
+		const now = Date.now();
+		if (now - this.lastBossKeyToggleAt < 300) return;
+		this.lastBossKeyToggleAt = now;
+
 		const mainWindow = this.windowManager.getMainWindow();
 		if (!mainWindow) return;
 
@@ -153,7 +158,7 @@ class FluxCore {
 		if (willHide) {
 			this.suspendShortcutsExceptBossKey();
 		} else {
-			this.resumeShortcuts();
+			this.resumeShortcutsExceptBossKey();
 			this.resumeBossKeyPausedVideos();
 		}
 	}
@@ -203,6 +208,12 @@ class FluxCore {
 	resumeShortcuts() {
 		if (this.shortcutManager) {
 			this.shortcutManager.resumeShortcuts();
+		}
+	}
+
+	resumeShortcutsExceptBossKey() {
+		if (this.shortcutManager) {
+			this.shortcutManager.resumeShortcutsExcept(["BossKey"]);
 		}
 	}
 
