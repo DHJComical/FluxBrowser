@@ -128,6 +128,19 @@ class ShortcutManager {
 		this.logger.debug("快捷键已暂停");
 	}
 
+	// 暂停除指定动作外的快捷键
+	suspendShortcutsExcept(actionIds = []) {
+		const preservedActionIds = new Set(actionIds);
+		for (const [key, actionId] of this.registeredShortcuts.entries()) {
+			if (!preservedActionIds.has(actionId)) {
+				this.unregisterShortcut(key);
+			}
+		}
+		this.logger.debug(
+			`快捷键已部分暂停，保留: ${Array.from(preservedActionIds).join(", ")}`,
+		);
+	}
+
 	// 恢复快捷键
 	resumeShortcuts() {
 		this.reloadShortcuts();

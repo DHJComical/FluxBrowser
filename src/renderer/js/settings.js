@@ -8,6 +8,9 @@ const checkUpdateBtn = document.getElementById("check-update-btn");
 const updateStatus = document.getElementById("update-status");
 const installUpdateBtn = document.getElementById("install-update-btn");
 const debugModeToggle = document.getElementById("debug-mode-toggle");
+const bossKeyProtectionToggle = document.getElementById(
+	"boss-key-protection-toggle",
+);
 const versionNumber = document.getElementById("version-number");
 const gitPatInput = document.getElementById("git-pat");
 const gitRemoteInput = document.getElementById("git-remote");
@@ -54,6 +57,7 @@ const debugLog = {
 // 临时存储数据
 let tempKeyMap = {};
 let debugModeState = false;
+let bossKeyProtectionState = true;
 let tempResolutionPresets = [];
 let aspectLocked = false;
 let lockedAspectRatio = null;
@@ -105,6 +109,8 @@ async function init() {
 		if (gitRemoteInput) gitRemoteInput.value = appConfig.gitRemote || "";
 		if (gitNameInput) gitNameInput.value = appConfig.gitName || "";
 		if (gitEmailInput) gitEmailInput.value = appConfig.gitEmail || "";
+		bossKeyProtectionState = appConfig.bossKeyProtection !== false;
+		updateBossKeyProtectionToggle();
 
 		// 加载分辨率预设
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
@@ -168,6 +174,14 @@ function bindButtonEvents() {
 		debugModeToggle.addEventListener("click", () => {
 			debugModeState = !debugModeState;
 			updateDebugToggle();
+		});
+	}
+
+	// 老板键保护开关
+	if (bossKeyProtectionToggle) {
+		bossKeyProtectionToggle.addEventListener("click", () => {
+			bossKeyProtectionState = !bossKeyProtectionState;
+			updateBossKeyProtectionToggle();
 		});
 	}
 
@@ -302,6 +316,17 @@ function updateDebugToggle() {
 			debugModeToggle.classList.add("active");
 		} else {
 			debugModeToggle.classList.remove("active");
+		}
+	}
+}
+
+// 更新老板键保护开关显示
+function updateBossKeyProtectionToggle() {
+	if (bossKeyProtectionToggle) {
+		if (bossKeyProtectionState) {
+			bossKeyProtectionToggle.classList.add("active");
+		} else {
+			bossKeyProtectionToggle.classList.remove("active");
 		}
 	}
 }
@@ -568,9 +593,12 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 
 			// 如果清理了应用配置，重新加载调试模式状态
 			if (cacheClearOptions.clearAppConfig) {
+				const appConfig = await ipcRenderer.invoke("get-app-config");
 				const debugMode = await ipcRenderer.invoke("get-debug-mode");
 				debugModeState = debugMode;
+				bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 				updateDebugToggle();
+				updateBossKeyProtectionToggle();
 			}
 
 			// 如果清理了分辨率预设，重新加载分辨率预设数据
@@ -589,7 +617,7 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 		);
 		bindCacheToggleEvents();
 		// 重置UI状态
-		document.querySelectorAll('[id$="-toggle"]').forEach((toggle) => {
+		document.querySelectorAll(".cache-section .toggle-switch").forEach((toggle) => {
 			toggle.classList.remove("active");
 		});
 		// 重置按钮状态
@@ -616,6 +644,7 @@ function handleSaveWithRestart() {
 
 		// 保存 Git 配置
 		ipcRenderer.send("save-app-config", {
+			bossKeyProtection: bossKeyProtectionState,
 			gitPat: gitPatInput.value,
 			gitRemote: gitRemoteInput.value,
 			gitName: gitNameInput.value,

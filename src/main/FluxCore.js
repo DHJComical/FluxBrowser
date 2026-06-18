@@ -136,6 +136,76 @@ class FluxCore {
 		this.windowManager.toggleVisibility();
 	}
 
+	// 触发老板键
+	toggleBossKey() {
+		const mainWindow = this.windowManager.getMainWindow();
+		if (!mainWindow) return;
+
+		const willHide = mainWindow.isVisible();
+		if (willHide && this.isBossKeyProtectionEnabled()) {
+			this.pausePlayingVideosForBossKey();
+		}
+
+		this.windowManager.toggleVisibility();
+
+		if (!this.isBossKeyProtectionEnabled()) return;
+
+		if (willHide) {
+			this.suspendShortcutsExceptBossKey();
+		} else {
+			this.resumeShortcuts();
+			this.resumeBossKeyPausedVideos();
+		}
+	}
+
+	// 老板键保护选项：隐藏时暂停视频并只保留老板键快捷键
+	isBossKeyProtectionEnabled() {
+		return configManager.getAppConfig().bossKeyProtection !== false;
+	}
+
+	pausePlayingVideosForBossKey() {
+		this.executeOnWebview(`
+			(() => {
+				document.querySelectorAll("video").forEach((video) => {
+					if (!video.paused && !video.ended) {
+						video.dataset.fluxBossKeyPaused = "true";
+						video.pause();
+					}
+				});
+			})();
+		`);
+	}
+
+	resumeBossKeyPausedVideos() {
+		this.executeOnWebview(`
+			(() => {
+				document.querySelectorAll("video").forEach((video) => {
+					if (video.dataset.fluxBossKeyPaused === "true") {
+						delete video.dataset.fluxBossKeyPaused;
+						if (video.paused && !video.ended) {
+							const playPromise = video.play();
+							if (playPromise && typeof playPromise.catch === "function") {
+								playPromise.catch(() => {});
+							}
+						}
+					}
+				});
+			})();
+		`);
+	}
+
+	suspendShortcutsExceptBossKey() {
+		if (this.shortcutManager) {
+			this.shortcutManager.suspendShortcutsExcept(["BossKey"]);
+		}
+	}
+
+	resumeShortcuts() {
+		if (this.shortcutManager) {
+			this.shortcutManager.resumeShortcuts();
+		}
+	}
+
 	// 设置窗口置顶状态
 	setAlwaysOnTop(flag) {
 		this.windowManager.setAlwaysOnTop(flag);

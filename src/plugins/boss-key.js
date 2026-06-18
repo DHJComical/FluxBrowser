@@ -2,7 +2,11 @@ module.exports = {
 	name: "BossKey",
 	shortcuts: {
 		BossKey: (core) => {
-			core.toggleVisibility();
+			if (core.toggleBossKey) {
+				core.toggleBossKey();
+			} else {
+				core.toggleVisibility();
+			}
 		},
 	},
 };
