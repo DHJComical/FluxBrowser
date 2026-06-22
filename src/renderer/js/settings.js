@@ -667,6 +667,7 @@ function handleSaveWithRestart() {
 			window.close();
 		} else {
 			// 不需要重启，直接关闭
+			ipcRenderer.send("settings-saved");
 			window.close();
 		}
 	} catch (error) {

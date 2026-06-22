@@ -7,6 +7,7 @@ class WindowManager {
 		this.mainWindow = null;
 		this.settingsWindow = null;
 		this.bookmarksWindow = null;
+		this.shouldFocusMainWindowAfterSettingsClose = false;
 		this.savedBounds = configManager.getBoundsConfig();
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 	}
@@ -104,6 +105,10 @@ class WindowManager {
 
 		this.settingsWindow.on("closed", () => {
 			this.settingsWindow = null;
+			if (this.shouldFocusMainWindowAfterSettingsClose) {
+				this.shouldFocusMainWindowAfterSettingsClose = false;
+				setTimeout(() => this.bringMainWindowToFront(), 0);
+			}
 		});
 
 		return this.settingsWindow;
@@ -178,6 +183,34 @@ class WindowManager {
 			this.settingsWindow.close();
 			this.settingsWindow = null;
 		}
+	}
+
+	// 标记设置窗口保存关闭后需要聚焦主窗口
+	focusMainWindowAfterSettingsClose() {
+		this.shouldFocusMainWindowAfterSettingsClose = true;
+	}
+
+	// 将主窗口带到前台
+	bringMainWindowToFront() {
+		if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
+
+		if (this.mainWindow.isMinimized()) {
+			this.mainWindow.restore();
+		}
+		if (!this.mainWindow.isVisible()) {
+			this.mainWindow.show();
+		}
+
+		if (typeof this.mainWindow.moveTop === "function") {
+			this.mainWindow.moveTop();
+		}
+
+		if (!this.mainWindow.isAlwaysOnTop()) {
+			this.mainWindow.setAlwaysOnTop(true, "screen-saver");
+			this.mainWindow.setAlwaysOnTop(false);
+		}
+
+		this.mainWindow.focus();
 	}
 
 	// 创建书签窗口

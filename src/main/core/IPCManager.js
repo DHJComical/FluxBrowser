@@ -54,6 +54,11 @@ class IPCManager {
 			this.windowManager.saveWindowBounds();
 			app.quit();
 		});
+
+		// 设置保存后关闭窗口时，将主窗口带回前台
+		ipcMain.on("settings-saved", () => {
+			this.windowManager.focusMainWindowAfterSettingsClose();
+		});
 	}
 
 	// 配置相关处理器
