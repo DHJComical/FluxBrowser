@@ -143,6 +143,7 @@ function bindButtonEvents() {
 	// 取消按钮
 	if (cancelBtn) {
 		cancelBtn.addEventListener("click", () => {
+			ipcRenderer.send("settings-window-closing");
 			window.close();
 		});
 	}
@@ -667,7 +668,7 @@ function handleSaveWithRestart() {
 			window.close();
 		} else {
 			// 不需要重启，直接关闭
-			ipcRenderer.send("settings-saved");
+			ipcRenderer.send("settings-window-closing");
 			window.close();
 		}
 	} catch (error) {

@@ -55,8 +55,8 @@ class IPCManager {
 			app.quit();
 		});
 
-		// 设置保存后关闭窗口时，将主窗口带回前台
-		ipcMain.on("settings-saved", () => {
+		// 设置窗口关闭后，将主窗口带回前台
+		ipcMain.on("settings-window-closing", () => {
 			this.windowManager.focusMainWindowAfterSettingsClose();
 		});
 	}
