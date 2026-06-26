@@ -11,6 +11,7 @@ const debugModeToggle = document.getElementById("debug-mode-toggle");
 const bossKeyProtectionToggle = document.getElementById(
 	"boss-key-protection-toggle",
 );
+const alwaysOnTopToggle = document.getElementById("always-on-top-toggle");
 const versionNumber = document.getElementById("version-number");
 const gitPatInput = document.getElementById("git-pat");
 const gitRemoteInput = document.getElementById("git-remote");
@@ -58,6 +59,7 @@ const debugLog = {
 let tempKeyMap = {};
 let debugModeState = false;
 let bossKeyProtectionState = true;
+let alwaysOnTopState = false;
 let tempResolutionPresets = [];
 let aspectLocked = false;
 let lockedAspectRatio = null;
@@ -110,7 +112,9 @@ async function init() {
 		if (gitNameInput) gitNameInput.value = appConfig.gitName || "";
 		if (gitEmailInput) gitEmailInput.value = appConfig.gitEmail || "";
 		bossKeyProtectionState = appConfig.bossKeyProtection !== false;
+		alwaysOnTopState = appConfig.alwaysOnTop === true;
 		updateBossKeyProtectionToggle();
+		updateAlwaysOnTopToggle();
 
 		// 加载分辨率预设
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
@@ -183,6 +187,14 @@ function bindButtonEvents() {
 		bossKeyProtectionToggle.addEventListener("click", () => {
 			bossKeyProtectionState = !bossKeyProtectionState;
 			updateBossKeyProtectionToggle();
+		});
+	}
+
+	// 窗口置顶开关
+	if (alwaysOnTopToggle) {
+		alwaysOnTopToggle.addEventListener("click", () => {
+			alwaysOnTopState = !alwaysOnTopState;
+			updateAlwaysOnTopToggle();
 		});
 	}
 
@@ -328,6 +340,17 @@ function updateBossKeyProtectionToggle() {
 			bossKeyProtectionToggle.classList.add("active");
 		} else {
 			bossKeyProtectionToggle.classList.remove("active");
+		}
+	}
+}
+
+// 更新窗口置顶开关显示
+function updateAlwaysOnTopToggle() {
+	if (alwaysOnTopToggle) {
+		if (alwaysOnTopState) {
+			alwaysOnTopToggle.classList.add("active");
+		} else {
+			alwaysOnTopToggle.classList.remove("active");
 		}
 	}
 }
@@ -598,8 +621,10 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 				const debugMode = await ipcRenderer.invoke("get-debug-mode");
 				debugModeState = debugMode;
 				bossKeyProtectionState = appConfig.bossKeyProtection !== false;
+				alwaysOnTopState = appConfig.alwaysOnTop === true;
 				updateDebugToggle();
 				updateBossKeyProtectionToggle();
+				updateAlwaysOnTopToggle();
 			}
 
 			// 如果清理了分辨率预设，重新加载分辨率预设数据
@@ -646,6 +671,7 @@ function handleSaveWithRestart() {
 		// 保存 Git 配置
 		ipcRenderer.send("save-app-config", {
 			bossKeyProtection: bossKeyProtectionState,
+			alwaysOnTop: alwaysOnTopState,
 			gitPat: gitPatInput.value,
 			gitRemote: gitRemoteInput.value,
 			gitName: gitNameInput.value,

@@ -113,6 +113,9 @@ class IPCManager {
 
 		ipcMain.on("save-app-config", (e, config) => {
 			configManager.saveAppConfig(config);
+			if (Object.hasOwn(config, "alwaysOnTop")) {
+				this.windowManager.setUserAlwaysOnTop(config.alwaysOnTop);
+			}
 		});
 
 		ipcMain.handle("get-app-config", () => {
@@ -160,6 +163,9 @@ class IPCManager {
 			if (options.clearAppConfig) {
 				this.logger.debug("正在重置应用配置...");
 				configManager.saveAppConfig(configManager.DEFAULT_APP_CONFIG);
+				this.windowManager.setUserAlwaysOnTop(
+					configManager.DEFAULT_APP_CONFIG.alwaysOnTop,
+				);
 			}
 
 			if (options.clearResolutionPresets) {

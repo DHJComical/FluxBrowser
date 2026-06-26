@@ -27,6 +27,7 @@ const DEFAULT_BOUNDS_CONFIG = {
 const DEFAULT_APP_CONFIG = {
 	debugMode: false,
 	bossKeyProtection: true,
+	alwaysOnTop: false,
 	gitPat: "",
 	gitRemote: "",
 	gitName: "",

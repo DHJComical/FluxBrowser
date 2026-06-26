@@ -9,6 +9,8 @@ class WindowManager {
 		this.bookmarksWindow = null;
 		this.shouldFocusMainWindowAfterSettingsClose = false;
 		this.savedBounds = configManager.getBoundsConfig();
+		this.userAlwaysOnTop = configManager.getAppConfig().alwaysOnTop === true;
+		this.temporaryAlwaysOnTop = false;
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 	}
 
@@ -29,7 +31,7 @@ class WindowManager {
 			minHeight: 80, // 最小高度：40px标题栏 + 40px Webview区域
 			frame: false,
 			transparent: true,
-			alwaysOnTop: false,
+			alwaysOnTop: this.userAlwaysOnTop,
 			hasShadow: false,
 			icon: iconPath,
 			webPreferences: {
@@ -142,7 +144,22 @@ class WindowManager {
 
 	// 设置窗口置顶状态
 	setAlwaysOnTop(flag) {
-		if (this.mainWindow) this.mainWindow.setAlwaysOnTop(flag, "screen-saver");
+		this.temporaryAlwaysOnTop = flag === true;
+		this.applyAlwaysOnTop();
+	}
+
+	// 设置用户配置的窗口置顶状态
+	setUserAlwaysOnTop(flag) {
+		this.userAlwaysOnTop = flag === true;
+		this.applyAlwaysOnTop();
+	}
+
+	// 应用最终置顶状态
+	applyAlwaysOnTop() {
+		if (this.mainWindow) {
+			const shouldAlwaysOnTop = this.userAlwaysOnTop || this.temporaryAlwaysOnTop;
+			this.mainWindow.setAlwaysOnTop(shouldAlwaysOnTop, "screen-saver");
+		}
 	}
 
 	// 设置鼠标穿透
@@ -207,7 +224,7 @@ class WindowManager {
 
 		if (!this.mainWindow.isAlwaysOnTop()) {
 			this.mainWindow.setAlwaysOnTop(true, "screen-saver");
-			this.mainWindow.setAlwaysOnTop(false);
+			this.applyAlwaysOnTop();
 		}
 
 		this.mainWindow.focus();
