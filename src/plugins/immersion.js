@@ -30,6 +30,8 @@ module.exports = {
 				// 启用沉浸模式特性
 				core.setIgnoreMouse(true);
 				core.setAlwaysOnTop(true);
+				core.setFocusable(false);
+				core.focusBorderlessMaximizedApp();
 			} else {
 				// 退出沉浸模式，恢复原来的窗口大小和位置
 				const currentBounds = mainWindow.getBounds();
@@ -44,6 +46,7 @@ module.exports = {
 				});
 
 				// 关闭沉浸模式特性
+				core.setFocusable(true);
 				core.setIgnoreMouse(false);
 				core.setAlwaysOnTop(false);
 			}

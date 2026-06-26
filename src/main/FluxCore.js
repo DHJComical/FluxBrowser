@@ -227,6 +227,16 @@ class FluxCore {
 		this.windowManager.setIgnoreMouseEvents(ignore);
 	}
 
+	// 设置主窗口是否可聚焦
+	setFocusable(focusable) {
+		this.windowManager.setFocusable(focusable);
+	}
+
+	// 聚焦无边框最大化的前台应用
+	focusBorderlessMaximizedApp() {
+		this.windowManager.focusBorderlessMaximizedApp();
+	}
+
 	// 调整透明度
 	adjustOpacity(delta) {
 		if (this.ipcManager) {
