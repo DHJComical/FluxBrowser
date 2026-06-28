@@ -17,6 +17,15 @@ const gitPatInput = document.getElementById("git-pat");
 const gitRemoteInput = document.getElementById("git-remote");
 const gitNameInput = document.getElementById("git-name");
 const gitEmailInput = document.getElementById("git-email");
+const videoForwardSecondsInput = document.getElementById(
+	"video-forward-seconds",
+);
+const videoBackwardSecondsInput = document.getElementById(
+	"video-backward-seconds",
+);
+const videoLongPressRateInput = document.getElementById(
+	"video-long-press-rate",
+);
 const syncBookmarksBtn = document.getElementById("sync-bookmarks-btn");
 const pullBookmarksBtn = document.getElementById("pull-bookmarks-btn");
 const syncAllBtn = document.getElementById("sync-all-btn");
@@ -60,6 +69,9 @@ let tempKeyMap = {};
 let debugModeState = false;
 let bossKeyProtectionState = true;
 let alwaysOnTopState = false;
+let videoForwardSecondsState = 10;
+let videoBackwardSecondsState = 10;
+let videoLongPressRateState = 2.0;
 let tempResolutionPresets = [];
 let aspectLocked = false;
 let lockedAspectRatio = null;
@@ -113,8 +125,27 @@ async function init() {
 		if (gitEmailInput) gitEmailInput.value = appConfig.gitEmail || "";
 		bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 		alwaysOnTopState = appConfig.alwaysOnTop === true;
+		videoForwardSecondsState = normalizeNumber(
+			appConfig.videoForwardSeconds,
+			10,
+			1,
+			600,
+		);
+		videoBackwardSecondsState = normalizeNumber(
+			appConfig.videoBackwardSeconds,
+			10,
+			1,
+			600,
+		);
+		videoLongPressRateState = normalizeNumber(
+			appConfig.videoLongPressRate,
+			2.0,
+			0.25,
+			16,
+		);
 		updateBossKeyProtectionToggle();
 		updateAlwaysOnTopToggle();
+		updateVideoControlInputs();
 
 		// 加载分辨率预设
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
@@ -197,6 +228,8 @@ function bindButtonEvents() {
 			updateAlwaysOnTopToggle();
 		});
 	}
+
+	bindVideoControlEvents();
 
 	// 手动同步按钮
 	if (syncBookmarksBtn) {
@@ -352,6 +385,59 @@ function updateAlwaysOnTopToggle() {
 		} else {
 			alwaysOnTopToggle.classList.remove("active");
 		}
+	}
+}
+
+function normalizeNumber(value, fallback, min, max) {
+	const number = Number(value);
+	if (!Number.isFinite(number)) return fallback;
+	return Math.min(max, Math.max(min, number));
+}
+
+function updateVideoControlInputs() {
+	if (videoForwardSecondsInput) {
+		videoForwardSecondsInput.value = videoForwardSecondsState;
+	}
+	if (videoBackwardSecondsInput) {
+		videoBackwardSecondsInput.value = videoBackwardSecondsState;
+	}
+	if (videoLongPressRateInput) {
+		videoLongPressRateInput.value = videoLongPressRateState;
+	}
+}
+
+function bindVideoControlEvents() {
+	if (videoForwardSecondsInput) {
+		videoForwardSecondsInput.addEventListener("input", () => {
+			videoForwardSecondsState = normalizeNumber(
+				videoForwardSecondsInput.value,
+				10,
+				1,
+				600,
+			);
+		});
+	}
+
+	if (videoBackwardSecondsInput) {
+		videoBackwardSecondsInput.addEventListener("input", () => {
+			videoBackwardSecondsState = normalizeNumber(
+				videoBackwardSecondsInput.value,
+				10,
+				1,
+				600,
+			);
+		});
+	}
+
+	if (videoLongPressRateInput) {
+		videoLongPressRateInput.addEventListener("input", () => {
+			videoLongPressRateState = normalizeNumber(
+				videoLongPressRateInput.value,
+				2.0,
+				0.25,
+				16,
+			);
+		});
 	}
 }
 
@@ -622,9 +708,28 @@ ipcRenderer.on("cache-cleared", async (e, data) => {
 				debugModeState = debugMode;
 				bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 				alwaysOnTopState = appConfig.alwaysOnTop === true;
+				videoForwardSecondsState = normalizeNumber(
+					appConfig.videoForwardSeconds,
+					10,
+					1,
+					600,
+				);
+				videoBackwardSecondsState = normalizeNumber(
+					appConfig.videoBackwardSeconds,
+					10,
+					1,
+					600,
+				);
+				videoLongPressRateState = normalizeNumber(
+					appConfig.videoLongPressRate,
+					2.0,
+					0.25,
+					16,
+				);
 				updateDebugToggle();
 				updateBossKeyProtectionToggle();
 				updateAlwaysOnTopToggle();
+				updateVideoControlInputs();
 			}
 
 			// 如果清理了分辨率预设，重新加载分辨率预设数据
@@ -672,6 +777,9 @@ function handleSaveWithRestart() {
 		ipcRenderer.send("save-app-config", {
 			bossKeyProtection: bossKeyProtectionState,
 			alwaysOnTop: alwaysOnTopState,
+			videoForwardSeconds: videoForwardSecondsState,
+			videoBackwardSeconds: videoBackwardSecondsState,
+			videoLongPressRate: videoLongPressRateState,
 			gitPat: gitPatInput.value,
 			gitRemote: gitRemoteInput.value,
 			gitName: gitNameInput.value,
