@@ -11,41 +11,45 @@ template: |
 
 categories:
   - title: 新功能
-    labels:
-      - feat
+    when:
+      labels:
+        - feat
+    semver-increment: minor
 
   - title: 功能改进
-    labels:
-      - improve
+    when:
+      labels:
+        - improve
+    semver-increment: patch
 
   - title: 问题修复
-    labels:
-      - fix
+    when:
+      labels:
+        - fix
+    semver-increment: patch
 
   - title: 重构与维护
-    labels:
-      - refactor
-      - chore
+    when:
+      labels:
+        - refactor
+        - chore
+    semver-increment: patch
 
   - title: 其他变更
+    semver-increment: patch
 
-exclude-labels:
-  - skip-changelog
+  - title: 跳过更新日志
+    type: pre-exclude
+    when:
+      labels:
+        - skip-changelog
 
-version-resolver:
-  major:
-    labels:
-      - major
-  minor:
-    labels:
-      - feat
-  patch:
-    labels:
-      - fix
-      - improve
-      - refactor
-      - chore
-  default: patch
+  - title: 重大变更
+    type: version-resolver
+    semver-increment: major
+    when:
+      labels:
+        - major
 
 autolabeler:
   - label: feat
