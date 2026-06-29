@@ -3,6 +3,8 @@ name: Build FluxBrowser
 on:
     pull_request:
     push:
+      tags-ignore:
+        - "v*"
       paths-ignore:
         - "**.md"
     workflow_dispatch:
