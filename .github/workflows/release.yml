@@ -2,89 +2,83 @@ name: Release FluxBrowser
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   publish:
     runs-on: windows-latest
 
-    permissions:
-      contents: write # 必须赋予写入权限，否则无法创建 Release
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
+
+      - name: Detect Version Change
+        id: version_change
+        shell: pwsh
+        run: |
+          $before = "${{ github.event.before }}"
+          if (-not $before -or $before -eq "0000000000000000000000000000000000000000") {
+            "changed=true" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $changedFiles = git diff --name-only $before ${{ github.sha }}
+          if ($changedFiles -notcontains "package.json") {
+            "changed=false" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+
+          $beforeVersion = git show "$before`:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version"
+          $currentVersion = node -p "require('./package.json').version"
+
+          if ($beforeVersion -ne $currentVersion) {
+            "changed=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "changed=false" >> $env:GITHUB_OUTPUT
+          }
 
       - name: Setup Node.js
+        if: steps.version_change.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install Dependencies
+        if: steps.version_change.outputs.changed == 'true'
         run: npm install
 
-      - name: Create GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Read App Version
+        if: steps.version_change.outputs.changed == 'true'
+        id: app_version
         shell: pwsh
         run: |
-          # 1. 安全地获取提交范围
-          $currentTag = "${{ github.ref_name }}"
-          # 使用引号包裹变量和 ^，防止 PowerShell 解析错误
-          $prevTag = git describe --tags --abbrev=0 "$currentTag^" 2>$null
-          
-          # 2. 根据是否有上一个标签决定 log 范围
-          if ($prevTag) {
-              $range = "$prevTag..$currentTag"
-              $commits = git log $range --pretty=format:"%s"
-          } else {
-              $commits = git log --pretty=format:"%s"
-          }
-
-          # 3. 定义提取函数 (增加对空提交记录的防御)
-          function Get-Group($prefix, $title) {
-              if (-not $commits) { return "" }
-              $pattern = "^$prefix[:\(]"
-              $matched = $commits | Where-Object { $_ -match $pattern }
-              if ($matched) {
-                  $lines = $matched | ForEach-Object { "* $_" }
-                  return "### $title`n$($lines -join "`n")`n`n"
-              }
-              return ""
-          }
-
-          # 4. 拼装内容
-          $body = "## 📝 更新日志 ($currentTag)`n`n"
-          $body += Get-Group "feat" "🚀 新特性"
-          $body += Get-Group "improve" "⚡ 改进"
-          $body += Get-Group "fix" "🐛 修复"
-          $body += Get-Group "refactor" "🛠️ 重构"
-          $body += Get-Group "chore" "🧹 琐事"
-          $body += Get-Group "version" "🔖 版本更新"
-
-          # 5. 兜底：抓取不符合规范的提交
-          if ($commits) {
-              $others = $commits | Where-Object { 
-                  $_ -notmatch "^(feat|fix|improve|chore|refactor|version)[:\(]" 
-              }
-              if ($others) {
-                  $otherLines = $others | ForEach-Object { "* $_" }
-                  $body += "### 🔍 其他改动`n$($otherLines -join "`n")"
-              }
-          }
-
-          # 6. 写入文件 (强制 UTF-8 无 BOM)
-          $path = "$PWD/release_notes.md"
-          [System.IO.File]::WriteAllText($path, $body, [System.Text.Encoding]::UTF8)
-
-          # 7. 创建 Release
-          gh release create $currentTag --title "Release $currentTag" --notes-file $path --latest
+          $version = node -p "require('./package.json').version"
+          "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Build and Publish Electron App
+        if: steps.version_change.outputs.changed == 'true'
         run: npm run build -- --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish GitHub Release
+        if: steps.version_change.outputs.changed == 'true'
+        uses: release-drafter/release-drafter@v7
+        with:
+          version: ${{ steps.app_version.outputs.version }}
+          publish: true
+          latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

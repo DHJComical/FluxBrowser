@@ -1,0 +1,79 @@
+name-template: "v$RESOLVED_VERSION"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+change-title-escapes: '\<*_&'
+category-template: "### $TITLE"
+no-changes-template: "- 暂无变更"
+template: |
+  ## 更新内容
+
+  $CHANGES
+
+categories:
+  - title: 新功能
+    labels:
+      - feat
+
+  - title: 功能改进
+    labels:
+      - improve
+
+  - title: 问题修复
+    labels:
+      - fix
+
+  - title: 重构与维护
+    labels:
+      - refactor
+      - chore
+
+  - title: 其他变更
+
+exclude-labels:
+  - skip-changelog
+
+version-resolver:
+  major:
+    labels:
+      - major
+  minor:
+    labels:
+      - feat
+  patch:
+    labels:
+      - fix
+      - improve
+      - refactor
+      - chore
+  default: patch
+
+autolabeler:
+  - label: feat
+    title:
+      - '/^feat[:(]/i'
+
+  - label: fix
+    title:
+      - '/^fix[:(]/i'
+
+  - label: improve
+    title:
+      - '/^improve[:(]/i'
+
+  - label: refactor
+    title:
+      - '/^refactor[:(]/i'
+
+  - label: chore
+    title:
+      - '/^chore[:(]/i'
+
+  - label: major
+    title:
+      - '/^\w+(?:\([^)]*\))?!:/i'
+    body:
+      - '/BREAKING CHANGE/i'
+
+  - label: skip-changelog
+    title:
+      - '/^version[:(]/i'
