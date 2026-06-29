@@ -5,6 +5,7 @@ const shortcutList = document.getElementById("shortcut-list");
 const saveBtn = document.getElementById("save-btn");
 const cancelBtn = document.getElementById("cancel-btn");
 const checkUpdateBtn = document.getElementById("check-update-btn");
+const downloadUpdateBtn = document.getElementById("download-update-btn");
 const updateStatus = document.getElementById("update-status");
 const installUpdateBtn = document.getElementById("install-update-btn");
 const debugModeToggle = document.getElementById("debug-mode-toggle");
@@ -216,9 +217,22 @@ function bindButtonEvents() {
 			ipcRenderer.send("check-for-updates");
 			updateStatus.innerText = "正在检查更新...";
 			checkUpdateBtn.disabled = true;
+			if (downloadUpdateBtn) downloadUpdateBtn.classList.add("hidden");
 			if (installUpdateBtn) installUpdateBtn.classList.add("hidden");
 			if (checkUpdateBtn) checkUpdateBtn.classList.remove("hidden");
+			resetUpdateProgress();
+		});
+	}
+
+	if (downloadUpdateBtn) {
+		downloadUpdateBtn.addEventListener("click", () => {
+			ipcRenderer.send("download-update");
+			downloadUpdateBtn.disabled = true;
+			if (checkUpdateBtn) checkUpdateBtn.disabled = true;
 			resetUpdateProgress({ hide: false, percent: 0 });
+			if (updateStatus)
+				updateStatus.innerText =
+					"\u6b63\u5728\u4e0b\u8f7d\u66f4\u65b0...";
 		});
 	}
 
@@ -599,11 +613,19 @@ ipcRenderer.on("update-message", (e, data) => {
 	// 情况 A: 已经是最新版本，或者检查更新失败
 	if (data.status === "not-available" || data.status === "error") {
 		if (checkUpdateBtn) checkUpdateBtn.disabled = false;
+		if (downloadUpdateBtn) {
+			downloadUpdateBtn.classList.add("hidden");
+			downloadUpdateBtn.disabled = false;
+		}
 		resetUpdateProgress();
 	}
 
 	// 情况 B: 发现新版本并下载完成了
 	if (data.status === "downloaded") {
+		if (downloadUpdateBtn) {
+			downloadUpdateBtn.classList.add("hidden");
+			downloadUpdateBtn.disabled = false;
+		}
 		if (installUpdateBtn) installUpdateBtn.classList.remove("hidden");
 		if (checkUpdateBtn) checkUpdateBtn.classList.add("hidden");
 		if (checkUpdateBtn) checkUpdateBtn.disabled = false;
@@ -613,7 +635,13 @@ ipcRenderer.on("update-message", (e, data) => {
 	// 情况 C: 发现新版本正在下载中
 	if (data.status === "available") {
 		if (updateStatus) updateStatus.innerText = data.msg;
-		resetUpdateProgress({ hide: false, percent: 0 });
+		if (checkUpdateBtn) checkUpdateBtn.disabled = false;
+		if (downloadUpdateBtn) {
+			downloadUpdateBtn.classList.remove("hidden");
+			downloadUpdateBtn.disabled = false;
+		}
+		if (installUpdateBtn) installUpdateBtn.classList.add("hidden");
+		resetUpdateProgress();
 	}
 });
 

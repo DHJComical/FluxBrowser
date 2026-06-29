@@ -22,7 +22,7 @@ class Updater {
 
 	setup() {
 		// 设置下载后不自动安装（让用户决定）
-		autoUpdater.autoDownload = true;
+		autoUpdater.autoDownload = false;
 		autoUpdater.autoInstallOnAppQuit = true;
 
 		// 调试日志辅助函数
@@ -83,7 +83,11 @@ class Updater {
 
 		// 接收前端的"检查更新"请求
 		ipcMain.on("check-for-updates", () => {
-			autoUpdater.checkForUpdatesAndNotify();
+			autoUpdater.checkForUpdates();
+		});
+
+		ipcMain.on("download-update", () => {
+			autoUpdater.downloadUpdate();
 		});
 
 		// 接收前端的"立即重启安装"请求
