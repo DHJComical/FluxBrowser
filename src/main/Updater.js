@@ -57,12 +57,17 @@ class Updater {
 		});
 
 		autoUpdater.on("download-progress", (progressObj) => {
-			this.core.sendToRenderer("update-progress", progressObj.percent);
+			this.core.broadcast("update-progress", {
+				percent: progressObj.percent,
+				transferred: progressObj.transferred,
+				total: progressObj.total,
+				bytesPerSecond: progressObj.bytesPerSecond,
+			});
 		});
 
 		autoUpdater.on("update-downloaded", (info) => {
 			debugLog.log("更新已下载完成:", info);
-			this.core.sendToRenderer("update-message", {
+			this.core.broadcast("update-message", {
 				status: "downloaded",
 				msg: "更新已下载完成，重启应用即可应用更新。",
 			});

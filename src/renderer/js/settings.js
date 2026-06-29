@@ -76,6 +76,33 @@ let tempResolutionPresets = [];
 let aspectLocked = false;
 let lockedAspectRatio = null;
 
+function setUpdateProgress(percent) {
+	const progressContainer = document.getElementById(
+		"update-progress-container",
+	);
+	const progressBar = document.getElementById("update-progress-bar");
+	if (!progressContainer || !progressBar) return;
+
+	const normalizedPercent = Math.max(0, Math.min(100, Number(percent) || 0));
+	progressContainer.classList.add("active");
+	progressBar.style.width = `${normalizedPercent}%`;
+}
+
+function resetUpdateProgress({ hide = true, percent = 0 } = {}) {
+	const progressContainer = document.getElementById(
+		"update-progress-container",
+	);
+	const progressBar = document.getElementById("update-progress-bar");
+	if (!progressContainer || !progressBar) return;
+
+	progressBar.style.width = `${Math.max(0, Math.min(100, Number(percent) || 0))}%`;
+	if (hide) {
+		progressContainer.classList.remove("active");
+	} else {
+		progressContainer.classList.add("active");
+	}
+}
+
 // 缓存清理相关状态
 let cacheClearOptions = {
 	clearLogs: false,
@@ -189,12 +216,9 @@ function bindButtonEvents() {
 			ipcRenderer.send("check-for-updates");
 			updateStatus.innerText = "正在检查更新...";
 			checkUpdateBtn.disabled = true;
-			const progressContainer = document.getElementById(
-				"update-progress-container",
-			);
-			if (progressContainer) {
-				progressContainer.classList.add("active");
-			}
+			if (installUpdateBtn) installUpdateBtn.classList.add("hidden");
+			if (checkUpdateBtn) checkUpdateBtn.classList.remove("hidden");
+			resetUpdateProgress({ hide: false, percent: 0 });
 		});
 	}
 
@@ -571,33 +595,33 @@ ipcRenderer.on("update-message", (e, data) => {
 	if (updateStatus) {
 		updateStatus.innerText = data.msg;
 	}
-	const progressBar = document.getElementById("update-progress-container");
-	const progressBarInner = document.getElementById("update-progress-bar");
 
 	// 情况 A: 已经是最新版本，或者检查更新失败
 	if (data.status === "not-available" || data.status === "error") {
 		if (checkUpdateBtn) checkUpdateBtn.disabled = false;
-		if (progressBar) progressBar.classList.remove("active");
+		resetUpdateProgress();
 	}
 
 	// 情况 B: 发现新版本并下载完成了
 	if (data.status === "downloaded") {
 		if (installUpdateBtn) installUpdateBtn.classList.remove("hidden");
 		if (checkUpdateBtn) checkUpdateBtn.classList.add("hidden");
-		if (progressBar && progressBarInner) {
-			progressBar.classList.remove("active");
-			progressBarInner.style.width = "100%";
-		}
+		if (checkUpdateBtn) checkUpdateBtn.disabled = false;
+		resetUpdateProgress({ hide: false, percent: 100 });
 	}
 
 	// 情况 C: 发现新版本正在下载中
 	if (data.status === "available") {
 		if (updateStatus) updateStatus.innerText = data.msg;
+		resetUpdateProgress({ hide: false, percent: 0 });
 	}
+});
 
-	// 更新下载进度（如果有进度百分比）
-	if (data.percent !== undefined && progressBarInner) {
-		progressBarInner.style.width = `${data.percent}%`;
+ipcRenderer.on("update-progress", (e, data) => {
+	if (!data || data.percent === undefined) return;
+	setUpdateProgress(data.percent);
+	if (updateStatus) {
+		updateStatus.innerText = `正在下载更新... ${Math.round(data.percent)}%`;
 	}
 });
 
