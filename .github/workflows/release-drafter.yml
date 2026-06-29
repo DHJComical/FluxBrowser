@@ -1,0 +1,29 @@
+name: Update Release Draft
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update_release_draft:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update GitHub Release Draft
+        uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

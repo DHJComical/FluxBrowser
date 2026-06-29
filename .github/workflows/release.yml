@@ -14,10 +14,205 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  publish:
-    runs-on: windows-latest
+  prepare_release:
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release_version.outputs.version }}
+      release_name: ${{ steps.release_notes.outputs.name }}
+      release_body: ${{ steps.release_notes.outputs.body }}
+
+    steps:
+      - name: Resolve Release Version
+        id: release_version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Get Current Tag Release
+        id: current_release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const tag = context.ref.replace("refs/tags/", "")
+
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag,
+              })
+
+              core.info(`Found current release ${release.html_url}`)
+              core.setOutput("exists", "true")
+              core.setOutput("id", String(release.id))
+              core.setOutput("draft", release.draft ? "true" : "false")
+              core.setOutput("name", release.name ?? "")
+              core.setOutput("body", release.body ?? "")
+            } catch (error) {
+              if (error.status === 404) {
+                core.setOutput("exists", "false")
+                return
+              }
+
+              throw error
+            }
+
+      - name: Get Latest Release Draft
+        id: draft_release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const tag = context.ref.replace("refs/tags/", "")
+            const version = tag.startsWith("v") ? tag.slice(1) : tag
+
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner,
+              repo,
+              per_page: 100,
+            })
+
+            const drafts = releases
+              .filter((release) => {
+                if (!release.draft) {
+                  return false
+                }
+
+                return [
+                  release.tag_name,
+                  release.name,
+                ].includes(tag) || [
+                  release.tag_name,
+                  release.name,
+                ].includes(version)
+              })
+              .sort((a, b) => {
+                const left = Date.parse(a.updated_at ?? a.created_at ?? 0)
+                const right = Date.parse(b.updated_at ?? b.created_at ?? 0)
+                return right - left
+              })
+
+            if (drafts.length === 0) {
+              core.setOutput("exists", "false")
+              return
+            }
+
+            const draft = drafts[0]
+            core.info(`Using draft release ${draft.tag_name || draft.name || draft.id}`)
+            core.setOutput("exists", "true")
+            core.setOutput("id", String(draft.id))
+            core.setOutput("name", draft.name ?? "")
+            core.setOutput("body", draft.body ?? "")
+
+      - name: Draft Release Notes
+        id: fallback_release_notes
+        if: steps.current_release.outputs.exists != 'true' && steps.draft_release.outputs.exists != 'true'
+        uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter.yml
+          tag: ${{ github.ref_name }}
+          version: ${{ steps.release_version.outputs.version }}
+          commitish: ${{ github.sha }}
+          latest: true
+          dry-run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Select Release Notes
+        id: release_notes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = ${{ toJson(steps.release_version.outputs.version) }}
+            const defaultName = `v${version}`
+            const hasCurrentRelease = ${{ toJson(steps.current_release.outputs.exists) }} === "true"
+            const useDraft = ${{ toJson(steps.draft_release.outputs.exists) }} === "true"
+            const currentName = ${{ toJson(steps.current_release.outputs.name) }} || ""
+            const currentBody = ${{ toJson(steps.current_release.outputs.body) }} || ""
+            const draftName = ${{ toJson(steps.draft_release.outputs.name) }} || ""
+            const draftBody = ${{ toJson(steps.draft_release.outputs.body) }} || ""
+            const fallbackName = ${{ toJson(steps.fallback_release_notes.outputs.name) }} || ""
+            const fallbackBody = ${{ toJson(steps.fallback_release_notes.outputs.body) }} || ""
+            const currentHasNotes = currentBody.trim().length > 0
+            const name = hasCurrentRelease && currentHasNotes
+              ? (currentName || defaultName)
+              : useDraft
+                ? (draftName || defaultName)
+                : hasCurrentRelease
+                  ? (currentName || defaultName)
+                  : (fallbackName || defaultName)
+            const body = hasCurrentRelease && currentHasNotes
+              ? currentBody
+              : useDraft
+                ? draftBody
+                : hasCurrentRelease
+                  ? currentBody
+                  : fallbackBody
+
+            core.setOutput("name", name)
+            core.setOutput("body", body)
+
+      - name: Create Draft Release For Assets
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo
+            const tag = context.ref.replace("refs/tags/", "")
+            const name = ${{ toJson(steps.release_notes.outputs.name) }}
+            const body = ${{ toJson(steps.release_notes.outputs.body) }}
+            const hasCurrentRelease = ${{ toJson(steps.current_release.outputs.exists) }} === "true"
+            const hasDraftRelease = ${{ toJson(steps.draft_release.outputs.exists) }} === "true"
+
+            if (hasCurrentRelease) {
+              await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: Number(${{ toJson(steps.current_release.outputs.id) }}),
+                tag_name: tag,
+                target_commitish: context.sha,
+                name: name || tag,
+                body,
+                draft: ${{ toJson(steps.current_release.outputs.draft) }} === "true",
+                prerelease: false,
+                make_latest: "false",
+              })
+              core.info(`Updated existing release for ${tag}`)
+              return
+            }
+
+            if (hasDraftRelease) {
+              await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: Number(${{ toJson(steps.draft_release.outputs.id) }}),
+                tag_name: tag,
+                target_commitish: context.sha,
+                name: name || tag,
+                body,
+                draft: true,
+                prerelease: false,
+                make_latest: "false",
+              })
+              core.info(`Updated matching draft release for ${tag}`)
+              return
+            }
+
+            const { data: release } = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: name || tag,
+              body,
+              draft: true,
+              prerelease: false,
+              make_latest: "false",
+            })
+            core.info(`Created draft release ${release.html_url}`)
+
+  publish:
+    needs: prepare_release
+    runs-on: windows-latest
 
     steps:
       - name: Checkout Code
@@ -35,32 +230,50 @@ jobs:
         run: npm install
 
       - name: Sync Package Version To Git Tag
-        id: release_version
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          $version = $tag.Substring(1)
-          "version=$version" >> $env:GITHUB_OUTPUT
+          $version = "${{ needs.prepare_release.outputs.version }}"
           node -e "const fs=require('fs'); const path='package.json'; const pkg=JSON.parse(fs.readFileSync(path,'utf8')); pkg.version=process.argv[1]; fs.writeFileSync(path, JSON.stringify(pkg, null, '\t') + '\n');" $version
 
       - name: Build and Publish Electron App
         run: npm run build -- --publish always
         env:
+          EP_GH_IGNORE_TIME: "true"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish_release_notes:
-    needs: publish
+  finalize_release:
+    needs:
+      - prepare_release
+      - publish
     runs-on: ubuntu-latest
 
     steps:
-      - name: Publish GitHub Release Notes
-        uses: release-drafter/release-drafter@v7
+      - name: Publish GitHub Release
+        uses: actions/github-script@v7
         with:
-          config-name: release-drafter.yml
-          tag: ${{ github.ref_name }}
-          version: ${{ needs.publish.outputs.version }}
-          commitish: ${{ github.sha }}
-          publish: true
-          latest: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo
+            const tag = context.ref.replace("refs/tags/", "")
+            const name = ${{ toJson(needs.prepare_release.outputs.release_name) }}
+            const body = ${{ toJson(needs.prepare_release.outputs.release_body) }}
+
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner,
+              repo,
+              tag,
+            })
+
+            const { data: updatedRelease } = await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: release.id,
+              tag_name: tag,
+              target_commitish: context.sha,
+              name: name || release.name || tag,
+              body,
+              draft: false,
+              prerelease: false,
+              make_latest: "true",
+            })
+
+            core.info(`Published release ${updatedRelease.html_url}`)
