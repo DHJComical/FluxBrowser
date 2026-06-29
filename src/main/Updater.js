@@ -22,7 +22,7 @@ class Updater {
 
 	setup() {
 		// 设置下载后不自动安装（让用户决定）
-		autoUpdater.autoDownload = true;
+		autoUpdater.autoDownload = false;
 		autoUpdater.autoInstallOnAppQuit = true;
 
 		// 调试日志辅助函数
@@ -57,12 +57,17 @@ class Updater {
 		});
 
 		autoUpdater.on("download-progress", (progressObj) => {
-			this.core.sendToRenderer("update-progress", progressObj.percent);
+			this.core.broadcast("update-progress", {
+				percent: progressObj.percent,
+				transferred: progressObj.transferred,
+				total: progressObj.total,
+				bytesPerSecond: progressObj.bytesPerSecond,
+			});
 		});
 
 		autoUpdater.on("update-downloaded", (info) => {
 			debugLog.log("更新已下载完成:", info);
-			this.core.sendToRenderer("update-message", {
+			this.core.broadcast("update-message", {
 				status: "downloaded",
 				msg: "更新已下载完成，重启应用即可应用更新。",
 			});
@@ -78,7 +83,11 @@ class Updater {
 
 		// 接收前端的"检查更新"请求
 		ipcMain.on("check-for-updates", () => {
-			autoUpdater.checkForUpdatesAndNotify();
+			autoUpdater.checkForUpdates();
+		});
+
+		ipcMain.on("download-update", () => {
+			autoUpdater.downloadUpdate();
 		});
 
 		// 接收前端的"立即重启安装"请求
