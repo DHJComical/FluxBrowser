@@ -79,7 +79,7 @@
 				"provider": "github",
 				"owner": "DHJComical",
 				"repo": "FluxBrowser",
-				"releaseType": "draft"
+				"releaseType": "release"
 			}
 		],
 		"productName": "FluxBrowser",
