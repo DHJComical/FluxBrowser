@@ -16,6 +16,8 @@ concurrency:
 jobs:
   publish:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.release_version.outputs.version }}
 
     steps:
       - name: Checkout Code
@@ -46,11 +48,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish_release_notes:
+    needs: publish
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Publish GitHub Release Notes
         uses: release-drafter/release-drafter@v7
         with:
+          config-name: release-drafter.yml
           tag: ${{ github.ref_name }}
-          version: ${{ steps.release_version.outputs.version }}
+          version: ${{ needs.publish.outputs.version }}
+          commitish: ${{ github.sha }}
           publish: true
           latest: true
         env:
