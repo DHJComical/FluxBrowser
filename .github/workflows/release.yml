@@ -2,8 +2,8 @@ name: Release FluxBrowser
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -23,61 +23,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Version Change
-        id: version_change
-        shell: pwsh
-        run: |
-          $before = "${{ github.event.before }}"
-          if (-not $before -or $before -eq "0000000000000000000000000000000000000000") {
-            "changed=true" >> $env:GITHUB_OUTPUT
-            exit 0
-          }
-
-          $changedFiles = git diff --name-only $before ${{ github.sha }}
-          if ($changedFiles -notcontains "package.json") {
-            "changed=false" >> $env:GITHUB_OUTPUT
-            exit 0
-          }
-
-          $beforeVersion = git show "$before`:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version"
-          $currentVersion = node -p "require('./package.json').version"
-
-          if ($beforeVersion -ne $currentVersion) {
-            "changed=true" >> $env:GITHUB_OUTPUT
-          } else {
-            "changed=false" >> $env:GITHUB_OUTPUT
-          }
-
       - name: Setup Node.js
-        if: steps.version_change.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
       - name: Install Dependencies
-        if: steps.version_change.outputs.changed == 'true'
         run: npm install
 
-      - name: Read App Version
-        if: steps.version_change.outputs.changed == 'true'
-        id: app_version
+      - name: Sync Package Version To Git Tag
+        id: release_version
         shell: pwsh
         run: |
-          $version = node -p "require('./package.json').version"
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.Substring(1)
           "version=$version" >> $env:GITHUB_OUTPUT
+          node -e "const fs=require('fs'); const path='package.json'; const pkg=JSON.parse(fs.readFileSync(path,'utf8')); pkg.version=process.argv[1]; fs.writeFileSync(path, JSON.stringify(pkg, null, '\t') + '\n');" $version
 
       - name: Build and Publish Electron App
-        if: steps.version_change.outputs.changed == 'true'
         run: npm run build -- --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish GitHub Release
-        if: steps.version_change.outputs.changed == 'true'
+      - name: Publish GitHub Release Notes
         uses: release-drafter/release-drafter@v7
         with:
-          version: ${{ steps.app_version.outputs.version }}
+          tag: ${{ github.ref_name }}
+          version: ${{ steps.release_version.outputs.version }}
           publish: true
           latest: true
         env:
