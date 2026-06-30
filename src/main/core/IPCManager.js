@@ -2,6 +2,7 @@ const { ipcMain } = require("electron");
 const configManager = require("../ConfigManager");
 const GitSyncManager = require("../GitSyncManager");
 const BookmarkService = require("../services/BookmarkService");
+const BookmarkSyncService = require("../services/BookmarkSyncService");
 const registerWindowHandlers = require("../ipc/handlers/windowHandlers");
 const registerConfigHandlers = require("../ipc/handlers/configHandlers");
 const registerShortcutHandlers = require("../ipc/handlers/shortcutHandlers");
@@ -19,6 +20,10 @@ class IPCManager {
 		this.currentOpacity = configManager.getBoundsConfig().opacity || 1.0;
 		this.gitSyncManager = new GitSyncManager(logger);
 		this.bookmarkService = new BookmarkService(logger);
+		this.bookmarkSyncService = new BookmarkSyncService(
+			this.bookmarkService,
+			this.gitSyncManager,
+		);
 	}
 
 	setupAllHandlers() {
@@ -30,6 +35,7 @@ class IPCManager {
 			configManager,
 			gitSyncManager: this.gitSyncManager,
 			bookmarkService: this.bookmarkService,
+			bookmarkSyncService: this.bookmarkSyncService,
 			broadcast: this.broadcast.bind(this),
 			sendToRenderer: this.sendToRenderer.bind(this),
 			getCurrentOpacity: this.getCurrentOpacity.bind(this),

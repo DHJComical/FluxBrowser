@@ -1,23 +1,27 @@
 const { app } = require("electron");
-const path = require("path");
 const configManager = require("./ConfigManager");
-const Updater = require("./Updater");
 const setupLogger = require("./Logger");
-const PluginLoader = require("./PluginLoader");
+const launchRuntime = require("./core/launchRuntime");
+const {
+	debugLog,
+	logStartupInfo,
+} = require("./core/coreLogger");
+const {
+	toggleBossKey,
+	isBossKeyProtectionEnabled,
+	pausePlayingVideosForBossKey,
+	resumeBossKeyPausedVideos,
+	suspendShortcutsExceptBossKey,
+	resumeShortcutsExceptBossKey,
+} = require("./core/bossKeyController");
 
 // 导入新的核心模块
 const WindowManager = require("./core/WindowManager");
-const IPCManager = require("./core/IPCManager");
-const ShortcutManager = require("./core/ShortcutManager");
 
 class FluxCore {
 	constructor() {
 		this.logger = setupLogger();
-
-		// 调试日志输出
-		this.debugLog("--- FluxCore 启动 (重构版) ---");
-		this.debugLog(`运行环境: ${app.isPackaged ? "生产" : "开发"}`);
-		this.debugLog(`存储路径: ${app.getPath("userData")}`);
+		logStartupInfo();
 
 		// 初始化核心管理器
 		this.windowManager = new WindowManager();
@@ -25,93 +29,15 @@ class FluxCore {
 		this.ipcManager = null;
 		this.shortcutManager = null;
 		this.lastBossKeyToggleAt = 0;
-
-		// 输出启动时的窗口位置和大小到日志
-		const savedBounds = configManager.getBoundsConfig();
-		this.debugLog(`启动窗口位置: X=${savedBounds.x}, Y=${savedBounds.y}`);
-		this.debugLog(
-			`启动窗口大小: Width=${savedBounds.width}, Height=${savedBounds.height}`,
-		);
 	}
 
 	// 调试模式日志输出
 	debugLog(...args) {
-		if (configManager.isDebugMode()) {
-			console.log(...args);
-		}
-	}
-
-	// 清理日志文件
-	clearLogFiles() {
-		try {
-			const { app } = require("electron");
-			const path = require("path");
-			const fs = require("fs");
-
-			const isDev = !app.isPackaged;
-			const prefix = isDev ? "dev-" : "";
-
-			// 获取日志文件路径
-			const logFolder = path.join(app.getPath("userData"), "logs");
-			const logPath = path.join(logFolder, "main.log");
-
-			// 删除日志文件
-			if (fs.existsSync(logPath)) {
-				fs.unlinkSync(logPath);
-				this.debugLog("日志文件已删除");
-			}
-
-			// 如果日志文件不存在，创建空的日志文件夹
-			if (!fs.existsSync(logFolder)) {
-				fs.mkdirSync(logFolder, { recursive: true });
-				this.debugLog("日志文件夹已创建");
-			}
-
-			this.debugLog("日志清理完成");
-		} catch (error) {
-			this.debugLog("清理日志文件时出错:", error.message);
-		}
+		debugLog(...args);
 	}
 
 	launch(PluginLoaderClass) {
-		// 创建主窗口
-		this.windowManager.createMainWindow();
-
-		// 初始化插件加载器
-		this.pluginLoader = new PluginLoaderClass(this);
-		this.pluginLoader.loadAll();
-
-		// 创建logger对象
-		const logger = {
-			debug: (...args) => this.debugLog(...args),
-			error: (...args) => this.debugLog(...args),
-			clearLogFiles: () => this.clearLogFiles(),
-			setDebugMode: (enabled) => {
-				if (this.logger && this.logger.setDebugMode) {
-					this.logger.setDebugMode(enabled);
-				}
-			},
-		};
-
-		// 初始化快捷键管理器
-		this.shortcutManager = new ShortcutManager(this, this.pluginLoader, logger);
-
-		// 初始化IPC管理器
-		this.ipcManager = new IPCManager(
-			this.windowManager,
-			this.pluginLoader,
-			logger,
-		);
-
-		// 设置IPC处理器
-		this.ipcManager.setupAllHandlers();
-
-		// 初始化快捷键
-		this.shortcutManager.reloadShortcuts();
-
-		// 启动更新器
-		new Updater(this);
-
+		launchRuntime(this, PluginLoaderClass);
 		this.debugLog("FluxCore 启动完成");
 	}
 
@@ -139,70 +65,24 @@ class FluxCore {
 
 	// 触发老板键
 	toggleBossKey() {
-		const now = Date.now();
-		if (now - this.lastBossKeyToggleAt < 300) return;
-		this.lastBossKeyToggleAt = now;
-
-		const mainWindow = this.windowManager.getMainWindow();
-		if (!mainWindow) return;
-
-		const willHide = mainWindow.isVisible();
-		if (willHide && this.isBossKeyProtectionEnabled()) {
-			this.pausePlayingVideosForBossKey();
-		}
-
-		this.windowManager.toggleVisibility();
-
-		if (!this.isBossKeyProtectionEnabled()) return;
-
-		if (willHide) {
-			this.suspendShortcutsExceptBossKey();
-		} else {
-			this.resumeShortcutsExceptBossKey();
-			this.resumeBossKeyPausedVideos();
-		}
+		toggleBossKey(this);
 	}
 
 	// 老板键保护选项：隐藏时暂停视频并只保留老板键快捷键
 	isBossKeyProtectionEnabled() {
-		return configManager.getAppConfig().bossKeyProtection !== false;
+		return isBossKeyProtectionEnabled();
 	}
 
 	pausePlayingVideosForBossKey() {
-		this.executeOnWebview(`
-			(() => {
-				document.querySelectorAll("video").forEach((video) => {
-					if (!video.paused && !video.ended) {
-						video.dataset.fluxBossKeyPaused = "true";
-						video.pause();
-					}
-				});
-			})();
-		`);
+		pausePlayingVideosForBossKey(this);
 	}
 
 	resumeBossKeyPausedVideos() {
-		this.executeOnWebview(`
-			(() => {
-				document.querySelectorAll("video").forEach((video) => {
-					if (video.dataset.fluxBossKeyPaused === "true") {
-						delete video.dataset.fluxBossKeyPaused;
-						if (video.paused && !video.ended) {
-							const playPromise = video.play();
-							if (playPromise && typeof playPromise.catch === "function") {
-								playPromise.catch(() => {});
-							}
-						}
-					}
-				});
-			})();
-		`);
+		resumeBossKeyPausedVideos(this);
 	}
 
 	suspendShortcutsExceptBossKey() {
-		if (this.shortcutManager) {
-			this.shortcutManager.suspendShortcutsExcept(["BossKey"]);
-		}
+		suspendShortcutsExceptBossKey(this.shortcutManager);
 	}
 
 	resumeShortcuts() {
@@ -212,9 +92,7 @@ class FluxCore {
 	}
 
 	resumeShortcutsExceptBossKey() {
-		if (this.shortcutManager) {
-			this.shortcutManager.resumeShortcutsExcept(["BossKey"]);
-		}
+		resumeShortcutsExceptBossKey(this.shortcutManager);
 	}
 
 	// 设置窗口置顶状态

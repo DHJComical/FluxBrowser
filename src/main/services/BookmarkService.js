@@ -58,6 +58,14 @@ class BookmarkService {
 		this.writeBookmarks(bookmarks);
 		return bookmarks;
 	}
+
+	buildOpenBookmarkScript(bookmark) {
+		if (!bookmark || !bookmark.url) return null;
+
+		const escapedUrl = bookmark.url.replace(/'/g, "\\'");
+		const escapedTime = parseFloat(bookmark.time) || 0;
+		return `window.location.href = '${escapedUrl}'; setTimeout(() => { const v = document.querySelector('video'); if(v) v.currentTime = ${escapedTime}; }, 2000);`;
+	}
 }
 
 module.exports = BookmarkService;
