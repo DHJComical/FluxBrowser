@@ -29,8 +29,11 @@ function createIPCSharedContext(ipcManager) {
 		gitSyncManager: ipcManager.gitSyncManager,
 		bookmarkService: ipcManager.bookmarkService,
 		bookmarkSyncService: ipcManager.bookmarkSyncService,
+		tabStateManager: ipcManager.tabStateManager,
 		broadcast: ipcManager.broadcast.bind(ipcManager),
 		sendToRenderer: ipcManager.sendToRenderer.bind(ipcManager),
+		sendToMainWindow: ipcManager.sendToMainWindow.bind(ipcManager),
+		sendToTabBar: ipcManager.sendToTabBar.bind(ipcManager),
 		getCurrentOpacity: ipcManager.getCurrentOpacity.bind(ipcManager),
 		setCurrentOpacity: ipcManager.setCurrentOpacity.bind(ipcManager),
 	};

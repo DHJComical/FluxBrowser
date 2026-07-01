@@ -5,7 +5,18 @@ const ShortcutManager = require("./ShortcutManager");
 const { createCoreLogger } = require("./coreLogger");
 
 function launchRuntime(core, PluginLoaderClass = PluginLoader) {
-	core.windowManager.createMainWindow();
+	core.windowManager.createMainWindow({
+		onRequestNewTab: (url) => {
+			const tab = core.tabStateManager.createTab({ url });
+			core.broadcast("tabs-state-changed", core.tabStateManager.getState());
+			core.sendToRenderer("focus-active-tab");
+			core.ipcManager?.sendToMainWindow("active-tab-navigation", {
+				tabId: tab.id,
+				url: tab.url,
+			});
+		},
+	});
+	core.windowManager.createTabBarWindow();
 
 	core.pluginLoader = new PluginLoaderClass(core);
 	core.pluginLoader.loadAll();
@@ -22,6 +33,7 @@ function launchRuntime(core, PluginLoaderClass = PluginLoader) {
 		core.windowManager,
 		core.pluginLoader,
 		coreLogger,
+		core.tabStateManager,
 	);
 
 	core.ipcManager.setupAllHandlers();

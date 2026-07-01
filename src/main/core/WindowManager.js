@@ -1,6 +1,7 @@
 const configManager = require("../ConfigManager");
 const { WINDOW_CONSTANTS } = require("../../constants/config");
 const createMainWindow = require("../windows/MainWindow");
+const createTabBarWindow = require("../windows/TabBarWindow");
 const createSettingsWindow = require("../windows/SettingsWindow");
 const createBookmarksWindow = require("../windows/BookmarksWindow");
 const {
@@ -12,6 +13,7 @@ const { collectActiveWindows } = require("./windowCollection");
 class WindowManager {
 	constructor() {
 		this.mainWindow = null;
+		this.tabBarWindow = null;
 		this.settingsWindow = null;
 		this.bookmarksWindow = null;
 		this.shouldFocusMainWindowAfterSettingsClose = false;
@@ -19,19 +21,76 @@ class WindowManager {
 		this.userAlwaysOnTop = configManager.getAppConfig().alwaysOnTop === true;
 		this.temporaryAlwaysOnTop = false;
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
+		this.isImmersionMode = false;
 	}
 
-	createMainWindow() {
+	createMainWindow(options = {}) {
 		this.mainWindow = createMainWindow({
 			savedBounds: this.savedBounds,
 			userAlwaysOnTop: this.userAlwaysOnTop,
+			onRequestNewTab: options.onRequestNewTab,
 			onClose: () => {
 				this.saveWindowBounds();
+				if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+					this.tabBarWindow.destroy();
+				}
 				if (this.settingsWindow) this.settingsWindow.close();
 			},
 		});
 
+		this.mainWindow.on("move", () => this.syncAuxiliaryWindows());
+		this.mainWindow.on("resize", () => this.syncAuxiliaryWindows());
+		this.mainWindow.on("show", () => this.showAuxiliaryWindows());
+		this.mainWindow.on("hide", () => this.hideAuxiliaryWindows());
+		this.mainWindow.on("focus", () => {
+			if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+				this.tabBarWindow.moveTop();
+			}
+		});
+
 		return this.mainWindow;
+	}
+
+	createTabBarWindow() {
+		if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+			return this.tabBarWindow;
+		}
+
+		const bounds = this.getTabBarBounds();
+		this.tabBarWindow = createTabBarWindow({
+			bounds,
+			alwaysOnTop: this.userAlwaysOnTop || this.temporaryAlwaysOnTop,
+			onClose: () => {
+				if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+					this.tabBarWindow.hide();
+				}
+			},
+		});
+
+		this.tabBarWindow.on("closed", () => {
+			this.tabBarWindow = null;
+		});
+
+		this.syncAuxiliaryWindows();
+		if (this.mainWindow && this.mainWindow.isVisible()) {
+			this.tabBarWindow.showInactive();
+		}
+
+		return this.tabBarWindow;
+	}
+
+	getTabBarBounds() {
+		const mainBounds = this.mainWindow
+			? this.mainWindow.getBounds()
+			: this.savedBounds;
+		const height = WINDOW_CONSTANTS.TAB_BAR_HEIGHT;
+
+		return {
+			x: mainBounds.x,
+			y: mainBounds.y - height,
+			width: mainBounds.width,
+			height,
+		};
 	}
 
 	createSettingsWindow(parentWindow) {
@@ -72,11 +131,20 @@ class WindowManager {
 		return this.settingsWindow;
 	}
 
+	getTabBarWindow() {
+		return this.tabBarWindow;
+	}
+
 	toggleVisibility() {
 		if (!this.mainWindow) return;
-		this.mainWindow.isVisible()
-			? this.mainWindow.hide()
-			: this.mainWindow.show();
+		if (this.mainWindow.isVisible()) {
+			this.hideAuxiliaryWindows();
+			this.mainWindow.hide();
+			return;
+		}
+
+		this.mainWindow.show();
+		this.showAuxiliaryWindows();
 	}
 
 	setAlwaysOnTop(flag) {
@@ -94,6 +162,9 @@ class WindowManager {
 			const shouldAlwaysOnTop =
 				this.userAlwaysOnTop || this.temporaryAlwaysOnTop;
 			this.mainWindow.setAlwaysOnTop(shouldAlwaysOnTop, "screen-saver");
+			if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+				this.tabBarWindow.setAlwaysOnTop(shouldAlwaysOnTop, "screen-saver");
+			}
 		}
 	}
 
@@ -101,11 +172,17 @@ class WindowManager {
 		if (this.mainWindow) {
 			this.mainWindow.setIgnoreMouseEvents(ignore, { forward: ignore });
 		}
+		if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+			this.tabBarWindow.setIgnoreMouseEvents(ignore, { forward: ignore });
+		}
 	}
 
 	setFocusable(focusable) {
 		if (this.mainWindow) {
 			this.mainWindow.setFocusable(focusable);
+		}
+		if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+			this.tabBarWindow.setFocusable(focusable);
 		}
 	}
 
@@ -126,6 +203,7 @@ class WindowManager {
 				width,
 				height: height + titleBarHeight,
 			});
+			this.syncAuxiliaryWindows();
 		}
 	}
 
@@ -147,6 +225,9 @@ class WindowManager {
 	bringMainWindowToFront() {
 		if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
 		bringWindowToFront(this.mainWindow);
+		if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+			this.tabBarWindow.moveTop();
+		}
 		if (!this.mainWindow.isAlwaysOnTop()) {
 			this.applyAlwaysOnTop();
 		}
@@ -166,6 +247,52 @@ class WindowManager {
 		});
 
 		return this.bookmarksWindow;
+	}
+
+	syncAuxiliaryWindows() {
+		if (
+			!this.mainWindow ||
+			this.mainWindow.isDestroyed() ||
+			!this.tabBarWindow ||
+			this.tabBarWindow.isDestroyed()
+		) {
+			return;
+		}
+
+		const tabBarBounds = this.getTabBarBounds();
+		this.tabBarWindow.setBounds(tabBarBounds);
+		if (this.isImmersionMode) {
+			this.tabBarWindow.hide();
+		}
+	}
+
+	showAuxiliaryWindows() {
+		if (
+			this.tabBarWindow &&
+			!this.tabBarWindow.isDestroyed() &&
+			!this.isImmersionMode
+		) {
+			this.tabBarWindow.showInactive();
+		}
+	}
+
+	hideAuxiliaryWindows() {
+		if (this.tabBarWindow && !this.tabBarWindow.isDestroyed()) {
+			this.tabBarWindow.hide();
+		}
+	}
+
+	setImmersionMode(isImmersionMode) {
+		this.isImmersionMode = isImmersionMode === true;
+		if (this.isImmersionMode) {
+			this.hideAuxiliaryWindows();
+			return;
+		}
+
+		this.syncAuxiliaryWindows();
+		if (this.mainWindow && this.mainWindow.isVisible()) {
+			this.showAuxiliaryWindows();
+		}
 	}
 }
 

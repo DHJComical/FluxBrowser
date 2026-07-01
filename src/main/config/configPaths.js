@@ -30,6 +30,10 @@ function getConfigPaths() {
 			userDataPath,
 			`${prefix}${CONFIG_FILE_NAMES.RESOLUTION_PRESETS}`,
 		),
+		tabsStatePath: path.join(
+			userDataPath,
+			`${prefix}${CONFIG_FILE_NAMES.TABS_STATE}`,
+		),
 	};
 }
 

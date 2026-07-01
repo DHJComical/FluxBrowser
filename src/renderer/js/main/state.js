@@ -1,9 +1,11 @@
 const state = {
 	isImmersionMode: false,
 	debugMode: false,
-	lastUrl:
-		localStorage.getItem("flux-last-url") ||
-		"https://space.bilibili.com/563138217",
+	tabs: [],
+	activeTabId: null,
+	webviews: new Map(),
+	webviewOpacity: 1,
+	pendingScripts: new Map(),
 };
 
 function setDebugMode(enabled) {
@@ -14,14 +16,55 @@ function setImmersionMode(enabled) {
 	state.isImmersionMode = enabled === true;
 }
 
-function setLastUrl(url) {
-	state.lastUrl = url;
-	localStorage.setItem("flux-last-url", url);
+function setTabsState(nextState = {}) {
+	state.tabs = Array.isArray(nextState.tabs) ? nextState.tabs : [];
+	state.activeTabId =
+		typeof nextState.activeTabId === "string" ? nextState.activeTabId : null;
+}
+
+function setWebview(tabId, webview) {
+	state.webviews.set(tabId, webview);
+}
+
+function removeWebview(tabId) {
+	state.webviews.delete(tabId);
+}
+
+function getWebview(tabId = state.activeTabId) {
+	if (!tabId) return null;
+	return state.webviews.get(tabId) || null;
+}
+
+function getActiveTab() {
+	return state.tabs.find((tab) => tab.id === state.activeTabId) || null;
+}
+
+function setWebviewOpacity(opacity) {
+	state.webviewOpacity = opacity;
+}
+
+function queuePendingScript(tabId, code) {
+	if (!tabId || !code) return;
+	state.pendingScripts.set(tabId, code);
+}
+
+function takePendingScript(tabId) {
+	if (!tabId) return null;
+	const code = state.pendingScripts.get(tabId) || null;
+	state.pendingScripts.delete(tabId);
+	return code;
 }
 
 module.exports = {
 	state,
 	setDebugMode,
 	setImmersionMode,
-	setLastUrl,
+	setTabsState,
+	setWebview,
+	removeWebview,
+	getWebview,
+	getActiveTab,
+	setWebviewOpacity,
+	queuePendingScript,
+	takePendingScript,
 };

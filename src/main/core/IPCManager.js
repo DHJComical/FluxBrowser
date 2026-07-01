@@ -7,17 +7,23 @@ const registerResizeHandlers = require("../ipc/handlers/resizeHandlers");
 const registerMoveHandlers = require("../ipc/handlers/moveHandlers");
 const registerSyncHandlers = require("../ipc/handlers/syncHandlers");
 const registerBookmarkHandlers = require("../ipc/handlers/bookmarkHandlers");
+const registerTabHandlers = require("../ipc/handlers/tabHandlers");
 const {
 	createIPCServices,
 	createIPCSharedContext,
 } = require("./ipcContextFactory");
-const { broadcastToWindows, adjustWindowOpacity } = require("./ipcWindowOps");
+const {
+	broadcastToWindows,
+	sendToWindow,
+	adjustWindowOpacity,
+} = require("./ipcWindowOps");
 
 class IPCManager {
-	constructor(windowManager, pluginLoader, logger) {
+	constructor(windowManager, pluginLoader, logger, tabStateManager) {
 		this.windowManager = windowManager;
 		this.pluginLoader = pluginLoader;
 		this.logger = logger;
+		this.tabStateManager = tabStateManager;
 		this.currentOpacity = configManager.getBoundsConfig().opacity || 1.0;
 		const services = createIPCServices(logger);
 		this.gitSyncManager = services.gitSyncManager;
@@ -36,6 +42,7 @@ class IPCManager {
 		registerMoveHandlers(sharedContext);
 		registerBookmarkHandlers(sharedContext);
 		registerSyncHandlers(sharedContext);
+		registerTabHandlers(sharedContext);
 	}
 
 	broadcast(channel, data) {
@@ -44,6 +51,14 @@ class IPCManager {
 
 	sendToRenderer(channel, data) {
 		this.broadcast(channel, data);
+	}
+
+	sendToMainWindow(channel, data) {
+		sendToWindow(this.windowManager.getMainWindow(), channel, data);
+	}
+
+	sendToTabBar(channel, data) {
+		sendToWindow(this.windowManager.getTabBarWindow(), channel, data);
 	}
 
 	setCurrentOpacity(opacity) {

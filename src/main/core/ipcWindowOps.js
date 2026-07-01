@@ -10,6 +10,11 @@ function broadcastToWindows(windowManager, channel, data) {
 	});
 }
 
+function sendToWindow(window, channel, data) {
+	if (!window || window.isDestroyed()) return;
+	window.webContents.send(channel, data);
+}
+
 function adjustWindowOpacity(ipcManager, delta) {
 	let newOpacity = parseFloat(
 		(ipcManager.currentOpacity + delta).toFixed(1),
@@ -29,5 +34,6 @@ function adjustWindowOpacity(ipcManager, delta) {
 
 module.exports = {
 	broadcastToWindows,
+	sendToWindow,
 	adjustWindowOpacity,
 };

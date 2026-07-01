@@ -4,7 +4,12 @@ const {
 	getWindowIconPath,
 } = require("./windowUtils");
 
-function createMainWindow({ savedBounds, userAlwaysOnTop, onClose }) {
+function createMainWindow({
+	savedBounds,
+	userAlwaysOnTop,
+	onClose,
+	onRequestNewTab,
+}) {
 	const { x, y, width, height } = savedBounds;
 
 	const mainWindow = new BrowserWindow({
@@ -36,7 +41,11 @@ function createMainWindow({ savedBounds, userAlwaysOnTop, onClose }) {
 
 	mainWindow.webContents.on("did-attach-webview", (_event, webContents) => {
 		webContents.setWindowOpenHandler(({ url }) => {
-			webContents.loadURL(url);
+			if (typeof onRequestNewTab === "function") {
+				onRequestNewTab(url);
+			} else {
+				webContents.loadURL(url);
+			}
 			return { action: "deny" };
 		});
 	});

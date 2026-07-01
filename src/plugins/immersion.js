@@ -28,6 +28,7 @@ module.exports = {
 				core.setIgnoreMouse(true);
 				core.setAlwaysOnTop(true);
 				core.setFocusable(false);
+				core.windowManager.setImmersionMode(true);
 				core.focusBorderlessMaximizedApp();
 			} else {
 				const currentBounds = mainWindow.getBounds();
@@ -42,6 +43,7 @@ module.exports = {
 				core.setFocusable(true);
 				core.setIgnoreMouse(false);
 				core.setAlwaysOnTop(false);
+				core.windowManager.setImmersionMode(false);
 			}
 
 			core.sendToRenderer("toggle-immersion-ui", isImmersion);

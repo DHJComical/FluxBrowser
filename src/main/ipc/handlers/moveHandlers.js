@@ -1,19 +1,20 @@
 function registerMoveHandlers({ ipcMain, windowManager, logger }) {
 	let moveInterval = null;
-	let startWindowBounds = null;
 
-	ipcMain.on("start-moving", () => {
+	function startMovingWindow(window) {
 		if (moveInterval) clearInterval(moveInterval);
+		if (!window) return;
 
 		const { screen } = require("electron");
-		const mainWindow = windowManager.getMainWindow();
-		if (!mainWindow) return;
-
 		const startMousePos = screen.getCursorScreenPoint();
-		startWindowBounds = mainWindow.getBounds();
+		const startWindowBounds = window.getBounds();
+		const startMainBounds =
+			window === windowManager.getTabBarWindow()
+				? windowManager.getMainWindow()?.getBounds() || null
+				: null;
 
 		moveInterval = setInterval(() => {
-			if (!mainWindow || mainWindow.isDestroyed()) {
+			if (!window || window.isDestroyed()) {
 				clearInterval(moveInterval);
 				return;
 			}
@@ -22,13 +23,34 @@ function registerMoveHandlers({ ipcMain, windowManager, logger }) {
 			const deltaX = currentMousePos.x - startMousePos.x;
 			const deltaY = currentMousePos.y - startMousePos.y;
 
-			mainWindow.setBounds({
+			window.setBounds({
 				x: startWindowBounds.x + deltaX,
 				y: startWindowBounds.y + deltaY,
 				width: startWindowBounds.width,
 				height: startWindowBounds.height,
 			});
+			if (window === windowManager.getTabBarWindow()) {
+				const mainWindow = windowManager.getMainWindow();
+				if (mainWindow && !mainWindow.isDestroyed() && startMainBounds) {
+					mainWindow.setBounds({
+						x: startMainBounds.x + deltaX,
+						y: startMainBounds.y + deltaY,
+						width: startMainBounds.width,
+						height: startMainBounds.height,
+					});
+				}
+			}
 		}, 10);
+	}
+
+	ipcMain.on("start-moving", () => {
+		const mainWindow = windowManager.getMainWindow();
+		startMovingWindow(mainWindow);
+	});
+
+	ipcMain.on("start-moving-tab-bar", () => {
+		const tabBarWindow = windowManager.getTabBarWindow();
+		startMovingWindow(tabBarWindow);
 	});
 
 	ipcMain.on("stop-moving", () => {

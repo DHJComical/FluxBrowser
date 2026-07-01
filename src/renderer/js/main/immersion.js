@@ -1,6 +1,7 @@
 const { ipcRenderer } = require("electron");
-const { fluxBar, resizeHandles, webview, dragRegion } = require("./dom");
+const { fluxBar, resizeHandles, dragRegion } = require("./dom");
 const { state, setImmersionMode } = require("./state");
+const { getActiveWebview } = require("./tabs");
 
 function bindImmersionEvents() {
 	ipcRenderer.on("toggle-immersion-ui", (_event, isImmersion) => {
@@ -14,11 +15,13 @@ function bindImmersionEvents() {
 		element.onmouseenter = () => ipcRenderer.send("set-ignore-mouse", false);
 	});
 
-	webview.onmouseenter = () => {
-		if (state.isImmersionMode) {
+	document.addEventListener("mouseover", (event) => {
+		const activeWebview = getActiveWebview();
+		if (!activeWebview) return;
+		if (event.target === activeWebview && state.isImmersionMode) {
 			ipcRenderer.send("set-ignore-mouse", true);
 		}
-	};
+	});
 
 	resizeHandles.forEach((handle) => {
 		handle.onmousedown = () => {

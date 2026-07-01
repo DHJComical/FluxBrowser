@@ -13,6 +13,7 @@ class ConfigManager {
 		this.boundsConfig = DEFAULT_BOUNDS_CONFIG;
 		this.appConfig = DEFAULT_APP_CONFIG;
 		this.resolutionPresets = DEFAULT_RESOLUTION_PRESETS;
+		this.tabsState = { tabs: [], activeTabId: null };
 		this.paths = getConfigPaths();
 		this.init();
 	}
@@ -34,6 +35,7 @@ class ConfigManager {
 			this.paths.resolutionPresetPath,
 			DEFAULT_RESOLUTION_PRESETS,
 		);
+		this.tabsState = this._loadConfig(this.paths.tabsStatePath, this.tabsState);
 	}
 
 	_debugLog(...args) {
@@ -100,6 +102,15 @@ class ConfigManager {
 			this.paths.resolutionPresetPath,
 			this.resolutionPresets,
 		);
+	}
+
+	getTabsState() {
+		return this.tabsState;
+	}
+
+	saveTabsState(tabsState) {
+		this.tabsState = { ...tabsState };
+		this._saveConfig(this.paths.tabsStatePath, this.tabsState);
 	}
 }
 

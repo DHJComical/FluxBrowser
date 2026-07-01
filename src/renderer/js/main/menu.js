@@ -7,11 +7,11 @@ const {
 	viewBookmarksBtn,
 	exitBtn,
 	resolutionSubmenu,
-	webview,
 } = require("./dom");
 const debugLog = require("./debug");
 const { showToast } = require("../shared/feedback");
 const { setWindowStatus } = require("./navigation");
+const { getActiveWebview } = require("./tabs");
 
 function closeMenu() {
 	dropdownMenu.classList.add("hidden");
@@ -26,6 +26,15 @@ function toggleMenu() {
 
 async function addBookmarkFromCurrentPage() {
 	closeMenu();
+	const webview = getActiveWebview();
+	if (!webview) {
+		showToast("当前没有可用的网页标签。", {
+			type: "warning",
+			title: "无法添加书签",
+		});
+		return;
+	}
+
 	const url = webview.getURL();
 	const code = `
 		(function() {
