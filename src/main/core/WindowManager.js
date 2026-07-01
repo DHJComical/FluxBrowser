@@ -43,6 +43,9 @@ class WindowManager {
 			parentWindow,
 			onClosed: () => {
 				this.settingsWindow = null;
+				if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+					this.mainWindow.webContents.send("settings-window-closed");
+				}
 				if (this.shouldFocusMainWindowAfterSettingsClose) {
 					this.shouldFocusMainWindowAfterSettingsClose = false;
 					setTimeout(() => this.bringMainWindowToFront(), 0);

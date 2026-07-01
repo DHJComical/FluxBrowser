@@ -1,15 +1,22 @@
 const { ipcRenderer } = require("electron");
-const { webview } = require("./dom");
+const { webview, pageTitle } = require("./dom");
 const debugLog = require("./debug");
+const { setWindowStatus } = require("./navigation");
 
 async function restoreOpacity() {
 	try {
 		const opacity = await ipcRenderer.invoke("get-opacity");
-		debugLog.info("启动恢复透明度:", opacity);
+		debugLog.info("启动恢复透明度", opacity);
 		webview.style.opacity = opacity;
 	} catch (error) {
 		debugLog.error("恢复透明度失败:", error);
 	}
+}
+
+function updatePageTitle() {
+	if (!pageTitle) return;
+	const title = webview.getTitle && webview.getTitle();
+	pageTitle.textContent = title || "当前页面";
 }
 
 function bindWebviewEvents() {
@@ -22,6 +29,12 @@ function bindWebviewEvents() {
 			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 		);
 		webview.focus();
+		setWindowStatus("页面已准备交互", "ready");
+		updatePageTitle();
+	});
+
+	webview.addEventListener("page-title-updated", () => {
+		updatePageTitle();
 	});
 
 	ipcRenderer.on("execute-webview-js", (_event, code) => {

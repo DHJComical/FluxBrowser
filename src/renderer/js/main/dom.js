@@ -12,4 +12,6 @@ module.exports = {
 	resizeHandles: document.querySelectorAll(".resize-handle"),
 	dragRegion: document.querySelector(".drag-region"),
 	resolutionSubmenu: document.getElementById("resolution-submenu"),
+	windowStatus: document.getElementById("window-status"),
+	pageTitle: document.getElementById("page-title"),
 };
