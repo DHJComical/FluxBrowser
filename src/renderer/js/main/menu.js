@@ -10,6 +10,7 @@ const {
 	webview,
 } = require("./dom");
 const debugLog = require("./debug");
+const { showToast } = require("../shared/feedback");
 
 async function addBookmarkFromCurrentPage() {
 	dropdownMenu.classList.add("hidden");
@@ -31,8 +32,16 @@ async function addBookmarkFromCurrentPage() {
 			time: videoInfo.time,
 			timestamp: Date.now(),
 		});
+		showToast("当前进度已经加入书签。", {
+			type: "success",
+			title: "书签已保存",
+		});
 	} catch (error) {
 		debugLog.error("获取视频信息失败:", error);
+		showToast("读取当前页面信息失败，暂时无法添加书签。", {
+			type: "error",
+			title: "添加失败",
+		});
 	}
 }
 
@@ -68,7 +77,10 @@ function bindMenuEvents() {
 	};
 
 	document.onclick = () => dropdownMenu.classList.add("hidden");
-	settingsBtn.onclick = () => ipcRenderer.send("open-settings");
+	settingsBtn.onclick = () => {
+		dropdownMenu.classList.add("hidden");
+		ipcRenderer.send("open-settings");
+	};
 	addBookmarkBtn.onclick = addBookmarkFromCurrentPage;
 	viewBookmarksBtn.onclick = () => {
 		dropdownMenu.classList.add("hidden");
@@ -79,8 +91,8 @@ function bindMenuEvents() {
 	document.addEventListener("click", (event) => {
 		if (event.target && event.target.classList.contains("resolution-item")) {
 			event.stopPropagation();
-			const width = parseInt(event.target.getAttribute("data-width"));
-			const height = parseInt(event.target.getAttribute("data-height"));
+			const width = parseInt(event.target.getAttribute("data-width"), 10);
+			const height = parseInt(event.target.getAttribute("data-height"), 10);
 			debugLog.info(
 				`应用分辨率预设 ${event.target.textContent} (${width} x ${height})`,
 			);

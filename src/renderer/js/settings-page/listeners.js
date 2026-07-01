@@ -1,19 +1,21 @@
 const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const state = require("./state");
-const { normalizeNumber } = require("./helpers");
 const {
 	setUpdateProgress,
 	resetUpdateProgress,
-	updateDebugToggle,
-	updateBossKeyProtectionToggle,
-	updateAlwaysOnTopToggle,
-	updateVideoControlInputs,
-	renderShortcuts,
 	renderResolutionPresets,
 	updateAspectLockButton,
 	updateToggleState,
 } = require("./renderers");
+const {
+	reloadAppConfig,
+	reloadDebugMode,
+} = require("./appConfigUtils");
+const {
+	loadShortcuts,
+	loadResolutionPresets,
+} = require("./experienceSection");
 
 function initTabs() {
 	const tabs = document.querySelectorAll(".settings-tab");
@@ -48,39 +50,33 @@ function initTabs() {
 function bindVideoControlEvents() {
 	if (dom.videoForwardSecondsInput) {
 		dom.videoForwardSecondsInput.addEventListener("input", () => {
-			state.videoForwardSecondsState = normalizeNumber(
-				dom.videoForwardSecondsInput.value,
-				10,
-				1,
-				600,
-			);
+			const value = Number(dom.videoForwardSecondsInput.value);
+			if (Number.isFinite(value)) {
+				state.videoForwardSecondsState = Math.min(600, Math.max(1, value));
+			}
 		});
 	}
 
 	if (dom.videoBackwardSecondsInput) {
 		dom.videoBackwardSecondsInput.addEventListener("input", () => {
-			state.videoBackwardSecondsState = normalizeNumber(
-				dom.videoBackwardSecondsInput.value,
-				10,
-				1,
-				600,
-			);
+			const value = Number(dom.videoBackwardSecondsInput.value);
+			if (Number.isFinite(value)) {
+				state.videoBackwardSecondsState = Math.min(600, Math.max(1, value));
+			}
 		});
 	}
 
 	if (dom.videoLongPressRateInput) {
 		dom.videoLongPressRateInput.addEventListener("input", () => {
-			state.videoLongPressRateState = normalizeNumber(
-				dom.videoLongPressRateInput.value,
-				2.0,
-				0.25,
-				16,
-			);
+			const value = Number(dom.videoLongPressRateInput.value);
+			if (Number.isFinite(value)) {
+				state.videoLongPressRateState = Math.min(16, Math.max(0.25, value));
+			}
 		});
 	}
 }
 
-function bindResolutionEvents(debugLog) {
+function bindResolutionEvents({ debugLog, showToast }) {
 	if (!dom.aspectRatioLock) return;
 
 	dom.aspectRatioLock.addEventListener("click", (event) => {
@@ -111,16 +107,22 @@ function bindResolutionEvents(debugLog) {
 
 	dom.addPresetBtn.addEventListener("click", () => {
 		const name = dom.presetName.value.trim();
-		const width = parseInt(dom.presetWidth.value);
-		const height = parseInt(dom.presetHeight.value);
+		const width = parseInt(dom.presetWidth.value, 10);
+		const height = parseInt(dom.presetHeight.value, 10);
 
 		if (!name || !width || !height) {
-			alert("请填写完整的分辨率信息");
+			showToast("请填写完整的分辨率名称、宽度和高度。", {
+				type: "warning",
+				title: "信息不完整",
+			});
 			return;
 		}
 
 		if (width < 200 || width > 4000 || height < 150 || height > 3000) {
-			alert("分辨率范围不合法（宽度200-4000, 高度150-3000）");
+			showToast("分辨率范围不合法，请保持宽度 200-4000、高度 150-3000。", {
+				type: "warning",
+				title: "数值超出范围",
+			});
 			return;
 		}
 
@@ -128,7 +130,10 @@ function bindResolutionEvents(debugLog) {
 			(preset) => preset.width === width && preset.height === height,
 		);
 		if (duplicate) {
-			alert("该分辨率已存在");
+			showToast("该分辨率预设已经存在。", {
+				type: "warning",
+				title: "重复预设",
+			});
 			return;
 		}
 
@@ -141,10 +146,14 @@ function bindResolutionEvents(debugLog) {
 		state.aspectLocked = false;
 		state.lockedAspectRatio = null;
 		updateAspectLockButton();
+		showToast(`已添加预设：${name}`, {
+			type: "success",
+			title: "分辨率已保存",
+		});
 	});
 }
 
-function bindCacheToggleEvents(performCacheClear) {
+function bindCacheToggleEvents() {
 	if (dom.clearLogsToggle) {
 		dom.clearLogsToggle.addEventListener("click", () => {
 			state.cacheClearOptions.clearLogs = !state.cacheClearOptions.clearLogs;
@@ -198,15 +207,62 @@ function bindCacheToggleEvents(performCacheClear) {
 			);
 		});
 	}
+}
 
-	if (dom.cacheClearBtn) {
-		dom.cacheClearBtn.addEventListener("click", () => {
-			performCacheClear();
-		});
+function resetSyncButtons() {
+	if (dom.syncBookmarksBtn) {
+		dom.syncBookmarksBtn.disabled = false;
+		dom.syncBookmarksBtn.innerHTML =
+			'<i class="material-icons">bookmark</i> 仅上传书签';
+	}
+	if (dom.pullBookmarksBtn) {
+		dom.pullBookmarksBtn.disabled = false;
+		dom.pullBookmarksBtn.innerHTML =
+			'<i class="material-icons">bookmark</i> 仅下载书签';
+	}
+	if (dom.syncAllBtn) {
+		dom.syncAllBtn.disabled = false;
+		dom.syncAllBtn.innerHTML =
+			'<i class="material-icons">cloud_upload</i> 上传所有配置到云端';
+	}
+	if (dom.pullAllBtn) {
+		dom.pullAllBtn.disabled = false;
+		dom.pullAllBtn.innerHTML =
+			'<i class="material-icons">cloud_download</i> 从云端下载覆盖本地';
 	}
 }
 
-function bindStatusListeners(debugLog) {
+function resetCacheClearState() {
+	Object.keys(state.cacheClearOptions).forEach((key) => {
+		state.cacheClearOptions[key] = false;
+	});
+	document
+		.querySelectorAll(".cache-section .toggle-switch")
+		.forEach((toggle) => {
+			toggle.classList.remove("active");
+		});
+	if (dom.cacheClearBtn) {
+		dom.cacheClearBtn.disabled = false;
+		dom.cacheClearBtn.textContent = "开始清理";
+	}
+}
+
+async function reloadClearedState(debugLog) {
+	if (state.cacheClearOptions.clearKeyConfig) {
+		await loadShortcuts();
+	}
+
+	if (state.cacheClearOptions.clearAppConfig) {
+		await reloadAppConfig();
+		await reloadDebugMode();
+	}
+
+	if (state.cacheClearOptions.clearResolutionPresets) {
+		await loadResolutionPresets(debugLog);
+	}
+}
+
+function bindStatusListeners({ debugLog, showToast }) {
 	ipcRenderer.on("update-message", (_event, data) => {
 		if (dom.updateStatus) {
 			dom.updateStatus.innerText = data.msg;
@@ -219,6 +275,12 @@ function bindStatusListeners(debugLog) {
 				dom.downloadUpdateBtn.disabled = false;
 			}
 			resetUpdateProgress();
+			if (data.status === "error") {
+				showToast(data.msg || "更新检查失败，请稍后重试。", {
+					type: "error",
+					title: "更新失败",
+				});
+			}
 		}
 
 		if (data.status === "downloaded") {
@@ -230,6 +292,10 @@ function bindStatusListeners(debugLog) {
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.classList.add("hidden");
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.disabled = false;
 			resetUpdateProgress({ hide: false, percent: 100 });
+			showToast("更新已下载完成，随时可以安装。", {
+				type: "success",
+				title: "更新已就绪",
+			});
 		}
 
 		if (data.status === "available") {
@@ -241,6 +307,10 @@ function bindStatusListeners(debugLog) {
 			}
 			if (dom.installUpdateBtn) dom.installUpdateBtn.classList.add("hidden");
 			resetUpdateProgress();
+			showToast(data.msg || "发现新版本，可开始下载。", {
+				type: "info",
+				title: "发现更新",
+			});
 		}
 	});
 
@@ -260,26 +330,24 @@ function bindStatusListeners(debugLog) {
 					'<i class="material-icons">sync</i> 同步中...';
 			}
 			if (dom.pullBookmarksBtn) dom.pullBookmarksBtn.disabled = true;
-		} else if (data.status === "pulling") {
+			return;
+		}
+
+		if (data.status === "pulling") {
 			if (dom.pullBookmarksBtn) {
 				dom.pullBookmarksBtn.disabled = true;
 				dom.pullBookmarksBtn.innerHTML =
 					'<i class="material-icons">sync</i> 拉取中...';
 			}
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
-		} else {
-			if (dom.syncBookmarksBtn) {
-				dom.syncBookmarksBtn.disabled = false;
-				dom.syncBookmarksBtn.innerHTML =
-					'<i class="material-icons">bookmark</i> 仅上传书签';
-			}
-			if (dom.pullBookmarksBtn) {
-				dom.pullBookmarksBtn.disabled = false;
-				dom.pullBookmarksBtn.innerHTML =
-					'<i class="material-icons">bookmark</i> 仅下载书签';
-			}
-			alert(data.success ? data.message : `操作失败: ${data.message}`);
+			return;
 		}
+
+		resetSyncButtons();
+		showToast(data.message, {
+			type: data.success ? "success" : "error",
+			title: data.success ? "书签同步完成" : "书签同步失败",
+		});
 	});
 
 	ipcRenderer.on("sync-all-status", (_event, data) => {
@@ -292,7 +360,10 @@ function bindStatusListeners(debugLog) {
 			if (dom.pullAllBtn) dom.pullAllBtn.disabled = true;
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
 			if (dom.pullBookmarksBtn) dom.pullBookmarksBtn.disabled = true;
-		} else if (data.status === "pulling") {
+			return;
+		}
+
+		if (data.status === "pulling") {
 			if (dom.pullAllBtn) {
 				dom.pullAllBtn.disabled = true;
 				dom.pullAllBtn.innerHTML =
@@ -301,89 +372,41 @@ function bindStatusListeners(debugLog) {
 			if (dom.syncAllBtn) dom.syncAllBtn.disabled = true;
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
 			if (dom.pullBookmarksBtn) dom.pullBookmarksBtn.disabled = true;
-		} else {
-			if (dom.syncAllBtn) {
-				dom.syncAllBtn.disabled = false;
-				dom.syncAllBtn.innerHTML =
-					'<i class="material-icons">cloud_upload</i> 上传所有配置到云端';
-			}
-			if (dom.pullAllBtn) {
-				dom.pullAllBtn.disabled = false;
-				dom.pullAllBtn.innerHTML =
-					'<i class="material-icons">cloud_download</i> 从云端下载覆盖本地';
-			}
-			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = false;
-			if (dom.pullBookmarksBtn) dom.pullBookmarksBtn.disabled = false;
-			alert(data.success ? data.message : `操作失败: ${data.message}`);
+			return;
 		}
+
+		resetSyncButtons();
+		showToast(data.message, {
+			type: data.success ? "success" : "error",
+			title: data.success ? "同步完成" : "同步失败",
+		});
 	});
 
 	ipcRenderer.on("cache-cleared", async (_event, data) => {
 		if (!data.success) {
-			alert("缓存清理失败，请重试");
+			showToast("缓存清理失败，请重试。", {
+				type: "error",
+				title: "清理失败",
+			});
+			resetCacheClearState();
 			return;
 		}
 
-		alert("缓存清理完成！");
-
 		try {
-			if (state.cacheClearOptions.clearKeyConfig) {
-				const map = await ipcRenderer.invoke("get-shortcuts");
-				state.tempKeyMap = { ...map };
-				renderShortcuts();
-			}
-
-			if (state.cacheClearOptions.clearAppConfig) {
-				const appConfig = await ipcRenderer.invoke("get-app-config");
-				const debugMode = await ipcRenderer.invoke("get-debug-mode");
-				state.debugModeState = debugMode;
-				state.bossKeyProtectionState = appConfig.bossKeyProtection !== false;
-				state.alwaysOnTopState = appConfig.alwaysOnTop === true;
-				state.videoForwardSecondsState = normalizeNumber(
-					appConfig.videoForwardSeconds,
-					10,
-					1,
-					600,
-				);
-				state.videoBackwardSecondsState = normalizeNumber(
-					appConfig.videoBackwardSeconds,
-					10,
-					1,
-					600,
-				);
-				state.videoLongPressRateState = normalizeNumber(
-					appConfig.videoLongPressRate,
-					2.0,
-					0.25,
-					16,
-				);
-				updateDebugToggle();
-				updateBossKeyProtectionToggle();
-				updateAlwaysOnTopToggle();
-				updateVideoControlInputs();
-			}
-
-			if (state.cacheClearOptions.clearResolutionPresets) {
-				const presets = await ipcRenderer.invoke("get-resolution-presets");
-				state.tempResolutionPresets = JSON.parse(JSON.stringify(presets));
-				renderResolutionPresets(debugLog);
-			}
+			await reloadClearedState(debugLog);
 		} catch (error) {
 			console.error("重新加载配置数据失败:", error);
+			showToast("缓存已清理，但界面状态刷新失败，请重新打开设置页。", {
+				type: "warning",
+				title: "状态未完全刷新",
+			});
 		}
 
-		Object.keys(state.cacheClearOptions).forEach((key) => {
-			state.cacheClearOptions[key] = false;
+		resetCacheClearState();
+		showToast(data.message || "缓存清理完成。", {
+			type: "success",
+			title: "清理完成",
 		});
-		document
-			.querySelectorAll(".cache-section .toggle-switch")
-			.forEach((toggle) => {
-				toggle.classList.remove("active");
-			});
-		if (dom.cacheClearBtn) {
-			dom.cacheClearBtn.disabled = false;
-			dom.cacheClearBtn.textContent = "开始清理";
-		}
 	});
 }
 
