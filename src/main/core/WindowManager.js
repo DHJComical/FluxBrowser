@@ -1,4 +1,5 @@
 const configManager = require("../ConfigManager");
+const { WINDOW_CONSTANTS } = require("../../constants/config");
 const createMainWindow = require("../windows/MainWindow");
 const createSettingsWindow = require("../windows/SettingsWindow");
 const createBookmarksWindow = require("../windows/BookmarksWindow");
@@ -112,7 +113,11 @@ class WindowManager {
 		focusBorderlessMaximizedApp();
 	}
 
-	setWindowSize(width, height, titleBarHeight = 40) {
+	setWindowSize(
+		width,
+		height,
+		titleBarHeight = WINDOW_CONSTANTS.TITLE_BAR_HEIGHT,
+	) {
 		if (this.mainWindow) {
 			const currentBounds = this.mainWindow.getBounds();
 			this.mainWindow.setBounds({
