@@ -18,19 +18,29 @@ const {
 function initTabs() {
 	const tabs = document.querySelectorAll(".settings-tab");
 	const panels = document.querySelectorAll(".settings-panel");
+	if (!tabs.length || !panels.length) return;
+
+	function activatePanel(targetPanel) {
+		tabs.forEach((item) => {
+			item.classList.toggle(
+				"active",
+				item.getAttribute("data-panel") === targetPanel,
+			);
+		});
+		panels.forEach((panel) => {
+			panel.classList.toggle("active", panel.id === `panel-${targetPanel}`);
+		});
+	}
+
+	const defaultTab = document.querySelector(".settings-tab.active") || tabs[0];
+	if (defaultTab) {
+		activatePanel(defaultTab.getAttribute("data-panel"));
+	}
 
 	tabs.forEach((tab) => {
 		tab.addEventListener("click", (event) => {
 			event.stopPropagation();
-			const targetPanel = tab.getAttribute("data-panel");
-			tabs.forEach((item) => item.classList.remove("active"));
-			tab.classList.add("active");
-			panels.forEach((panel) => {
-				panel.classList.remove("active");
-				if (panel.id === `panel-${targetPanel}`) {
-					panel.classList.add("active");
-				}
-			});
+			activatePanel(tab.getAttribute("data-panel"));
 		});
 	});
 }

@@ -6,8 +6,8 @@ const {
 } = require("./windowUtils");
 
 function createSettingsWindow({ parentWindow, onClosed }) {
-	const windowWidth = 800;
-	const windowHeight = 600;
+	const windowWidth = 860;
+	const windowHeight = 620;
 	const { x, y } = getCenteredPosition(windowWidth, windowHeight);
 
 	const settingsWindow = new BrowserWindow({
@@ -15,8 +15,8 @@ function createSettingsWindow({ parentWindow, onClosed }) {
 		y,
 		width: windowWidth,
 		height: windowHeight,
-		minWidth: 700,
-		minHeight: 500,
+		minWidth: 820,
+		minHeight: 560,
 		parent: parentWindow,
 		title: "FluxBrowser 设置",
 		icon: getWindowIconPath(),
