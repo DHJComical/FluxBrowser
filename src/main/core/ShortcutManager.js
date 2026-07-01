@@ -1,5 +1,10 @@
 const { globalShortcut } = require("electron");
-const configManager = require("../ConfigManager");
+const {
+	getKeyFromConfig,
+	isActionRegistered,
+	getRegisteredShortcutsMap,
+} = require("./shortcutUtils");
+const { forEachPluginShortcut } = require("./shortcutPluginOps");
 
 class ShortcutManager {
 	constructor(core, pluginLoader, logger) {
@@ -11,45 +16,46 @@ class ShortcutManager {
 
 	// 重新加载所有快捷键
 	reloadShortcuts() {
-		// 1. 先注销所有快捷键，防止冲突
 		this.unregisterAllShortcuts();
-
-		// 2. 遍历所有插件，注册快捷键
-		if (this.pluginLoader && this.pluginLoader.plugins) {
-			this.pluginLoader.plugins.forEach((plugin) => {
-				if (plugin.shortcuts) {
-					this.registerPluginShortcuts(plugin);
-				}
-			});
-		}
-
+		this.reloadPluginShortcuts();
 		this.logger.debug("快捷键重载完成");
+	}
+
+	reloadPluginShortcuts(options = {}) {
+		forEachPluginShortcut(this.pluginLoader, (plugin, actionId, actionFunc) => {
+			this.registerPluginShortcut(actionId, actionFunc, options);
+		});
 	}
 
 	// 注册单个插件的快捷键
 	registerPluginShortcuts(plugin, options = {}) {
+		if (!plugin || !plugin.shortcuts) {
+			return;
+		}
+
 		const skippedActionIds = new Set(options.skipActionIds || []);
 		for (const [actionId, actionFunc] of Object.entries(plugin.shortcuts)) {
-			if (skippedActionIds.has(actionId) || this.isActionRegistered(actionId)) {
-				continue;
-			}
+			this.registerPluginShortcut(actionId, actionFunc, {
+				skipActionIds: skippedActionIds,
+			});
+		}
+	}
 
-			// 从配置获取用户设置的按键
-			const userKey = this.getKeyFromConfig(actionId);
-			if (userKey) {
-				this.registerShortcut(userKey, actionId, actionFunc);
-			}
+	registerPluginShortcut(actionId, actionFunc, options = {}) {
+		const skippedActionIds = new Set(options.skipActionIds || []);
+		if (skippedActionIds.has(actionId) || this.isActionRegistered(actionId)) {
+			return;
+		}
+
+		const userKey = this.getKeyFromConfig(actionId);
+		if (userKey) {
+			this.registerShortcut(userKey, actionId, actionFunc);
 		}
 	}
 
 	// 从配置获取快捷键
 	getKeyFromConfig(actionId) {
-		if (this.core && this.core.getKey) {
-			return this.core.getKey(actionId);
-		}
-		// 备用方案：直接从配置管理器获取
-		const keyConfig = configManager.getKeyConfig();
-		return keyConfig[actionId];
+		return getKeyFromConfig(this.core, actionId);
 	}
 
 	// 注册单个快捷键
@@ -120,21 +126,12 @@ class ShortcutManager {
 
 	// 获取所有已注册的快捷键
 	getAllRegisteredShortcuts() {
-		const result = {};
-		for (const [key, actionId] of this.registeredShortcuts.entries()) {
-			result[actionId] = key;
-		}
-		return result;
+		return getRegisteredShortcutsMap(this.registeredShortcuts);
 	}
 
 	// 检查动作是否已经注册
 	isActionRegistered(actionId) {
-		for (const registeredActionId of this.registeredShortcuts.values()) {
-			if (registeredActionId === actionId) {
-				return true;
-			}
-		}
-		return false;
+		return isActionRegistered(this.registeredShortcuts, actionId);
 	}
 
 	// 暂停所有快捷键（临时禁用）
@@ -165,13 +162,7 @@ class ShortcutManager {
 	// 恢复除指定动作外的快捷键
 	resumeShortcutsExcept(actionIds = []) {
 		const skippedActionIds = new Set(actionIds);
-		if (this.pluginLoader && this.pluginLoader.plugins) {
-			this.pluginLoader.plugins.forEach((plugin) => {
-				if (plugin.shortcuts) {
-					this.registerPluginShortcuts(plugin, { skipActionIds: skippedActionIds });
-				}
-			});
-		}
+		this.reloadPluginShortcuts({ skipActionIds: skippedActionIds });
 		this.logger.debug(
 			`快捷键已部分恢复，跳过: ${Array.from(skippedActionIds).join(", ")}`,
 		);

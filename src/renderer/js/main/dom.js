@@ -1,0 +1,17 @@
+module.exports = {
+	webview: document.getElementById("browser-view"),
+	urlInput: document.getElementById("url-input"),
+	goBtn: document.getElementById("go-btn"),
+	fluxBar: document.getElementById("flux-bar"),
+	menuBtn: document.getElementById("menu-btn"),
+	dropdownMenu: document.getElementById("dropdown-menu"),
+	settingsBtn: document.getElementById("settings-btn"),
+	addBookmarkBtn: document.getElementById("add-bookmark-btn"),
+	viewBookmarksBtn: document.getElementById("view-bookmarks-btn"),
+	exitBtn: document.getElementById("exit-btn"),
+	resizeHandles: document.querySelectorAll(".resize-handle"),
+	dragRegion: document.querySelector(".drag-region"),
+	resolutionSubmenu: document.getElementById("resolution-submenu"),
+	windowStatus: document.getElementById("window-status"),
+	pageTitle: document.getElementById("page-title"),
+};

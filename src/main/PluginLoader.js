@@ -1,4 +1,9 @@
 const configManager = require("./ConfigManager");
+const pluginRegistry = require("./plugins/pluginRegistry");
+const {
+	initializePlugin,
+	collectPluginShortcuts,
+} = require("./plugins/pluginUtils");
 
 class PluginLoader {
 	constructor(core) {
@@ -7,21 +12,8 @@ class PluginLoader {
 	}
 
 	loadAll() {
-		// 使用 require 加载插件模块
-		this.plugins = [
-			require("../plugins/boss-key"),
-			require("../plugins/immersion"),
-			require("../plugins/video-ctrl"),
-			require("../plugins/opacity"),
-			require("../plugins/web-nav"),
-			require("../plugins/site-fixes"),
-		];
-
-		// 初始化所有插件
-		this.plugins.forEach((p) => {
-			if (p.initialize) p.initialize(this.core);
-			else if (p.init) p.init(this.core);
-		});
+		this.plugins = [...pluginRegistry];
+		this.plugins.forEach((plugin) => initializePlugin(plugin, this.core));
 
 		// 注意：现在快捷键的注册由ShortcutManager处理
 		// 我们不再在这里直接调用reloadShortcuts()
@@ -95,11 +87,7 @@ class PluginLoader {
 	addPlugin(pluginModule) {
 		if (pluginModule) {
 			this.plugins.push(pluginModule);
-
-			// 初始化新插件
-			if (pluginModule.initialize) pluginModule.initialize(this.core);
-			else if (pluginModule.init) pluginModule.init(this.core);
-
+			initializePlugin(pluginModule, this.core);
 			return true;
 		}
 		return false;
@@ -117,13 +105,7 @@ class PluginLoader {
 
 	// 获取所有插件的快捷键配置
 	getAllPluginShortcuts() {
-		const shortcuts = {};
-		this.plugins.forEach((plugin) => {
-			if (plugin.shortcuts) {
-				Object.assign(shortcuts, plugin.shortcuts);
-			}
-		});
-		return shortcuts;
+		return collectPluginShortcuts(this.plugins);
 	}
 
 	// 验证插件结构

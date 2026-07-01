@@ -60,7 +60,7 @@ const DEV_CONFIG_PREFIX = "dev-";
 
 // 窗口相关常量
 const WINDOW_CONSTANTS = {
-	TITLE_BAR_HEIGHT: 40, // 标题栏高度（像素）
+	TITLE_BAR_HEIGHT: 56, // 标题栏高度（像素）
 	MIN_WIDTH: 300, // 最小宽度
 	MIN_HEIGHT: 200, // 最小高度
 	MAX_WIDTH: 4000, // 最大宽度

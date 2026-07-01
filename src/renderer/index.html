@@ -2,81 +2,62 @@
 <html>
 <head>
   <link rel="stylesheet" href="css/style.css">
-  <!-- 引入 Material Icons 让界面更漂亮 -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-  
-  <!-- 顶部控制栏 (Flux Bar) -->
   <div id="flux-bar">
-    <div class="drag-region">FluxBrowser</div>
-    
-    <!-- 1. 确保这一块菜单按钮存在 -->
+    <div class="brand-panel">
+      <div class="drag-region">FluxBrowser</div>
+      <div class="window-status" id="window-status">准备就绪</div>
+    </div>
+
     <div class="menu-container">
-        <button id="menu-btn"><i class="material-icons">menu</i></button>
-        <div id="dropdown-menu" class="hidden">
-            <div class="menu-item" id="settings-btn">
-                <i class="material-icons">settings</i> 设置
-            </div>
-            <div class="menu-divider"></div>
-                <div class="menu-submenu" id="resolution-menu">
-                    <div class="menu-item">
-                        <i class="material-icons">aspect_ratio</i> 分辨率预设
-                        <i class="material-icons submenu-arrow">chevron_right</i>
-                    </div>
-                    <div class="submenu-content" id="resolution-submenu"></div>
-                </div>
-            <div class="menu-divider"></div>
-            <div class="menu-item" id="add-bookmark-btn">
-                <i class="material-icons">bookmark_add</i> 添加书签
-            </div>
-            <div class="menu-item" id="view-bookmarks-btn">
-                <i class="material-icons">bookmarks</i> 查看书签
-            </div>
-            <div class="menu-divider"></div>
-            <div class="menu-item" id="exit-btn">
-                <i class="material-icons">power_settings_new</i> 退出
-            </div>
+      <button id="menu-btn"><i class="material-icons">menu</i></button>
+      <div id="dropdown-menu" class="hidden">
+        <div class="menu-item" id="settings-btn">
+          <i class="material-icons">settings</i> 设置
         </div>
+        <div class="menu-divider"></div>
+
+        <div class="menu-submenu" id="resolution-menu">
+          <div class="menu-item">
+            <i class="material-icons">aspect_ratio</i> 分辨率预设
+            <i class="material-icons submenu-arrow">chevron_right</i>
+          </div>
+          <div class="submenu-content" id="resolution-submenu"></div>
+        </div>
+        <div class="menu-divider"></div>
+
+        <div class="menu-item" id="add-bookmark-btn">
+          <i class="material-icons">bookmark_add</i> 添加书签
+        </div>
+        <div class="menu-item" id="view-bookmarks-btn">
+          <i class="material-icons">bookmarks</i> 查看书签
+        </div>
+        <div class="menu-divider"></div>
+
+        <div class="menu-item" id="exit-btn">
+          <i class="material-icons">power_settings_new</i> 退出
+        </div>
+      </div>
     </div>
 
     <div class="input-group">
-        <input type="text" id="url-input" placeholder="Enter URL..." value="">
-        <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
+      <div class="address-meta">
+        <span class="address-label">地址</span>
+        <span class="page-title" id="page-title">未加载页面</span>
+      </div>
+      <input type="text" id="url-input" placeholder="输入网址后回车或点击前往" value="">
+      <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
     </div>
   </div>
-  <!-- 网页容器 -->
 
   <webview id="browser-view" allowpopups></webview>
 
-  <!-- 边缘调整区域 -->
   <div class="resize-handle right" data-direction="right"></div>
   <div class="resize-handle bottom" data-direction="bottom"></div>
   <div class="resize-handle corner" data-direction="both"></div>
 
-  <div id="settings-modal" class="modal hidden">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>快捷键设置</h3>
-            <button id="close-settings"><i class="material-icons">close</i></button>
-        </div>
-        <div class="modal-body">
-            <ul id="shortcut-list"></ul>
-            <div id="update-section">
-                <p id="update-status">版本: v1.0.0</p>
-                <div id="update-progress-container" class="hidden">
-                    <div id="update-progress-bar"></div>
-                </div>
-                <button id="check-update-btn">检查更新</button>
-                <button id="install-update-btn" class="hidden">重启并安装</button>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button id="save-shortcuts">保存并生效</button>
-        </div>
-    </div>
-  </div>
-  
   <script src="js/client.js"></script>
 </body>
 </html>

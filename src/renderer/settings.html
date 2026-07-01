@@ -8,339 +8,382 @@
 </head>
 <body>
     <div class="settings-container">
-        <!-- 左侧Tab栏 -->
         <div class="settings-sidebar">
             <div class="settings-sidebar-title">
                 <i class="material-icons">settings</i>
                 设置
             </div>
-            
-            <div class="settings-tab active" data-panel="shortcuts">
-                <i class="material-icons">keyboard</i>
-                快捷键
+
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">播放与窗口</div>
+                <div class="settings-tab active" data-panel="experience">
+                    <i class="material-icons">slideshow</i>
+                    <div class="settings-tab-copy">
+                        <span class="settings-tab-label">播放与窗口</span>
+                        <span class="settings-tab-desc">快捷键、沉浸与分辨率</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="settings-tab" data-panel="updates">
-                <i class="material-icons">system_update</i>
-                软件更新
+
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">数据与同步</div>
+                <div class="settings-tab" data-panel="sync">
+                    <i class="material-icons">cloud_sync</i>
+                    <div class="settings-tab-copy">
+                        <span class="settings-tab-label">数据与同步</span>
+                        <span class="settings-tab-desc">书签与 Git 同步</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="settings-tab" data-panel="debug">
-                <i class="material-icons">bug_report</i>
-                调试模式
-            </div>
-            
-            <div class="settings-tab" data-panel="resolution">
-                <i class="material-icons">aspect_ratio</i>
-                分辨率预设
-            </div>
-            
-            <div class="settings-tab" data-panel="cache">
-                <i class="material-icons">memory</i>
-                缓存清理
-            </div>
-            <div class="settings-tab" data-panel="git">
-                <i class="material-icons">cloud_sync</i>
-                Git 同步
+
+            <div class="settings-nav-group">
+                <div class="settings-nav-group-title">系统与维护</div>
+                <div class="settings-tab" data-panel="system">
+                    <i class="material-icons">build</i>
+                    <div class="settings-tab-copy">
+                        <span class="settings-tab-label">系统与维护</span>
+                        <span class="settings-tab-desc">更新、调试与清理</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 右侧内容区 -->
         <div class="settings-content">
-            <!-- 快捷键设置面板 -->
-            <div class="settings-panel active" id="panel-shortcuts">
-                <div class="panel-title">快捷键设置</div>
-                <div class="panel-subtitle">配置全局快捷键以快速触发各种功能</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">flash_on</i>
-                        功能快捷键
-                    </div>
-                    <div id="shortcut-list"></div>
-                </div>
+            <div class="settings-panel active" id="panel-experience">
+                <div class="panel-title">播放与窗口</div>
+                <div class="panel-subtitle">把常用播放控制、窗口行为和尺寸预设放在一处，减少切换负担。</div>
 
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">privacy_tip</i>
-                        老板键保护
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">快捷键</div>
+                        <div class="settings-section-desc">调整全局操作入口，覆盖播放、窗口和网页浏览动作。</div>
                     </div>
-                    <div class="toggle-item">
-                        <div class="toggle-info">
-                            <span class="toggle-label">隐藏时保护播放状态和快捷键</span>
-                            <span class="toggle-desc">触发老板键隐藏窗口后暂停视频，并只保留老板键快捷键用于恢复窗口</span>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">keyboard</i>
+                            播放与窗口快捷键
                         </div>
-                        <div class="toggle-switch" id="boss-key-protection-toggle"></div>
+                        <div id="shortcut-list"></div>
                     </div>
                 </div>
 
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">push_pin</i>
-                        窗口置顶
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">窗口行为</div>
+                        <div class="settings-section-desc">决定窗口显示方式、沉浸切换后的保护策略，以及视频控制手感。</div>
                     </div>
-                    <div class="toggle-item">
-                        <div class="toggle-info">
-                            <span class="toggle-label">浏览器窗口始终置顶</span>
-                            <span class="toggle-desc">即使不在沉浸模式，也让浏览器主窗口保持在其他窗口上方</span>
-                        </div>
-                        <div class="toggle-switch" id="always-on-top-toggle"></div>
-                    </div>
-                </div>
 
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">movie</i>
-                        视频控制
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>快进时长 (秒)</label>
-                            <input type="number" id="video-forward-seconds" min="1" max="600" step="1">
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">push_pin</i>
+                            置顶
                         </div>
-                        <div class="form-group">
-                            <label>快退时长 (秒)</label>
-                            <input type="number" id="video-backward-seconds" min="1" max="600" step="1">
-                        </div>
-                        <div class="form-group">
-                            <label>长按快进倍速</label>
-                            <input type="number" id="video-long-press-rate" min="0.25" max="16" step="0.25">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 软件更新面板 -->
-            <div class="settings-panel" id="panel-updates">
-                <div class="panel-title">软件更新</div>
-                <div class="panel-subtitle">检查新版本以获得最新功能和修复</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">info</i>
-                        版本信息
-                    </div>
-                    <div class="update-section">
-                        <div class="version-info">
-                            <i class="material-icons">new_releases</i>
-                            <div class="version-text">
-                                <span class="version-label">当前版本</span>
-                                <span class="version-number" id="version-number">v1.0.0</span>
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">浏览器窗口始终置顶</span>
+                                <span class="toggle-desc">即使不在沉浸模式，也让浏览器主窗口保持在其他窗口上方</span>
                             </div>
-                        </div>
-                        <div class="update-status" id="update-status">点击下方按钮检查更新</div>
-                        <div class="update-progress" id="update-progress-container">
-                            <div class="update-progress-bar" id="update-progress-bar"></div>
-                        </div>
-                        <div class="update-actions">
-                            <button id="check-update-btn" class="btn btn-secondary">检查更新</button>
-                            <button id="download-update-btn" class="btn btn-primary hidden">下载更新</button>
-                            <button id="install-update-btn" class="btn btn-success hidden">立即安装</button>
+                            <div class="toggle-switch" id="always-on-top-toggle"></div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- 调试模式面板 -->
-            <div class="settings-panel" id="panel-debug">
-                <div class="panel-title">调试模式</div>
-                <div class="panel-subtitle">用于排查问题和开发调试的选项</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">developer_mode</i>
-                        调试选项
-                    </div>
-                    <div class="toggle-item">
-                        <div class="toggle-info">
-                            <span class="toggle-label">启用调试日志</span>
-                            <span class="toggle-desc">在控制台输出窗口位置和大小相关的调试信息</span>
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">privacy_tip</i>
+                            沉浸行为
                         </div>
-                        <div class="toggle-switch" id="debug-mode-toggle"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 分辨率预设面板 -->
-            <div class="settings-panel" id="panel-resolution">
-                <div class="panel-title">分辨率预设</div>
-                <div class="panel-subtitle">管理窗口分辨率预设，快速切换常用分辨率</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">list</i>
-                        当前预设
-                    </div>
-                    <div id="resolution-list"></div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">add_circle</i>
-                        添加新预设
-                    </div>
-                    <div class="resolution-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>名称</label>
-                                <input type="text" id="preset-name" placeholder="例如: 16:9 720P" maxlength="30">
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">隐藏时保护播放状态和快捷键</span>
+                                <span class="toggle-desc">触发老板键隐藏窗口后暂停视频，并只保留老板键快捷键用于恢复窗口</span>
                             </div>
+                            <div class="toggle-switch" id="boss-key-protection-toggle"></div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">movie</i>
+                            视频控制
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>宽度 (px)</label>
-                                <input type="number" id="preset-width" placeholder="例如: 1280" min="200" max="4000">
+                                <label>快进时长 (秒)</label>
+                                <input type="number" id="video-forward-seconds" min="1" max="600" step="1">
                             </div>
                             <div class="form-group">
-                                <label>高度 (px)</label>
-                                <input type="number" id="preset-height" placeholder="例如: 720" min="150" max="3000">
+                                <label>快退时长 (秒)</label>
+                                <input type="number" id="video-backward-seconds" min="1" max="600" step="1">
                             </div>
-                            <div class="form-group aspect-ratio-group">
-                                <label>纵横比锁定</label>
-                                <button id="aspect-ratio-lock" class="aspect-lock-btn" title="锁定纵横比，修改一边会自动计算另一边">
-                                    <i class="material-icons">lock_open</i>
-                                </button>
+                            <div class="form-group">
+                                <label>长按快进倍速</label>
+                                <input type="number" id="video-long-press-rate" min="0.25" max="16" step="0.25">
                             </div>
                         </div>
-                        <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">尺寸与布局</div>
+                        <div class="settings-section-desc">保存常用窗口分辨率，快速切换不同观看场景。</div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">aspect_ratio</i>
+                            分辨率预设
+                        </div>
+                        <div id="resolution-list"></div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">add_circle</i>
+                            添加新预设
+                        </div>
+                        <div class="resolution-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>名称</label>
+                                    <input type="text" id="preset-name" placeholder="例如: 16:9 720P" maxlength="30">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>宽度 (px)</label>
+                                    <input type="number" id="preset-width" placeholder="例如: 1280" min="200" max="4000">
+                                </div>
+                                <div class="form-group">
+                                    <label>高度 (px)</label>
+                                    <input type="number" id="preset-height" placeholder="例如: 720" min="150" max="3000">
+                                </div>
+                                <div class="form-group aspect-ratio-group">
+                                    <label>纵横比锁定</label>
+                                    <button id="aspect-ratio-lock" class="aspect-lock-btn" title="锁定纵横比，修改一边会自动计算另一边">
+                                        <i class="material-icons">lock_open</i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Git 同步面板 -->
-            <div class="settings-panel" id="panel-git">
-                <div class="panel-title">Git 同步设置</div>
-                <div class="panel-subtitle">配置 GitHub PAT 和远程仓库以同步所有个性化配置和书签</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">settings_input_component</i>
-                        Git 配置
+            <div class="settings-panel" id="panel-sync">
+                <div class="panel-title">数据与同步</div>
+                <div class="panel-subtitle">集中管理书签和配置同步，减少误操作时的认知跳转。</div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">书签</div>
+                        <div class="settings-section-desc">书签可单独上传或下载，适合只处理内容数据的场景。</div>
                     </div>
-                    <div class="form-group">
-                        <label>GitHub PAT</label>
-                        <input type="password" id="git-pat" placeholder="输入 GitHub Personal Access Token">
-                    </div>
-                    <div class="form-group">
-                        <label>远程仓库地址 (HTTPS)</label>
-                        <input type="text" id="git-remote" placeholder="https://github.com/username/repo.git">
-                    </div>
-                    <div class="form-group">
-                        <label>Git 用户名</label>
-                        <input type="text" id="git-name" placeholder="例如: YourName">
-                    </div>
-                    <div class="form-group">
-                        <label>Git 邮箱</label>
-                        <input type="email" id="git-email" placeholder="例如: email@example.com">
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">bookmark</i>
+                            书签同步
+                        </div>
+                        <div class="git-actions">
+                            <button id="sync-bookmarks-btn" class="btn btn-secondary">
+                                <i class="material-icons">bookmark</i>
+                                仅上传书签
+                            </button>
+                            <button id="pull-bookmarks-btn" class="btn btn-secondary">
+                                <i class="material-icons">bookmark</i>
+                                仅下载书签
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">cloud_upload</i>
-                        一键同步所有配置
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">Git 同步</div>
+                        <div class="settings-section-desc">使用 GitHub 仓库存放配置快照和书签记录。</div>
                     </div>
-                    <div class="sync-info">
-                        <p>同步内容包括：</p>
-                        <ul>
-                            <li>快捷键配置</li>
-                            <li>窗口边界设置</li>
-                            <li>分辨率预设</li>
-                            <li>书签记录</li>
-                        </ul>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">settings_input_component</i>
+                            Git 配置
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub PAT</label>
+                            <input type="password" id="git-pat" placeholder="输入 GitHub Personal Access Token">
+                        </div>
+                        <div class="form-group">
+                            <label>远程仓库地址 (HTTPS)</label>
+                            <input type="text" id="git-remote" placeholder="https://github.com/username/repo.git">
+                        </div>
+                        <div class="form-group">
+                            <label>Git 用户名</label>
+                            <input type="text" id="git-name" placeholder="例如: YourName">
+                        </div>
+                        <div class="form-group">
+                            <label>Git 邮箱</label>
+                            <input type="email" id="git-email" placeholder="例如: email@example.com">
+                        </div>
                     </div>
-                    <div class="git-actions">
-                        <button id="sync-all-btn" class="btn btn-primary">
+
+                    <div class="settings-card">
+                        <div class="card-title">
                             <i class="material-icons">cloud_upload</i>
-                            上传所有配置到云端
-                        </button>
-                        <button id="pull-all-btn" class="btn btn-warning">
-                            <i class="material-icons">cloud_download</i>
-                            从云端下载覆盖本地
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">bookmark</i>
-                        书签单独同步
-                    </div>
-                    <div class="git-actions">
-                        <button id="sync-bookmarks-btn" class="btn btn-secondary">仅上传书签</button>
-                        <button id="pull-bookmarks-btn" class="btn btn-secondary">仅下载书签</button>
+                            配置与书签总同步
+                        </div>
+                        <div class="sync-info">
+                            <p>同步内容包括：</p>
+                            <ul>
+                                <li>快捷键配置</li>
+                                <li>窗口边界设置</li>
+                                <li>分辨率预设</li>
+                                <li>书签记录</li>
+                            </ul>
+                        </div>
+                        <div class="git-actions">
+                            <button id="sync-all-btn" class="btn btn-primary">
+                                <i class="material-icons">cloud_upload</i>
+                                上传所有配置到云端
+                            </button>
+                            <button id="pull-all-btn" class="btn btn-warning">
+                                <i class="material-icons">cloud_download</i>
+                                从云端下载覆盖本地
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 缓存清理面板 -->
-            <div class="settings-panel" id="panel-cache">
-                <div class="panel-title">缓存清理</div>
-                <div class="panel-subtitle">清理应用缓存和日志文件以释放空间和解决潜在问题</div>
-                
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">delete_forever</i>
-                        清理缓存文件
+            <div class="settings-panel" id="panel-system">
+                <div class="panel-title">系统与维护</div>
+                <div class="panel-subtitle">把更新、排障和重置工具收在一起，减少低频功能打断主流程。</div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">系统更新</div>
+                        <div class="settings-section-desc">检查版本、下载更新，并在准备好时触发安装。</div>
                     </div>
-                    <div class="cache-section">
-                        <div class="toggle-item">
-                            <div class="toggle-info">
-                                <span class="toggle-label">日志文件</span>
-                                <span class="toggle-desc">清理所有日志文件，包括主日志和调试日志</span>
-                            </div>
-                            <div class="toggle-switch" id="clear-logs-toggle"></div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">system_update</i>
+                            软件更新
                         </div>
-                        
-                        <div class="toggle-item">
-                            <div class="toggle-info">
-                                <span class="toggle-label">快捷键配置</span>
-                                <span class="toggle-desc">重置所有快捷键配置为默认值</span>
+                        <div class="update-section">
+                            <div class="version-info">
+                                <i class="material-icons">new_releases</i>
+                                <div class="version-text">
+                                    <span class="version-label">当前版本</span>
+                                    <span class="version-number" id="version-number">v1.0.0</span>
+                                </div>
                             </div>
-                            <div class="toggle-switch" id="clear-key-config-toggle"></div>
-                        </div>
-                        
-                        <div class="toggle-item">
-                            <div class="toggle-info">
-                                <span class="toggle-label">窗口配置</span>
-                                <span class="toggle-desc">重置窗口位置、大小和透明度为默认值</span>
+                            <div class="update-status" id="update-status">点击下方按钮检查更新</div>
+                            <div class="update-progress" id="update-progress-container">
+                                <div class="update-progress-bar" id="update-progress-bar"></div>
                             </div>
-                            <div class="toggle-switch" id="clear-window-config-toggle"></div>
-                        </div>
-                        
-                        <div class="toggle-item">
-                            <div class="toggle-info">
-                                <span class="toggle-label">应用配置</span>
-                                <span class="toggle-desc">重置应用设置，包括调试模式</span>
+                            <div class="update-actions">
+                                <button id="check-update-btn" class="btn btn-secondary">检查更新</button>
+                                <button id="download-update-btn" class="btn btn-primary hidden">下载更新</button>
+                                <button id="install-update-btn" class="btn btn-success hidden">立即安装</button>
                             </div>
-                            <div class="toggle-switch" id="clear-app-config-toggle"></div>
-                        </div>
-                        
-                        <div class="toggle-item">
-                            <div class="toggle-info">
-                                <span class="toggle-label">分辨率预设</span>
-                                <span class="toggle-desc">重置所有分辨率预设为默认值</span>
-                            </div>
-                            <div class="toggle-switch" id="clear-resolution-presets-toggle"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-card">
-                    <div class="card-title">
-                        <i class="material-icons">warning</i>
-                        操作确认
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">调试</div>
+                        <div class="settings-section-desc">需要排查问题时，再开启额外日志输出。</div>
                     </div>
-                    <div class="cache-actions">
-                        <div class="cache-warning">
-                            <span class="warning-icon">⚠️</span>
-                            <span class="warning-text">注意：清理配置文件后需要重启应用才能生效</span>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">bug_report</i>
+                            调试模式
                         </div>
-                        <div class="auto-restart-info">
-                            <i class="material-icons">autorenew</i>
-                            <span>应用将在保存后自动重启</span>
+                        <div class="toggle-item">
+                            <div class="toggle-info">
+                                <span class="toggle-label">启用调试日志</span>
+                                <span class="toggle-desc">在控制台输出窗口位置和大小相关的调试信息</span>
+                            </div>
+                            <div class="toggle-switch" id="debug-mode-toggle"></div>
                         </div>
-                        <button id="cache-clear-btn" class="btn btn-success">开始清理</button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title">缓存清理</div>
+                        <div class="settings-section-desc">重置配置和日志前，先明确影响范围，避免误清理常用数据。</div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">delete_forever</i>
+                            清理缓存文件
+                        </div>
+                        <div class="cache-section">
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <span class="toggle-label">日志文件</span>
+                                    <span class="toggle-desc">清理所有日志文件，包括主日志和调试日志</span>
+                                </div>
+                                <div class="toggle-switch" id="clear-logs-toggle"></div>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <span class="toggle-label">快捷键配置</span>
+                                    <span class="toggle-desc">重置所有快捷键配置为默认值</span>
+                                </div>
+                                <div class="toggle-switch" id="clear-key-config-toggle"></div>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <span class="toggle-label">窗口配置</span>
+                                    <span class="toggle-desc">重置窗口位置、大小和透明度为默认值</span>
+                                </div>
+                                <div class="toggle-switch" id="clear-window-config-toggle"></div>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <span class="toggle-label">应用配置</span>
+                                    <span class="toggle-desc">重置应用设置，包括调试模式</span>
+                                </div>
+                                <div class="toggle-switch" id="clear-app-config-toggle"></div>
+                            </div>
+
+                            <div class="toggle-item">
+                                <div class="toggle-info">
+                                    <span class="toggle-label">分辨率预设</span>
+                                    <span class="toggle-desc">重置所有分辨率预设为默认值</span>
+                                </div>
+                                <div class="toggle-switch" id="clear-resolution-presets-toggle"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title">
+                            <i class="material-icons">warning</i>
+                            操作确认
+                        </div>
+                        <div class="cache-actions">
+                            <div class="cache-warning">
+                                <span class="warning-icon">⚠️</span>
+                                <span class="warning-text">注意：清理配置文件后需要重启应用才能生效</span>
+                            </div>
+                            <div class="auto-restart-info">
+                                <i class="material-icons">autorenew</i>
+                                <span>应用将在保存后自动重启</span>
+                            </div>
+                            <button id="cache-clear-btn" class="btn btn-success">开始清理</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -349,7 +392,6 @@
         </div>
     </div>
 
-    <!-- 底部保存栏 -->
     <div class="save-bar">
         <button id="cancel-btn" class="btn btn-secondary">取消</button>
         <button id="save-btn" class="btn btn-primary">保存设置</button>
