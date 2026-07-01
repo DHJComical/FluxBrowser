@@ -22,6 +22,11 @@ class WindowManager {
 		this.temporaryAlwaysOnTop = false;
 		this.currentOpacity = this.savedBounds.opacity || 1.0;
 		this.isImmersionMode = false;
+		this.pendingWebviewSizeTarget = null;
+		this.webviewSizeCalibrationId = 0;
+		this.webviewSizeMeasurementTimer = null;
+		this.preImmersionBounds = null;
+		this.normalWindowBounds = null;
 	}
 
 	createMainWindow(options = {}) {
@@ -38,8 +43,15 @@ class WindowManager {
 			},
 		});
 
-		this.mainWindow.on("move", () => this.syncAuxiliaryWindows());
-		this.mainWindow.on("resize", () => this.syncAuxiliaryWindows());
+		this.normalWindowBounds = this.normalizeBounds(this.mainWindow.getBounds());
+		this.mainWindow.on("move", () => {
+			this.rememberNormalWindowBounds();
+			this.syncAuxiliaryWindows();
+		});
+		this.mainWindow.on("resize", () => {
+			this.rememberNormalWindowBounds();
+			this.syncAuxiliaryWindows();
+		});
 		this.mainWindow.on("show", () => this.showAuxiliaryWindows());
 		this.mainWindow.on("hide", () => this.hideAuxiliaryWindows());
 		this.mainWindow.on("focus", () => {
@@ -118,7 +130,10 @@ class WindowManager {
 
 	saveWindowBounds() {
 		if (this.mainWindow) {
-			const bounds = this.mainWindow.getBounds();
+			const bounds =
+				this.isImmersionMode && this.normalWindowBounds
+					? this.normalWindowBounds
+					: this.mainWindow.getBounds();
 			configManager.saveBoundsConfig(bounds);
 		}
 	}
@@ -197,14 +212,194 @@ class WindowManager {
 	) {
 		if (this.mainWindow) {
 			const currentBounds = this.mainWindow.getBounds();
-			this.mainWindow.setBounds({
+			const calibrationId = ++this.webviewSizeCalibrationId;
+			this.pendingWebviewSizeTarget = {
+				id: calibrationId,
+				width,
+				height,
+				attempt: 0,
+			};
+			const nextBounds = {
 				x: currentBounds.x,
 				y: currentBounds.y,
 				width,
 				height: height + titleBarHeight,
-			});
+			};
+			this.mainWindow.setBounds(nextBounds);
+			this.rememberNormalWindowBounds(nextBounds);
 			this.syncAuxiliaryWindows();
+			this.requestWebviewSizeMeasurement();
 		}
+	}
+
+	requestWebviewSizeMeasurement() {
+		if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
+		if (!this.pendingWebviewSizeTarget) return;
+
+		const { id, width, height, attempt } = this.pendingWebviewSizeTarget;
+		if (this.webviewSizeMeasurementTimer) {
+			clearTimeout(this.webviewSizeMeasurementTimer);
+		}
+
+		this.webviewSizeMeasurementTimer = setTimeout(() => {
+			if (!this.mainWindow || this.mainWindow.isDestroyed()) return;
+			if (!this.pendingWebviewSizeTarget) return;
+			if (this.pendingWebviewSizeTarget.id !== id) return;
+
+			this.mainWindow.webContents.send("measure-webview-size", {
+				calibrationId: id,
+				targetWidth: width,
+				targetHeight: height,
+				attempt,
+			});
+		}, 40);
+	}
+
+	cancelWebviewSizeCalibration() {
+		this.webviewSizeCalibrationId += 1;
+		this.pendingWebviewSizeTarget = null;
+		if (this.webviewSizeMeasurementTimer) {
+			clearTimeout(this.webviewSizeMeasurementTimer);
+			this.webviewSizeMeasurementTimer = null;
+		}
+	}
+
+	calibrateWebviewSize(measurement = {}) {
+		if (!this.mainWindow || this.mainWindow.isDestroyed()) return false;
+		if (!this.pendingWebviewSizeTarget) return false;
+		if (measurement.calibrationId !== this.pendingWebviewSizeTarget.id) {
+			return false;
+		}
+
+		const targetWidth = Number(this.pendingWebviewSizeTarget.width);
+		const targetHeight = Number(this.pendingWebviewSizeTarget.height);
+		const actualWidth = Number(measurement.actualWidth);
+		const actualHeight = Number(measurement.actualHeight);
+
+		if (
+			!Number.isFinite(targetWidth) ||
+			!Number.isFinite(targetHeight) ||
+			!Number.isFinite(actualWidth) ||
+			!Number.isFinite(actualHeight)
+		) {
+			return false;
+		}
+
+		const deltaWidth = targetWidth - actualWidth;
+		const deltaHeight = targetHeight - actualHeight;
+		const isSettled = Math.abs(deltaWidth) <= 1 && Math.abs(deltaHeight) <= 1;
+
+		if (isSettled) {
+			this.pendingWebviewSizeTarget = null;
+			return true;
+		}
+
+		const attempt = this.pendingWebviewSizeTarget.attempt + 1;
+		if (attempt > 4) {
+			this.pendingWebviewSizeTarget = null;
+			return false;
+		}
+
+		this.pendingWebviewSizeTarget.attempt = attempt;
+		const currentBounds = this.mainWindow.getBounds();
+		const nextBounds = {
+			x: currentBounds.x,
+			y: currentBounds.y,
+			width: Math.max(WINDOW_CONSTANTS.MIN_WIDTH, currentBounds.width + deltaWidth),
+			height: Math.max(
+				WINDOW_CONSTANTS.MIN_HEIGHT,
+				currentBounds.height + deltaHeight,
+			),
+		};
+		this.mainWindow.setBounds(nextBounds);
+		this.rememberNormalWindowBounds(nextBounds);
+		this.syncAuxiliaryWindows();
+		this.requestWebviewSizeMeasurement();
+		return false;
+	}
+
+	enterImmersionMode(
+		titleBarHeight = null,
+	) {
+		if (!this.mainWindow || this.mainWindow.isDestroyed()) {
+			return this.isImmersionMode;
+		}
+		if (this.isImmersionMode) return true;
+
+		this.cancelWebviewSizeCalibration();
+		const currentBounds = this.normalWindowBounds
+			? this.normalizeBounds(this.normalWindowBounds)
+			: this.normalizeBounds(this.mainWindow.getBounds());
+		const chromeHeight =
+			titleBarHeight || this.getContentChromeHeight(currentBounds.width);
+		this.normalWindowBounds = currentBounds;
+		this.preImmersionBounds = currentBounds;
+		this.setImmersionMode(true);
+		this.mainWindow.setBounds({
+			x: currentBounds.x,
+			y: currentBounds.y + chromeHeight,
+			width: currentBounds.width,
+			height: Math.max(
+				WINDOW_CONSTANTS.MIN_HEIGHT,
+				currentBounds.height - chromeHeight,
+			),
+		});
+		return true;
+	}
+
+	exitImmersionMode() {
+		if (!this.mainWindow || this.mainWindow.isDestroyed()) {
+			return this.isImmersionMode;
+		}
+		if (!this.isImmersionMode) return false;
+
+		this.cancelWebviewSizeCalibration();
+		const restoreBounds = this.normalWindowBounds
+			? this.normalizeBounds(this.normalWindowBounds)
+			: this.preImmersionBounds
+				? this.normalizeBounds(this.preImmersionBounds)
+				: null;
+
+		if (restoreBounds) {
+			this.mainWindow.setBounds(restoreBounds);
+			this.normalWindowBounds = restoreBounds;
+		}
+		this.preImmersionBounds = null;
+		this.setImmersionMode(false);
+		return false;
+	}
+
+	toggleImmersionMode(titleBarHeight = null) {
+		if (this.isImmersionMode) {
+			return this.exitImmersionMode();
+		}
+
+		return this.enterImmersionMode(titleBarHeight);
+	}
+
+	getImmersionMode() {
+		return this.isImmersionMode;
+	}
+
+	normalizeBounds(bounds) {
+		return {
+			x: Math.round(bounds.x),
+			y: Math.round(bounds.y),
+			width: Math.round(bounds.width),
+			height: Math.round(bounds.height),
+		};
+	}
+
+	rememberNormalWindowBounds(bounds = null) {
+		if (this.isImmersionMode) return;
+		if (!bounds && (!this.mainWindow || this.mainWindow.isDestroyed())) return;
+
+		const nextBounds = bounds || this.mainWindow.getBounds();
+		this.normalWindowBounds = this.normalizeBounds(nextBounds);
+	}
+
+	getContentChromeHeight(width) {
+		return width <= 860 ? 64 : WINDOW_CONSTANTS.TITLE_BAR_HEIGHT;
 	}
 
 	getAllWindows() {

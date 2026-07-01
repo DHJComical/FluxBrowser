@@ -6,6 +6,7 @@ const { bindMenuEvents, loadResolutionPresets } = require("./menu");
 const { bindImmersionEvents } = require("./immersion");
 const { bindWebviewEvents, restoreOpacity } = require("./webview");
 const { bindTabsEvents, hydrateTabsState } = require("./tabs");
+const { bindLayoutEvents } = require("./layout");
 
 async function init() {
 	bindTabsEvents();
@@ -13,6 +14,7 @@ async function init() {
 	bindMenuEvents();
 	bindImmersionEvents();
 	bindWebviewEvents();
+	bindLayoutEvents();
 	await hydrateTabsState();
 
 	ipcRenderer

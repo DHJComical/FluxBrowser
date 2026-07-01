@@ -17,6 +17,15 @@ function registerWindowHandlers({ ipcMain, windowManager, logger }) {
 		logger.debug(`窗口分辨率已设置为: ${width} x ${height} (webview区域)`);
 	});
 
+	ipcMain.on("webview-size-measured", (_event, measurement) => {
+		const calibrated = windowManager.calibrateWebviewSize(measurement);
+		if (calibrated) {
+			logger.debug(
+				`Webview区域已校准为: ${measurement.targetWidth} x ${measurement.targetHeight}`,
+			);
+		}
+	});
+
 	ipcMain.on("app-exit", () => {
 		windowManager.saveWindowBounds();
 		app.quit();
