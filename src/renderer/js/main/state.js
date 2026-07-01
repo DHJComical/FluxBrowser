@@ -6,6 +6,7 @@ const state = {
 	webviews: new Map(),
 	webviewOpacity: 1,
 	pendingScripts: new Map(),
+	startupPauseTabIds: new Set(),
 };
 
 function setDebugMode(enabled) {
@@ -55,6 +56,20 @@ function takePendingScript(tabId) {
 	return code;
 }
 
+function markStartupPauseTabs(tabIds = []) {
+	state.startupPauseTabIds = new Set(
+		tabIds.filter((tabId) => typeof tabId === "string" && tabId),
+	);
+}
+
+function shouldStartupPauseTab(tabId) {
+	return state.startupPauseTabIds.has(tabId);
+}
+
+function clearStartupPauseTab(tabId) {
+	state.startupPauseTabIds.delete(tabId);
+}
+
 module.exports = {
 	state,
 	setDebugMode,
@@ -67,4 +82,7 @@ module.exports = {
 	setWebviewOpacity,
 	queuePendingScript,
 	takePendingScript,
+	markStartupPauseTabs,
+	shouldStartupPauseTab,
+	clearStartupPauseTab,
 };

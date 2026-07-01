@@ -9,12 +9,98 @@ const {
 	getWebview,
 	getActiveTab,
 	takePendingScript,
+	markStartupPauseTabs,
+	shouldStartupPauseTab,
+	clearStartupPauseTab,
 } = require("./state");
 const { syncActiveTabUi } = require("./activeTabUi");
 const { setWindowStatus } = require("./status");
 
 const USER_AGENT =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+
+const STARTUP_PAUSE_VIDEO_SCRIPT = `
+	(() => {
+		let pausedCount = 0;
+		document.querySelectorAll("video").forEach((video) => {
+			video.autoplay = false;
+			video.removeAttribute("autoplay");
+			if (!video.paused && !video.ended) {
+				video.dataset.fluxStartupPaused = "true";
+				video.pause();
+				pausedCount += 1;
+			}
+		});
+		return pausedCount;
+	})();
+`;
+
+const STARTUP_PAUSE_DELAYS = [0, 500, 1500, 3000];
+const startupMutedWebviews = new WeakMap();
+const startupPauseScheduledWebviews = new WeakSet();
+
+function muteUntilStartupPauseCompletes(webview, tabId) {
+	if (!shouldStartupPauseTab(tabId)) return;
+	if (!webview || startupMutedWebviews.has(webview)) return;
+
+	try {
+		const wasMuted =
+			typeof webview.isAudioMuted === "function"
+				? webview.isAudioMuted()
+				: false;
+		startupMutedWebviews.set(webview, wasMuted);
+		if (!wasMuted && typeof webview.setAudioMuted === "function") {
+			webview.setAudioMuted(true);
+		}
+	} catch (_error) {
+		startupMutedWebviews.delete(webview);
+	}
+}
+
+function restoreStartupMute(webview) {
+	if (!webview || !startupMutedWebviews.has(webview)) return;
+
+	const wasMuted = startupMutedWebviews.get(webview);
+	startupMutedWebviews.delete(webview);
+	try {
+		if (!wasMuted && typeof webview.setAudioMuted === "function") {
+			webview.setAudioMuted(false);
+		}
+	} catch (_error) {
+		// Audio state restoration must never block tab loading.
+	}
+}
+
+function scheduleStartupVideoPause(webview, tabId) {
+	if (!shouldStartupPauseTab(tabId)) return;
+	muteUntilStartupPauseCompletes(webview, tabId);
+	if (startupPauseScheduledWebviews.has(webview)) return;
+	startupPauseScheduledWebviews.add(webview);
+
+	STARTUP_PAUSE_DELAYS.forEach((delay, index) => {
+		setTimeout(() => {
+			if (!shouldStartupPauseTab(tabId)) return;
+			if (!webview || !webview.isConnected) {
+				restoreStartupMute(webview);
+				clearStartupPauseTab(tabId);
+				return;
+			}
+
+			const pausePromise =
+				typeof webview.executeJavaScript === "function"
+					? webview
+						.executeJavaScript(STARTUP_PAUSE_VIDEO_SCRIPT)
+						.catch(() => {})
+					: Promise.resolve();
+			if (index === STARTUP_PAUSE_DELAYS.length - 1) {
+				pausePromise.then(() => {
+					restoreStartupMute(webview);
+					clearStartupPauseTab(tabId);
+				});
+			}
+		}, delay);
+	});
+}
 
 function createWebview(tab) {
 	const webview = document.createElement("webview");
@@ -26,6 +112,7 @@ function createWebview(tab) {
 
 	webview.addEventListener("dom-ready", () => {
 		webview.setUserAgent(USER_AGENT);
+		scheduleStartupVideoPause(webview, tab.id);
 		const pendingScript = takePendingScript(tab.id);
 		if (pendingScript) {
 			webview.executeJavaScript(pendingScript);
@@ -67,6 +154,7 @@ function createWebview(tab) {
 	});
 
 	const persistNavigationState = () => {
+		scheduleStartupVideoPause(webview, tab.id);
 		ipcRenderer.send("update-tab", {
 			tabId: tab.id,
 			patch: {
@@ -116,6 +204,7 @@ function ensureWebview(tab) {
 	webview = createWebview(tab);
 	setWebview(tab.id, webview);
 	webviewStack.appendChild(webview);
+	muteUntilStartupPauseCompletes(webview, tab.id);
 	return webview;
 }
 
@@ -144,6 +233,7 @@ function renderTabsState(nextState) {
 
 async function hydrateTabsState() {
 	const tabsState = await ipcRenderer.invoke("get-tabs-state");
+	markStartupPauseTabs((tabsState.tabs || []).map((tab) => tab.id));
 	renderTabsState(tabsState);
 }
 
