@@ -8,14 +8,62 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-    <div class="bookmarks-container">
-        <div class="bookmarks-header">
-            <i class="material-icons">bookmark</i>
-            <h1>我的书签</h1>
-            <span class="bookmarks-count" id="bookmarks-count">0 个书签</span>
-        </div>
-        <div id="bookmark-list" class="bookmark-list"></div>
+    <div class="bookmarks-shell">
+        <header class="bookmarks-hero">
+            <div class="hero-copy">
+                <span class="hero-eyebrow">Continue Watching</span>
+                <h1>继续观看</h1>
+                <p>快速找到上次中断的位置，继续回到对应页面和进度。</p>
+            </div>
+            <div class="hero-stats">
+                <div class="hero-stat">
+                    <span class="hero-stat-label">书签</span>
+                    <strong id="summary-total">0</strong>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-label">近 7 天</span>
+                    <strong id="summary-recent">0</strong>
+                </div>
+                <div class="hero-stat">
+                    <span class="hero-stat-label">累计进度</span>
+                    <strong id="summary-duration">0 秒</strong>
+                </div>
+            </div>
+        </header>
+
+        <section class="bookmarks-toolbar">
+            <div class="toolbar-search">
+                <i class="material-icons">search</i>
+                <input
+                    id="bookmark-search"
+                    type="text"
+                    placeholder="搜索标题或网址"
+                >
+            </div>
+            <div class="toolbar-sort">
+                <button id="sort-trigger" class="sort-trigger" type="button">
+                    <span id="sort-trigger-label">最近保存</span>
+                    <i class="material-icons">unfold_more</i>
+                </button>
+                <div id="sort-menu" class="sort-menu hidden">
+                    <button class="sort-option active" type="button" data-value="latest">最近保存</button>
+                    <button class="sort-option" type="button" data-value="oldest">最早保存</button>
+                    <button class="sort-option" type="button" data-value="progress-desc">进度最长</button>
+                    <button class="sort-option" type="button" data-value="progress-asc">进度最短</button>
+                    <button class="sort-option" type="button" data-value="title">标题 A-Z</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="bookmarks-results">
+            <div class="results-meta">
+                <strong id="results-count">0 条记录</strong>
+                <span class="results-hint">点击卡片继续播放，右侧可删除。</span>
+            </div>
+            <div id="bookmark-list" class="bookmark-list"></div>
+        </section>
     </div>
+
     <script src="js/bookmarks.js"></script>
 </body>
 </html>

@@ -6,8 +6,8 @@ const {
 } = require("./windowUtils");
 
 function createBookmarksWindow({ parentWindow, onClosed }) {
-	const windowWidth = 600;
-	const windowHeight = 400;
+	const windowWidth = 820;
+	const windowHeight = 620;
 	const { x, y } = getCenteredPosition(windowWidth, windowHeight);
 
 	const bookmarksWindow = new BrowserWindow({
@@ -15,6 +15,8 @@ function createBookmarksWindow({ parentWindow, onClosed }) {
 		y,
 		width: windowWidth,
 		height: windowHeight,
+		minWidth: 620,
+		minHeight: 520,
 		parent: parentWindow,
 		title: "书签管理",
 		icon: getWindowIconPath(),
