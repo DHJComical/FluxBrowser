@@ -141,6 +141,18 @@ function createWebview(tab) {
 		});
 	});
 
+	webview.addEventListener("page-favicon-updated", (event) => {
+		const favicon = Array.isArray(event.favicons) ? event.favicons[0] : "";
+		if (!favicon) return;
+
+		ipcRenderer.send("update-tab", {
+			tabId: tab.id,
+			patch: {
+				favicon,
+			},
+		});
+	});
+
 	webview.addEventListener("did-start-loading", () => {
 		ipcRenderer.send("update-tab", {
 			tabId: tab.id,

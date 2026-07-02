@@ -38,6 +38,10 @@ function sanitizeTab(tab = {}) {
 		isLoading: tab.isLoading === true,
 		canGoBack: tab.canGoBack === true,
 		canGoForward: tab.canGoForward === true,
+		favicon:
+			typeof tab.favicon === "string" && tab.favicon.trim()
+				? tab.favicon.trim()
+				: "",
 		lastUpdatedAt:
 			typeof tab.lastUpdatedAt === "number" ? tab.lastUpdatedAt : Date.now(),
 	};
