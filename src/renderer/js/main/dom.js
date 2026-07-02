@@ -1,5 +1,5 @@
 module.exports = {
-	webview: document.getElementById("browser-view"),
+	webviewStack: document.getElementById("webview-stack"),
 	urlInput: document.getElementById("url-input"),
 	goBtn: document.getElementById("go-btn"),
 	fluxBar: document.getElementById("flux-bar"),

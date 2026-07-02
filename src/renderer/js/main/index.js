@@ -5,12 +5,19 @@ const { bindNavigationEvents } = require("./navigation");
 const { bindMenuEvents, loadResolutionPresets } = require("./menu");
 const { bindImmersionEvents } = require("./immersion");
 const { bindWebviewEvents, restoreOpacity } = require("./webview");
+const { bindTabsEvents, hydrateTabsState } = require("./tabs");
+const { bindLayoutEvents } = require("./layout");
+const { bindFloatingPanels } = require("./floatingPanels");
 
-function init() {
+async function init() {
+	await bindFloatingPanels();
+	bindTabsEvents();
 	bindNavigationEvents();
 	bindMenuEvents();
 	bindImmersionEvents();
 	bindWebviewEvents();
+	bindLayoutEvents();
+	await hydrateTabsState();
 
 	ipcRenderer
 		.invoke("get-debug-mode")

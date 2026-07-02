@@ -14,6 +14,7 @@ const {
 	suspendShortcutsExceptBossKey,
 	resumeShortcutsExceptBossKey,
 } = require("./core/bossKeyController");
+const { TabStateManager } = require("./TabStateManager");
 
 // 导入新的核心模块
 const WindowManager = require("./core/WindowManager");
@@ -25,6 +26,7 @@ class FluxCore {
 
 		// 初始化核心管理器
 		this.windowManager = new WindowManager();
+		this.tabStateManager = new TabStateManager();
 		this.pluginLoader = null;
 		this.ipcManager = null;
 		this.shortcutManager = null;
@@ -49,13 +51,15 @@ class FluxCore {
 	// 发送消息到渲染进程
 	sendToRenderer(channel, data) {
 		if (this.ipcManager) {
-			this.ipcManager.sendToRenderer(channel, data);
+			this.ipcManager.sendToMainWindow(channel, data);
 		}
 	}
 
 	// 执行网页内的JS（用于视频控制插件）
 	executeOnWebview(jsCode) {
-		this.sendToRenderer("execute-webview-js", jsCode);
+		if (this.ipcManager) {
+			this.ipcManager.sendToMainWindow("execute-active-tab-js", jsCode);
+		}
 	}
 
 	// 切换窗口显示状态
@@ -135,6 +139,10 @@ class FluxCore {
 	// 获取快捷键管理器
 	getShortcutManager() {
 		return this.shortcutManager;
+	}
+
+	getTabStateManager() {
+		return this.tabStateManager;
 	}
 
 	// 获取插件加载器

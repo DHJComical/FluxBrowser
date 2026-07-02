@@ -18,6 +18,9 @@ body {
 }
 
 :root {
+	--flux-bar-height: 104px;
+	--floating-webview-width: min(960px, calc(100vw - 48px));
+	--floating-webview-height: min(540px, calc(100vh - 156px));
 	--surface-bg: rgba(18, 18, 30, 0.92);
 	--surface-soft: rgba(255, 255, 255, 0.05);
 	--surface-border: rgba(255, 255, 255, 0.1);
@@ -45,20 +48,48 @@ button:hover {
 }
 
 #flux-bar {
+	box-sizing: border-box;
 	display: flex;
-	align-items: center;
-	gap: 14px;
-	height: 56px;
-	padding: 0 16px;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 8px;
+	height: var(--flux-bar-height);
+	width: min(980px, calc(100vw - 32px));
+	padding: 8px 12px;
 	background:
 		radial-gradient(circle at top left, rgba(76, 204, 255, 0.12), transparent 28%),
 		linear-gradient(180deg, rgba(20, 22, 36, 0.94) 0%, rgba(16, 18, 30, 0.9) 100%);
 	backdrop-filter: blur(20px) saturate(180%);
 	-webkit-backdrop-filter: blur(20px) saturate(180%);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-	position: relative;
+	position: fixed;
+	top: 12px;
+	left: 50%;
 	z-index: 10000;
+	border-radius: 18px;
 	box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+}
+
+.mainbar-row,
+.mainbar-tabs {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	position: relative;
+	z-index: 1;
+	-webkit-app-region: no-drag;
+}
+
+.mainbar-row {
+	gap: 14px;
+	flex: 0 0 40px;
+	z-index: 3;
+}
+
+.mainbar-tabs {
+	gap: 8px;
+	flex: 1;
+	z-index: 1;
 }
 
 .brand-panel {
@@ -166,6 +197,7 @@ button:hover {
 
 .menu-container {
 	position: relative;
+	z-index: 30;
 	-webkit-app-region: no-drag;
 }
 
@@ -312,9 +344,9 @@ button:hover {
 	white-space: nowrap;
 }
 
-#browser-view {
-	width: 100vw;
-	height: calc(100vh - 56px);
+#webview-stack {
+	width: 100%;
+	height: 100%;
 	background: #0a0a14;
 	position: relative;
 	z-index: 1;
@@ -324,18 +356,143 @@ button:hover {
 	cursor: auto;
 	border-radius: 0;
 	overflow: hidden;
-	transition: height 0.2s ease;
 }
 
 body.immersion #flux-bar {
-	transform: translateY(-100%);
-	position: absolute;
+	display: none;
 	opacity: 0;
 }
 
-body.immersion #browser-view {
-	height: 100vh;
+body.immersion #webview-stack {
+	height: 100%;
 	border-radius: 0;
+}
+
+.floating-panel {
+	position: fixed;
+	z-index: 50;
+	display: flex;
+	flex-direction: column;
+	background: rgba(10, 10, 20, 0.94);
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 18px;
+	box-shadow:
+		0 20px 60px rgba(0, 0, 0, 0.36),
+		0 0 0 1px rgba(255, 255, 255, 0.04);
+	overflow: hidden;
+}
+
+.floating-panel.is-dragging {
+	box-shadow:
+		0 24px 70px rgba(0, 0, 0, 0.42),
+		0 0 0 1px rgba(108, 140, 255, 0.36);
+}
+
+.webview-panel {
+	width: var(--floating-webview-width);
+	height: var(--floating-webview-height);
+	min-width: 360px;
+	min-height: 240px;
+}
+
+.floating-panel-grip {
+	flex: 0 0 22px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(255, 255, 255, 0.04);
+	cursor: move;
+}
+
+.floating-panel-grip span {
+	width: 42px;
+	height: 4px;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.22);
+}
+
+.floating-panel-content {
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.floating-panel-resize {
+	position: absolute;
+	z-index: 3;
+	background: transparent;
+}
+
+.floating-panel-resize.resize-east {
+	top: 0;
+	right: 0;
+	width: 10px;
+	height: 100%;
+	cursor: e-resize;
+}
+
+.floating-panel-resize.resize-south {
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	height: 10px;
+	cursor: s-resize;
+}
+
+.floating-panel-resize.resize-corner {
+	right: 0;
+	bottom: 0;
+	width: 18px;
+	height: 18px;
+	cursor: se-resize;
+}
+
+.floating-panel-interaction-shield {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483646;
+	display: none;
+	background: transparent;
+}
+
+.floating-panel-interaction-shield.is-active {
+	display: block;
+}
+
+body.immersion .webview-panel {
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	background: #0a0a14;
+}
+
+body.immersion .webview-panel .floating-panel-grip,
+body.immersion .webview-panel .floating-panel-resize {
+	display: none;
+}
+
+.browser-webview {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	background: #0a0a14;
+	-webkit-user-select: auto;
+	user-select: auto;
+	-webkit-user-drag: auto;
+	cursor: auto;
+	border-radius: 0;
+	overflow: hidden;
+}
+
+.browser-webview.is-hidden {
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.browser-webview.is-active {
+	visibility: visible;
+	pointer-events: auto;
 }
 
 .webview-disabled {
@@ -711,9 +868,12 @@ button:disabled:hover {
 }
 
 @media (max-width: 860px) {
+	:root {
+		--flux-bar-height: 112px;
+	}
+
 	#flux-bar {
-		height: 64px;
-		padding: 0 12px;
+		padding: 8px 10px;
 		gap: 10px;
 	}
 
@@ -730,7 +890,150 @@ button:disabled:hover {
 		display: none;
 	}
 
-	#browser-view {
-		height: calc(100vh - 64px);
-	}
+}
+
+.tabbar-body {
+	background: transparent;
+	overflow: hidden;
+}
+
+#tabbar-root {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 100vh;
+	padding: 8px 12px;
+	background:
+		radial-gradient(circle at top left, rgba(76, 204, 255, 0.12), transparent 28%),
+		linear-gradient(180deg, rgba(20, 22, 36, 0.95) 0%, rgba(16, 18, 30, 0.92) 100%);
+	backdrop-filter: blur(18px) saturate(180%);
+	-webkit-backdrop-filter: blur(18px) saturate(180%);
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+}
+
+.tabbar-drag-region {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+}
+
+.tabbar-strip,
+.tabbar-add-btn {
+	position: relative;
+	z-index: 1;
+}
+
+.tabbar-strip {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding-bottom: 2px;
+	scroll-behavior: smooth;
+}
+
+.tabbar-strip::-webkit-scrollbar {
+	height: 6px;
+}
+
+.tabbar-strip::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.12);
+	border-radius: 999px;
+}
+
+.tab-pill {
+	flex: 0 0 178px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 132px;
+	max-width: 240px;
+	padding: 8px 10px 8px 12px;
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	color: #d7dcf3;
+	transition:
+		background-color 0.18s ease,
+		border-color 0.18s ease,
+		color 0.18s ease;
+}
+
+.tab-pill:hover {
+	background: rgba(108, 140, 255, 0.1);
+	color: #eef1ff;
+}
+
+.tab-pill.is-active {
+	background: rgba(108, 140, 255, 0.18);
+	border-color: rgba(108, 140, 255, 0.28);
+	color: #ffffff;
+}
+
+.tab-pill-title {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12px;
+	text-align: left;
+}
+
+.tab-pill-favicon,
+.tab-pill-fallback {
+	flex: 0 0 auto;
+	width: 16px;
+	height: 16px;
+}
+
+.tab-pill-favicon {
+	border-radius: 4px;
+	object-fit: contain;
+}
+
+.tab-pill-fallback {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	color: var(--text-muted);
+}
+
+.tab-pill-close {
+	flex: 0 0 auto;
+	font-size: 16px;
+	opacity: 0;
+	border-radius: 6px;
+	transition:
+		opacity 0.18s ease,
+		background-color 0.18s ease;
+}
+
+.tab-pill:hover .tab-pill-close,
+.tab-pill.is-active .tab-pill-close {
+	opacity: 0.72;
+}
+
+.tab-pill-close:hover {
+	opacity: 1;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.tabbar-add-btn {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 10px;
+	color: #d7dcf3;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.08);
 }

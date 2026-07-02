@@ -51,6 +51,38 @@ function registerConfigHandlers({
 	});
 
 	ipcMain.handle("get-app-config", () => configManager.getAppConfig());
+
+	ipcMain.handle("get-floating-panels", () => {
+		const appConfig = configManager.getAppConfig();
+		return appConfig.floatingPanels || {};
+	});
+
+	ipcMain.on("save-floating-panel", (_event, payload = {}) => {
+		const panelId =
+			typeof payload.panelId === "string" && payload.panelId.trim()
+				? payload.panelId.trim()
+				: "";
+		if (!panelId) return;
+
+		const bounds = payload.bounds || {};
+		const nextBounds = {
+			x: Math.round(Number(bounds.x) || 0),
+			y: Math.round(Number(bounds.y) || 0),
+			width: Math.round(Number(bounds.width) || 0),
+			height: Math.round(Number(bounds.height) || 0),
+		};
+
+		const appConfig = configManager.getAppConfig();
+		configManager.saveAppConfig({
+			floatingPanels: {
+				...(appConfig.floatingPanels || {}),
+				[panelId]: nextBounds,
+			},
+		});
+		logger.debug(
+			`悬浮窗位置已保存: ${panelId} X=${nextBounds.x}, Y=${nextBounds.y}, Width=${nextBounds.width}, Height=${nextBounds.height}`,
+		);
+	});
 }
 
 module.exports = registerConfigHandlers;

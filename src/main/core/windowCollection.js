@@ -3,6 +3,9 @@ function collectActiveWindows(windowManager) {
 	if (windowManager.mainWindow && !windowManager.mainWindow.isDestroyed()) {
 		windows.push(windowManager.mainWindow);
 	}
+	if (windowManager.tabBarWindow && !windowManager.tabBarWindow.isDestroyed()) {
+		windows.push(windowManager.tabBarWindow);
+	}
 	if (windowManager.settingsWindow && !windowManager.settingsWindow.isDestroyed()) {
 		windows.push(windowManager.settingsWindow);
 	}

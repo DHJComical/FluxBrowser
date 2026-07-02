@@ -5,6 +5,17 @@ const { app } = require("electron");
 
 // 全局调试模式标志（需要从 ConfigManager 获取）
 let debugMode = false;
+let brokenPipeGuardInstalled = false;
+
+function installBrokenPipeGuard(stream) {
+	if (!stream || typeof stream.on !== "function") return;
+
+	stream.on("error", (error) => {
+		if (error && error.code === "EPIPE") {
+			return;
+		}
+	});
+}
 
 /**
  * 设置调试模式
@@ -57,12 +68,18 @@ module.exports = function () {
 	// electron-log
 	log.transports.file.resolvePathFn = () => logPath;
 
-	// 开发环境记录 debug，生产环境记录 info
+	// 开发环境保留控制台日志，配合 EPIPE 防护避免管道断开时崩溃
 	log.transports.file.level = isDev ? "debug" : "info";
-	log.transports.console.level = isDev ? "debug" : "info";
+	log.transports.console.level = isDev ? "debug" : false;
 
 	log.transports.file.format =
 		"[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}";
+
+	if (!brokenPipeGuardInstalled) {
+		installBrokenPipeGuard(process.stdout);
+		installBrokenPipeGuard(process.stderr);
+		brokenPipeGuardInstalled = true;
+	}
 
 	// 接管全局 console
 	Object.assign(console, log.functions);

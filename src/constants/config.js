@@ -28,6 +28,7 @@ const DEFAULT_APP_CONFIG = {
 	debugMode: false,
 	bossKeyProtection: true,
 	alwaysOnTop: false,
+	tabBarDetached: true,
 	videoForwardSeconds: 10,
 	videoBackwardSeconds: 10,
 	videoLongPressRate: 2.0,
@@ -35,6 +36,7 @@ const DEFAULT_APP_CONFIG = {
 	gitRemote: "",
 	gitName: "",
 	gitEmail: "",
+	floatingPanels: {},
 };
 
 // 默认分辨率预设
@@ -53,6 +55,7 @@ const CONFIG_FILE_NAMES = {
 	BOUNDS_CONFIG: "window-bounds.json",
 	APP_CONFIG: "app-config.json",
 	RESOLUTION_PRESETS: "resolution-presets.json",
+	TABS_STATE: "tabs-state.json",
 };
 
 // 开发环境配置文件前缀
@@ -61,6 +64,7 @@ const DEV_CONFIG_PREFIX = "dev-";
 // 窗口相关常量
 const WINDOW_CONSTANTS = {
 	TITLE_BAR_HEIGHT: 56, // 标题栏高度（像素）
+	TAB_BAR_HEIGHT: 48,
 	MIN_WIDTH: 300, // 最小宽度
 	MIN_HEIGHT: 200, // 最小高度
 	MAX_WIDTH: 4000, // 最大宽度
@@ -102,6 +106,7 @@ const IPC_CHANNELS = {
 	STOP_RESIZING: "stop-resizing",
 	START_MOVING: "start-moving",
 	STOP_MOVING: "stop-moving",
+	START_MOVING_TAB_BAR: "start-moving-tab-bar",
 
 	// 配置相关
 	GET_SHORTCUTS: "get-shortcuts",
@@ -112,6 +117,17 @@ const IPC_CHANNELS = {
 	GET_APP_VERSION: "get-app-version",
 	GET_DEBUG_MODE: "get-debug-mode",
 	SET_DEBUG_MODE: "set-debug-mode",
+	GET_TABS_STATE: "get-tabs-state",
+	CREATE_TAB: "create-tab",
+	CLOSE_TAB: "close-tab",
+	ACTIVATE_TAB: "activate-tab",
+	UPDATE_TAB: "update-tab",
+	NAVIGATE_TAB: "navigate-tab",
+	GO_BACK_ACTIVE_TAB: "go-back-active-tab",
+	GO_FORWARD_ACTIVE_TAB: "go-forward-active-tab",
+	FOCUS_ACTIVE_TAB: "focus-active-tab",
+	EXECUTE_ACTIVE_TAB_JS: "execute-active-tab-js",
+	OPEN_BOOKMARK_IN_TAB: "open-bookmark-in-tab",
 
 	// 快捷键相关
 	SUSPEND_SHORTCUTS: "suspend-shortcuts",
@@ -130,6 +146,8 @@ const IPC_CHANNELS = {
 	WEB_GO_BACK: "web-go-back",
 	WEB_GO_FORWARD: "web-go-forward",
 	IMMERSION_MODE_CHANGED: "immersion-mode-changed",
+	TABS_STATE_CHANGED: "tabs-state-changed",
+	ACTIVE_TAB_NAVIGATION: "active-tab-navigation",
 };
 
 // 插件相关常量

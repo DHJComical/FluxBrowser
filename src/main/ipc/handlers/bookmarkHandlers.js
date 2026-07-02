@@ -111,13 +111,12 @@ async function pullBookmarks({
 }
 
 function openBookmark(windowManager, bookmarkService, bookmark) {
-	const mainWindow = windowManager.getMainWindow();
-	if (!mainWindow || !bookmark || !bookmark.url) return;
+	if (!bookmark || !bookmark.url) return null;
 
 	const script = bookmarkService.buildOpenBookmarkScript(bookmark);
-	if (!script) return;
+	if (!script) return null;
 
-	mainWindow.webContents.send("execute-webview-js", script);
+	return script;
 }
 
 function registerBookmarkHandlers({
@@ -126,6 +125,8 @@ function registerBookmarkHandlers({
 	bookmarkService,
 	bookmarkSyncService,
 	configManager,
+	tabStateManager,
+	sendToMainWindow,
 	broadcast,
 	logger,
 }) {
@@ -164,7 +165,24 @@ function registerBookmarkHandlers({
 	});
 
 	ipcMain.on("open-bookmark", (_event, bookmark) => {
-		openBookmark(windowManager, bookmarkService, bookmark);
+		const script = openBookmark(windowManager, bookmarkService, bookmark);
+		if (!script) return;
+
+		tabStateManager.createTab({
+			url: bookmark.url,
+			title: bookmark.title,
+		});
+		broadcast("tabs-state-changed", tabStateManager.getState());
+		const activeTabId = tabStateManager.getActiveTabId();
+		sendToMainWindow("active-tab-navigation", {
+			tabId: activeTabId,
+			url: bookmark.url,
+		});
+		sendToMainWindow("execute-active-tab-js", {
+			tabId: activeTabId,
+			code: script,
+		});
+		sendToMainWindow("focus-active-tab");
 	});
 }
 

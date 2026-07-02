@@ -1,17 +1,25 @@
-const { BrowserWindow } = require("electron");
+const { BrowserWindow, screen } = require("electron");
 const {
 	getRendererPath,
 	getWindowIconPath,
 } = require("./windowUtils");
 
-function createMainWindow({ savedBounds, userAlwaysOnTop, onClose }) {
+function createMainWindow({
+	savedBounds,
+	userAlwaysOnTop,
+	onClose,
+	onRequestNewTab,
+}) {
 	const { x, y, width, height } = savedBounds;
+	const { workArea } = screen.getPrimaryDisplay();
+	const windowWidth = workArea.width;
+	const windowHeight = workArea.height;
 
 	const mainWindow = new BrowserWindow({
-		x,
-		y,
-		width: width || 800,
-		height: height || 600,
+		x: workArea.x,
+		y: workArea.y,
+		width: windowWidth,
+		height: windowHeight,
 		minWidth: 40,
 		minHeight: 80,
 		frame: false,
@@ -36,7 +44,11 @@ function createMainWindow({ savedBounds, userAlwaysOnTop, onClose }) {
 
 	mainWindow.webContents.on("did-attach-webview", (_event, webContents) => {
 		webContents.setWindowOpenHandler(({ url }) => {
-			webContents.loadURL(url);
+			if (typeof onRequestNewTab === "function") {
+				onRequestNewTab(url);
+			} else {
+				webContents.loadURL(url);
+			}
 			return { action: "deny" };
 		});
 	});
