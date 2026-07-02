@@ -208,10 +208,12 @@ class WindowManager {
 	setWindowSize(
 		width,
 		height,
-		titleBarHeight = WINDOW_CONSTANTS.TITLE_BAR_HEIGHT,
+		titleBarHeight = null,
 	) {
 		if (this.mainWindow) {
 			const currentBounds = this.mainWindow.getBounds();
+			const chromeHeight =
+				titleBarHeight || this.getContentChromeHeight(width);
 			const calibrationId = ++this.webviewSizeCalibrationId;
 			this.pendingWebviewSizeTarget = {
 				id: calibrationId,
@@ -223,7 +225,7 @@ class WindowManager {
 				x: currentBounds.x,
 				y: currentBounds.y,
 				width,
-				height: height + titleBarHeight,
+				height: height + chromeHeight,
 			};
 			this.mainWindow.setBounds(nextBounds);
 			this.rememberNormalWindowBounds(nextBounds);
@@ -399,7 +401,7 @@ class WindowManager {
 	}
 
 	getContentChromeHeight(width) {
-		return width <= 860 ? 64 : WINDOW_CONSTANTS.TITLE_BAR_HEIGHT;
+		return width <= 860 ? 112 : 104;
 	}
 
 	getAllWindows() {

@@ -3,6 +3,7 @@ const { ipcRenderer } = require("electron");
 const strip = document.getElementById("tabbar-strip");
 const addBtn = document.getElementById("tabbar-add-btn");
 const dragRegion = document.getElementById("tabbar-drag-region");
+const isDetachedTabBar = document.body.classList.contains("tabbar-body");
 
 let tabsState = {
 	tabs: [],
@@ -101,11 +102,13 @@ function bindEvents() {
 		renderTabs();
 	});
 
-	dragRegion.addEventListener("mousedown", (event) => {
-		if (event.button !== 0) return;
-		event.preventDefault();
-		ipcRenderer.send("start-moving-tab-bar");
-	});
+	if (dragRegion) {
+		dragRegion.addEventListener("mousedown", (event) => {
+			if (event.button !== 0) return;
+			event.preventDefault();
+			ipcRenderer.send(isDetachedTabBar ? "start-moving-tab-bar" : "start-moving");
+		});
+	}
 
 	window.addEventListener("mouseup", () => {
 		ipcRenderer.send("stop-moving");

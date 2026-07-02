@@ -16,7 +16,6 @@ function launchRuntime(core, PluginLoaderClass = PluginLoader) {
 			});
 		},
 	});
-	core.windowManager.createTabBarWindow();
 
 	core.pluginLoader = new PluginLoaderClass(core);
 	core.pluginLoader.loadAll();
