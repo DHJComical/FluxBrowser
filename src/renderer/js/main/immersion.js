@@ -2,11 +2,21 @@ const { ipcRenderer } = require("electron");
 const { fluxBar, resizeHandles, dragRegion } = require("./dom");
 const { state, setImmersionMode } = require("./state");
 const { getActiveWebview } = require("./tabs");
+const {
+	enterImmersionPanelLayout,
+	exitImmersionPanelLayout,
+} = require("./floatingPanels");
 
 function bindImmersionEvents() {
 	ipcRenderer.on("toggle-immersion-ui", (_event, isImmersion) => {
+		if (isImmersion) {
+			enterImmersionPanelLayout();
+			document.body.classList.add("immersion");
+		} else {
+			exitImmersionPanelLayout();
+			document.body.classList.remove("immersion");
+		}
 		setImmersionMode(isImmersion);
-		document.body.classList.toggle("immersion", isImmersion);
 		if (!isImmersion) ipcRenderer.send("set-ignore-mouse", false);
 		ipcRenderer.send("immersion-mode-changed", isImmersion);
 	});

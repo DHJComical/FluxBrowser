@@ -359,18 +359,13 @@ button:hover {
 }
 
 body.immersion #flux-bar {
-	transform: translateY(-100%);
-	position: absolute;
+	display: none;
 	opacity: 0;
 }
 
 body.immersion #webview-stack {
 	height: 100%;
 	border-radius: 0;
-}
-
-body.immersion .webview-panel {
-	pointer-events: none;
 }
 
 .floating-panel {
@@ -420,6 +415,17 @@ body.immersion .webview-panel {
 	flex: 1;
 	min-height: 0;
 	overflow: hidden;
+}
+
+body.immersion .webview-panel {
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	background: #0a0a14;
+}
+
+body.immersion .webview-panel .floating-panel-grip {
+	display: none;
 }
 
 .browser-webview {

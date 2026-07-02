@@ -5,6 +5,7 @@ const INTERACTIVE_SELECTOR = "[data-floating-panel], #dropdown-menu, .feedback-c
 let activeDragState = null;
 let floatingPanelsConfig = {};
 const saveTimers = new Map();
+const temporaryPanelBounds = new Map();
 
 function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
@@ -94,6 +95,46 @@ function setFloatingPanelSize(panelId, width, height) {
 	scheduleSavePanelBounds(panel);
 }
 
+function applyTemporaryPanelBounds(panel, bounds) {
+	panel.style.width = `${Math.round(bounds.width)}px`;
+	panel.style.height = `${Math.round(bounds.height)}px`;
+	placePanel(panel, bounds.x, bounds.y);
+}
+
+function getContentExtraHeight(panel) {
+	const handle = panel.querySelector("[data-floating-handle]");
+	return panel.dataset.sizeTarget === "content" && handle ? handle.offsetHeight : 0;
+}
+
+function enterImmersionPanelLayout() {
+	const panel = document.querySelector('[data-panel-id="webview"]');
+	if (!panel) return;
+
+	if (!temporaryPanelBounds.has("webview")) {
+		temporaryPanelBounds.set("webview", serializePanelBounds(panel));
+	}
+
+	const bounds = serializePanelBounds(panel);
+	const contentExtraHeight = getContentExtraHeight(panel);
+	if (contentExtraHeight <= 0) return;
+
+	applyTemporaryPanelBounds(panel, {
+		x: bounds.x,
+		y: bounds.y + contentExtraHeight,
+		width: bounds.width,
+		height: Math.max(120, bounds.height - contentExtraHeight),
+	});
+}
+
+function exitImmersionPanelLayout() {
+	const panel = document.querySelector('[data-panel-id="webview"]');
+	const bounds = temporaryPanelBounds.get("webview");
+	if (!panel || !bounds) return;
+
+	applyTemporaryPanelBounds(panel, bounds);
+	temporaryPanelBounds.delete("webview");
+}
+
 function initializePanelPosition(panel) {
 	if (panel.dataset.positioned === "true") return;
 
@@ -177,6 +218,14 @@ async function bindFloatingPanels() {
 	bindMousePassthrough();
 
 	window.addEventListener("resize", () => {
+		if (document.body.classList.contains("immersion")) {
+			const webviewPanel = document.querySelector('[data-panel-id="webview"]');
+			if (webviewPanel) {
+				keepPanelInView(webviewPanel);
+			}
+			return;
+		}
+
 		panels.forEach((panel) => {
 			keepPanelInView(panel);
 			scheduleSavePanelBounds(panel);
@@ -186,12 +235,6 @@ async function bindFloatingPanels() {
 
 function isInteractivePoint(x, y) {
 	const element = document.elementFromPoint(x, y);
-	if (document.body.classList.contains("immersion")) {
-		const panel = element && element.closest("[data-floating-panel]");
-		if (panel && panel.dataset.panelId === "webview") {
-			return false;
-		}
-	}
 	return Boolean(element && element.closest(INTERACTIVE_SELECTOR));
 }
 
@@ -218,4 +261,6 @@ function bindMousePassthrough() {
 module.exports = {
 	bindFloatingPanels,
 	setFloatingPanelSize,
+	enterImmersionPanelLayout,
+	exitImmersionPanelLayout,
 };
