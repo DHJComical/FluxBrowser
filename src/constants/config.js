@@ -36,6 +36,7 @@ const DEFAULT_APP_CONFIG = {
 	gitRemote: "",
 	gitName: "",
 	gitEmail: "",
+	floatingPanels: {},
 };
 
 // 默认分辨率预设

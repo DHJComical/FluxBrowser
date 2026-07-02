@@ -10,7 +10,7 @@ const { bindLayoutEvents } = require("./layout");
 const { bindFloatingPanels } = require("./floatingPanels");
 
 async function init() {
-	bindFloatingPanels();
+	await bindFloatingPanels();
 	bindTabsEvents();
 	bindNavigationEvents();
 	bindMenuEvents();

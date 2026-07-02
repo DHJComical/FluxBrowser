@@ -1,9 +1,11 @@
 function registerMoveHandlers({ ipcMain, windowManager, logger }) {
 	let moveInterval = null;
+	let isMovingWindow = false;
 
 	function startMovingWindow(window) {
 		if (moveInterval) clearInterval(moveInterval);
 		if (!window) return;
+		isMovingWindow = true;
 
 		const { screen } = require("electron");
 		const startMousePos = screen.getCursorScreenPoint();
@@ -54,10 +56,13 @@ function registerMoveHandlers({ ipcMain, windowManager, logger }) {
 	});
 
 	ipcMain.on("stop-moving", () => {
+		const wasMovingWindow = isMovingWindow;
 		if (moveInterval) {
 			clearInterval(moveInterval);
 			moveInterval = null;
 		}
+		isMovingWindow = false;
+		if (!wasMovingWindow) return;
 
 		const mainWindow = windowManager.getMainWindow();
 		if (mainWindow) {

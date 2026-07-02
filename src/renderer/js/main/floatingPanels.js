@@ -3,6 +3,8 @@ const { ipcRenderer } = require("electron");
 const FLOATING_PANEL_MARGIN = 12;
 const INTERACTIVE_SELECTOR = "[data-floating-panel], #dropdown-menu, .feedback-confirm-scrim, .feedback-toast-stack";
 let activeDragState = null;
+let floatingPanelsConfig = {};
+const saveTimers = new Map();
 
 function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
@@ -38,6 +40,43 @@ function keepPanelInView(panel) {
 	placePanel(panel, bounds.x, bounds.y);
 }
 
+function getPanelId(panel) {
+	return panel.dataset.panelId || "";
+}
+
+function getPersistedBounds(panel) {
+	const panelId = getPanelId(panel);
+	return panelId ? floatingPanelsConfig[panelId] || null : null;
+}
+
+function serializePanelBounds(panel) {
+	const bounds = getPanelBounds(panel);
+	return {
+		x: Math.round(bounds.x),
+		y: Math.round(bounds.y),
+		width: Math.round(bounds.width),
+		height: Math.round(bounds.height),
+	};
+}
+
+function scheduleSavePanelBounds(panel) {
+	const panelId = getPanelId(panel);
+	if (!panelId) return;
+
+	if (saveTimers.has(panelId)) {
+		clearTimeout(saveTimers.get(panelId));
+	}
+
+	const timer = setTimeout(() => {
+		ipcRenderer.send("save-floating-panel", {
+			panelId,
+			bounds: serializePanelBounds(panel),
+		});
+		saveTimers.delete(panelId);
+	}, 160);
+	saveTimers.set(panelId, timer);
+}
+
 function setFloatingPanelSize(panelId, width, height) {
 	const panel = document.querySelector(`[data-panel-id="${panelId}"]`);
 	if (!panel) return;
@@ -52,10 +91,20 @@ function setFloatingPanelSize(panelId, width, height) {
 		Math.round(Number(height) || 0) + extraHeight,
 	)}px`;
 	keepPanelInView(panel);
+	scheduleSavePanelBounds(panel);
 }
 
 function initializePanelPosition(panel) {
 	if (panel.dataset.positioned === "true") return;
+
+	const persistedBounds = getPersistedBounds(panel);
+	if (persistedBounds) {
+		panel.style.width = `${Math.max(240, Math.round(persistedBounds.width || 0))}px`;
+		panel.style.height = `${Math.max(120, Math.round(persistedBounds.height || 0))}px`;
+		placePanel(panel, persistedBounds.x || 0, persistedBounds.y || 0);
+		panel.dataset.positioned = "true";
+		return;
+	}
 
 	const panelWidth = panel.offsetWidth || Math.min(960, window.innerWidth - 48);
 	const x = Math.max(FLOATING_PANEL_MARGIN, (window.innerWidth - panelWidth) / 2);
@@ -109,10 +158,17 @@ function bindPanelDrag(panel) {
 		dragState = null;
 		activeDragState = null;
 		panel.classList.remove("is-dragging");
+		scheduleSavePanelBounds(panel);
 	});
 }
 
-function bindFloatingPanels() {
+async function bindFloatingPanels() {
+	try {
+		floatingPanelsConfig = await ipcRenderer.invoke("get-floating-panels");
+	} catch (_error) {
+		floatingPanelsConfig = {};
+	}
+
 	const panels = Array.from(document.querySelectorAll("[data-floating-panel]"));
 	panels.forEach((panel) => {
 		initializePanelPosition(panel);
@@ -123,6 +179,7 @@ function bindFloatingPanels() {
 	window.addEventListener("resize", () => {
 		panels.forEach((panel) => {
 			keepPanelInView(panel);
+			scheduleSavePanelBounds(panel);
 		});
 	});
 }
