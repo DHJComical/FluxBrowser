@@ -417,6 +417,48 @@ body.immersion #webview-stack {
 	overflow: hidden;
 }
 
+.floating-panel-resize {
+	position: absolute;
+	z-index: 3;
+	background: transparent;
+}
+
+.floating-panel-resize.resize-east {
+	top: 0;
+	right: 0;
+	width: 10px;
+	height: 100%;
+	cursor: e-resize;
+}
+
+.floating-panel-resize.resize-south {
+	left: 0;
+	bottom: 0;
+	width: 100%;
+	height: 10px;
+	cursor: s-resize;
+}
+
+.floating-panel-resize.resize-corner {
+	right: 0;
+	bottom: 0;
+	width: 18px;
+	height: 18px;
+	cursor: se-resize;
+}
+
+.floating-panel-interaction-shield {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483646;
+	display: none;
+	background: transparent;
+}
+
+.floating-panel-interaction-shield.is-active {
+	display: block;
+}
+
 body.immersion .webview-panel {
 	border: none;
 	border-radius: 0;
@@ -424,7 +466,8 @@ body.immersion .webview-panel {
 	background: #0a0a14;
 }
 
-body.immersion .webview-panel .floating-panel-grip {
+body.immersion .webview-panel .floating-panel-grip,
+body.immersion .webview-panel .floating-panel-resize {
 	display: none;
 }
 

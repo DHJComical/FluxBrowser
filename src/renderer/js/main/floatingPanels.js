@@ -3,9 +3,11 @@ const { ipcRenderer } = require("electron");
 const FLOATING_PANEL_MARGIN = 12;
 const INTERACTIVE_SELECTOR = "[data-floating-panel], #dropdown-menu, .feedback-confirm-scrim, .feedback-toast-stack";
 let activeDragState = null;
+let activeResizeState = null;
 let floatingPanelsConfig = {};
 const saveTimers = new Map();
 const temporaryPanelBounds = new Map();
+let interactionShield = null;
 
 function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
@@ -39,6 +41,27 @@ function placePanel(panel, x, y) {
 function keepPanelInView(panel) {
 	const bounds = getPanelBounds(panel);
 	placePanel(panel, bounds.x, bounds.y);
+}
+
+function ensureInteractionShield() {
+	if (interactionShield) return interactionShield;
+
+	interactionShield = document.createElement("div");
+	interactionShield.className = "floating-panel-interaction-shield";
+	interactionShield.setAttribute("aria-hidden", "true");
+	document.body.appendChild(interactionShield);
+	return interactionShield;
+}
+
+function setInteractionShield(active, cursor = "") {
+	const shield = ensureInteractionShield();
+	shield.classList.toggle("is-active", active);
+	shield.style.cursor = cursor || "";
+}
+
+function resizePanel(panel, nextWidth, nextHeight) {
+	panel.style.width = `${Math.max(240, Math.round(nextWidth))}px`;
+	panel.style.height = `${Math.max(120, Math.round(nextHeight))}px`;
 }
 
 function getPanelId(panel) {
@@ -183,6 +206,7 @@ function bindPanelDrag(panel) {
 		};
 		activeDragState = dragState;
 		setMousePassthrough(false);
+		setInteractionShield(true, "move");
 		panel.classList.add("is-dragging");
 	});
 
@@ -198,6 +222,76 @@ function bindPanelDrag(panel) {
 		if (!dragState) return;
 		dragState = null;
 		activeDragState = null;
+		setInteractionShield(false);
+		panel.classList.remove("is-dragging");
+		scheduleSavePanelBounds(panel);
+	});
+}
+
+function bindPanelResize(panel) {
+	const handles = Array.from(panel.querySelectorAll("[data-resize-handle]"));
+	if (handles.length === 0) return;
+
+	handles.forEach((handle) => {
+		handle.addEventListener("mousedown", (event) => {
+			if (event.button !== 0) return;
+			if (document.body.classList.contains("immersion")) return;
+			event.preventDefault();
+			event.stopPropagation();
+
+			const direction = handle.dataset.resizeHandle;
+			const bounds = getPanelBounds(panel);
+			activeResizeState = {
+				direction,
+				pointerX: event.clientX,
+				pointerY: event.clientY,
+				width: bounds.width,
+				height: bounds.height,
+				x: bounds.x,
+				y: bounds.y,
+			};
+			setMousePassthrough(false);
+			const cursor =
+				direction === "east"
+					? "e-resize"
+					: direction === "south"
+						? "s-resize"
+						: "se-resize";
+			setInteractionShield(true, cursor);
+			panel.classList.add("is-dragging");
+		});
+	});
+
+	window.addEventListener("mousemove", (event) => {
+		if (!activeResizeState) return;
+		if (activeResizeState.direction === "east") {
+			resizePanel(
+				panel,
+				activeResizeState.width + (event.clientX - activeResizeState.pointerX),
+				activeResizeState.height,
+			);
+		}
+		if (activeResizeState.direction === "south") {
+			resizePanel(
+				panel,
+				activeResizeState.width,
+				activeResizeState.height + (event.clientY - activeResizeState.pointerY),
+			);
+		}
+		if (activeResizeState.direction === "southeast") {
+			resizePanel(
+				panel,
+				activeResizeState.width + (event.clientX - activeResizeState.pointerX),
+				activeResizeState.height + (event.clientY - activeResizeState.pointerY),
+			);
+		}
+		keepPanelInView(panel);
+	});
+
+	window.addEventListener("mouseup", () => {
+		if (!activeResizeState) return;
+		activeResizeState = null;
+		setInteractionShield(false);
 		panel.classList.remove("is-dragging");
 		scheduleSavePanelBounds(panel);
 	});
@@ -214,6 +308,7 @@ async function bindFloatingPanels() {
 	panels.forEach((panel) => {
 		initializePanelPosition(panel);
 		bindPanelDrag(panel);
+		bindPanelResize(panel);
 	});
 	bindMousePassthrough();
 
@@ -246,7 +341,7 @@ function bindMousePassthrough() {
 	setMousePassthrough(true);
 
 	window.addEventListener("mousemove", (event) => {
-		if (activeDragState) {
+		if (activeDragState || activeResizeState) {
 			setMousePassthrough(false);
 			return;
 		}
