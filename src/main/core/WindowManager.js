@@ -205,32 +205,12 @@ class WindowManager {
 		focusBorderlessMaximizedApp();
 	}
 
-	setWindowSize(
-		width,
-		height,
-		titleBarHeight = null,
-	) {
+	setWindowSize(width, height) {
 		if (this.mainWindow) {
-			const currentBounds = this.mainWindow.getBounds();
-			const chromeHeight =
-				titleBarHeight || this.getContentChromeHeight(width);
-			const calibrationId = ++this.webviewSizeCalibrationId;
-			this.pendingWebviewSizeTarget = {
-				id: calibrationId,
+			this.mainWindow.webContents.send("set-webview-panel-size", {
 				width,
 				height,
-				attempt: 0,
-			};
-			const nextBounds = {
-				x: currentBounds.x,
-				y: currentBounds.y,
-				width,
-				height: height + chromeHeight,
-			};
-			this.mainWindow.setBounds(nextBounds);
-			this.rememberNormalWindowBounds(nextBounds);
-			this.syncAuxiliaryWindows();
-			this.requestWebviewSizeMeasurement();
+			});
 		}
 	}
 
@@ -329,23 +309,7 @@ class WindowManager {
 		if (this.isImmersionMode) return true;
 
 		this.cancelWebviewSizeCalibration();
-		const currentBounds = this.normalWindowBounds
-			? this.normalizeBounds(this.normalWindowBounds)
-			: this.normalizeBounds(this.mainWindow.getBounds());
-		const chromeHeight =
-			titleBarHeight || this.getContentChromeHeight(currentBounds.width);
-		this.normalWindowBounds = currentBounds;
-		this.preImmersionBounds = currentBounds;
 		this.setImmersionMode(true);
-		this.mainWindow.setBounds({
-			x: currentBounds.x,
-			y: currentBounds.y + chromeHeight,
-			width: currentBounds.width,
-			height: Math.max(
-				WINDOW_CONSTANTS.MIN_HEIGHT,
-				currentBounds.height - chromeHeight,
-			),
-		});
 		return true;
 	}
 
@@ -356,16 +320,6 @@ class WindowManager {
 		if (!this.isImmersionMode) return false;
 
 		this.cancelWebviewSizeCalibration();
-		const restoreBounds = this.normalWindowBounds
-			? this.normalizeBounds(this.normalWindowBounds)
-			: this.preImmersionBounds
-				? this.normalizeBounds(this.preImmersionBounds)
-				: null;
-
-		if (restoreBounds) {
-			this.mainWindow.setBounds(restoreBounds);
-			this.normalWindowBounds = restoreBounds;
-		}
 		this.preImmersionBounds = null;
 		this.setImmersionMode(false);
 		return false;

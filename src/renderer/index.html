@@ -6,10 +6,14 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-  <div id="flux-bar">
+  <div
+    id="flux-bar"
+    data-floating-panel
+    data-panel-id="mainbar"
+  >
     <div class="mainbar-row">
       <div class="brand-panel">
-        <div class="drag-region">FluxBrowser</div>
+        <div class="drag-region" data-floating-handle>FluxBrowser</div>
         <div class="window-status" id="window-status">准备就绪</div>
       </div>
 
@@ -62,7 +66,20 @@
     </div>
   </div>
 
-  <div id="webview-stack"></div>
+  <section
+    class="floating-panel webview-panel"
+    id="webview-panel"
+    data-floating-panel
+    data-panel-id="webview"
+    data-size-target="content"
+  >
+    <div class="floating-panel-grip" data-floating-handle title="拖动网页悬浮窗">
+      <span></span>
+    </div>
+    <div class="floating-panel-content">
+      <div id="webview-stack"></div>
+    </div>
+  </section>
 
   <div class="resize-handle right" data-direction="right"></div>
   <div class="resize-handle bottom" data-direction="bottom"></div>

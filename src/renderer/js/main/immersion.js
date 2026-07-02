@@ -33,6 +33,7 @@ function bindImmersionEvents() {
 	if (dragRegion) {
 		dragRegion.onmousedown = (event) => {
 			if (state.isImmersionMode) return;
+			if (event.target.closest("[data-floating-handle]")) return;
 			event.preventDefault();
 			ipcRenderer.send("start-moving");
 		};

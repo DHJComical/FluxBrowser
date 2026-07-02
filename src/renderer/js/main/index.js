@@ -7,8 +7,10 @@ const { bindImmersionEvents } = require("./immersion");
 const { bindWebviewEvents, restoreOpacity } = require("./webview");
 const { bindTabsEvents, hydrateTabsState } = require("./tabs");
 const { bindLayoutEvents } = require("./layout");
+const { bindFloatingPanels } = require("./floatingPanels");
 
 async function init() {
+	bindFloatingPanels();
 	bindTabsEvents();
 	bindNavigationEvents();
 	bindMenuEvents();

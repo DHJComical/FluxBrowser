@@ -1,5 +1,6 @@
 const { ipcRenderer } = require("electron");
 const { webviewStack } = require("./dom");
+const { setFloatingPanelSize } = require("./floatingPanels");
 
 function measureWebviewStack() {
 	if (!webviewStack) {
@@ -14,6 +15,10 @@ function measureWebviewStack() {
 }
 
 function bindLayoutEvents() {
+	ipcRenderer.on("set-webview-panel-size", (_event, payload = {}) => {
+		setFloatingPanelSize("webview", payload.width, payload.height);
+	});
+
 	ipcRenderer.on("measure-webview-size", (_event, payload = {}) => {
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
