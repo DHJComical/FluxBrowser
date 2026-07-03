@@ -1,4 +1,5 @@
 const configManager = require("./ConfigManager");
+const { t } = require("./i18n");
 const pluginRegistry = require("./plugins/pluginRegistry");
 const {
 	initializePlugin,
@@ -52,7 +53,7 @@ class PluginLoader {
 			},
 		};
 
-		debugLog.log("正在重载快捷键（旧版逻辑）...");
+		debugLog.log(t("logs.shortcuts.legacyReload"));
 
 		// 2. 遍历所有插件，去 Core 里查配置
 		this.plugins.forEach((plugin) => {
@@ -63,9 +64,19 @@ class PluginLoader {
 					if (userKey) {
 						try {
 							globalShortcut.register(userKey, () => actionFunc(this.core));
-							debugLog.log(`注册成功: [${actionId}] -> ${userKey}`);
+							debugLog.log(
+								t("logs.shortcuts.registerSuccess", {
+									actionId,
+									key: userKey,
+								}),
+							);
 						} catch (e) {
-							debugLog.error(`注册失败: ${userKey}`, e);
+							debugLog.error(
+								t("logs.shortcuts.registerFailed", {
+									key: userKey,
+								}),
+								e,
+							);
 						}
 					}
 				}

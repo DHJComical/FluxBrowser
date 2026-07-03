@@ -1,4 +1,5 @@
 const configManager = require("./ConfigManager");
+const { t } = require("./i18n");
 const GitRuntime = require("./services/gitSync/gitRuntime");
 const SyncDataStore = require("./services/gitSync/syncDataStore");
 const {
@@ -64,7 +65,9 @@ class GitSyncManager {
 		const configCheck = this.checkGitConfig(config);
 
 		if (!configCheck.valid) {
-			const msg = `Git配置不完整，请填写: ${configCheck.missing.join(", ")}`;
+			const msg = t("logs.gitSync.configMissing", {
+				fields: configCheck.missing.join(", "),
+			});
 			this.logger.debug(msg);
 			broadcast({ success: false, message: msg });
 			return;
@@ -73,12 +76,20 @@ class GitSyncManager {
 		// 导出当前配置
 		const exportResult = this.exportConfigs();
 		if (!exportResult.success) {
-			broadcast({ success: false, message: `导出配置失败: ${exportResult.error}` });
+			broadcast({
+				success: false,
+				message: t("logs.gitSync.exportFailed", {
+					error: exportResult.error,
+				}),
+			});
 			return;
 		}
 
 		const remoteUrl = this.buildRemoteUrl(config);
-		broadcast({ status: "syncing", message: "正在同步所有配置..." });
+		broadcast({
+			status: "syncing",
+			message: t("logs.gitSync.syncingAll"),
+		});
 
 		(async () => {
 			try {
@@ -89,18 +100,27 @@ class GitSyncManager {
 				const status = await this._runGitCommand(this.syncDataPath, "status --porcelain");
 				
 				if (status.trim()) {
-					const timestamp = new Date().toLocaleString("zh-CN");
+					const timestamp = new Date().toISOString();
 					await this._runGitCommand(this.syncDataPath, `commit -m "Sync all configs at ${timestamp}"`);
 					await this._runGitCommand(this.syncDataPath, "push -u origin HEAD --force");
-					this.logger.debug("Git推送成功");
-					broadcast({ success: true, message: "所有配置同步成功!" });
+					this.logger.debug("logs.gitSync.pushSuccess");
+					broadcast({ success: true, message: t("logs.gitSync.pushSuccessMessage") });
 				} else {
-					this.logger.debug("没有变更需要同步");
-					broadcast({ success: true, message: "没有变更需要同步" });
+					this.logger.debug("logs.gitSync.noChanges");
+					broadcast({ success: true, message: t("logs.gitSync.noChangesMessage") });
 				}
 			} catch (err) {
-				this.logger.debug(`Git推送失败: ${this._filterPat(err.message)}`);
-				broadcast({ success: false, message: `同步失败: ${err.message}` });
+				this.logger.debug(
+					t("logs.gitSync.pushFailed", {
+						message: this._filterPat(err.message),
+					}),
+				);
+				broadcast({
+					success: false,
+					message: t("logs.gitSync.syncFailedMessage", {
+						message: err.message,
+					}),
+				});
 			}
 		})();
 	}
@@ -110,14 +130,19 @@ class GitSyncManager {
 		const configCheck = this.checkGitConfig(config);
 
 		if (!configCheck.valid) {
-			const msg = `Git配置不完整，请填写: ${configCheck.missing.join(", ")}`;
+			const msg = t("logs.gitSync.configMissing", {
+				fields: configCheck.missing.join(", "),
+			});
 			this.logger.debug(msg);
 			broadcast({ success: false, message: msg });
 			return;
 		}
 
 		const remoteUrl = this.buildRemoteUrl(config);
-		broadcast({ status: "pulling", message: "正在从远程拉取配置..." });
+		broadcast({
+			status: "pulling",
+			message: t("logs.gitSync.pullingAll"),
+		});
 
 		(async () => {
 			try {
@@ -128,23 +153,39 @@ class GitSyncManager {
 				try {
 					await this._runGitCommand(this.syncDataPath, `pull origin ${defaultBranch} --rebase`);
 				} catch (_pullError) {
-					this.logger.debug("首次同步或拉取冲突，使用force reset");
+					this.logger.debug("logs.gitSync.pullForceReset");
 				}
 				await this._runGitCommand(this.syncDataPath, `reset --hard origin/${defaultBranch}`);
-				this.logger.debug("Git拉取成功");
+				this.logger.debug("logs.gitSync.pullSuccess");
 				
 				const importResult = this.importConfigs();
 				
 				if (importResult.success) {
-					const msg = `拉取成功! 已导入: ${importResult.imported.join(", ")}`;
+					const msg = t("logs.gitSync.pullImported", {
+						items: importResult.imported.join(", "),
+					});
 					broadcast({ success: true, message: msg, imported: importResult.imported });
 				} else {
-					broadcast({ success: false, message: `拉取成功但导入失败: ${importResult.error}` });
+					broadcast({
+						success: false,
+						message: t("logs.gitSync.pullImportFailed", {
+							error: importResult.error,
+						}),
+					});
 				}
 			} catch (err) {
-				this.logger.debug(`Git拉取失败: ${this._filterPat(err.message)}`);
+				this.logger.debug(
+					t("logs.gitSync.pullFailed", {
+						message: this._filterPat(err.message),
+					}),
+				);
 				const userMsg = mapPullErrorMessage(err.message);
-				broadcast({ success: false, message: `拉取失败: ${userMsg}` });
+				broadcast({
+					success: false,
+					message: t("logs.gitSync.pullFailedMessage", {
+						message: userMsg,
+					}),
+				});
 			}
 		})();
 	}

@@ -1,4 +1,5 @@
 let feedbackUI = null;
+const { t, translateMaybeKey } = require("./i18n");
 
 function createElement(tagName, className, textContent) {
 	const element = document.createElement(tagName);
@@ -26,12 +27,12 @@ function ensureFeedbackUI() {
 	const cancelButton = createElement(
 		"button",
 		"feedback-btn feedback-btn-secondary",
-		"取消",
+		t("common.actions.cancel"),
 	);
 	const confirmButton = createElement(
 		"button",
 		"feedback-btn feedback-btn-primary",
-		"确认",
+		t("common.actions.confirm"),
 	);
 
 	confirmActions.append(cancelButton, confirmButton);
@@ -77,15 +78,15 @@ function settleConfirm(result) {
 
 function getToastMeta(type) {
 	if (type === "success") {
-		return { icon: "check_circle", title: "已完成" };
+		return { icon: "check_circle", title: t("common.toast.done") };
 	}
 	if (type === "error") {
-		return { icon: "error", title: "操作失败" };
+		return { icon: "error", title: t("common.toast.failed") };
 	}
 	if (type === "warning") {
-		return { icon: "warning", title: "请注意" };
+		return { icon: "warning", title: t("common.toast.attention") };
 	}
-	return { icon: "info", title: "提示" };
+	return { icon: "info", title: t("common.toast.notice") };
 }
 
 function showToast(message, options = {}) {
@@ -101,12 +102,12 @@ function showToast(message, options = {}) {
 	const toastTitle = createElement(
 		"div",
 		"feedback-toast-title",
-		title || meta.title,
+		translateMaybeKey(title || meta.title),
 	);
 	const toastMessage = createElement(
 		"div",
 		"feedback-toast-message",
-		message,
+		translateMaybeKey(message),
 	);
 
 	content.append(toastTitle, toastMessage);
@@ -135,17 +136,17 @@ function confirmAction(options = {}) {
 	}
 
 	const {
-		title = "请确认操作",
+		title = "common.confirm.title",
 		message = "",
-		confirmText = "确认",
-		cancelText = "取消",
+		confirmText = "common.actions.confirm",
+		cancelText = "common.actions.cancel",
 		tone = "primary",
 	} = options;
 
-	ui.confirmTitle.textContent = title;
-	ui.confirmMessage.textContent = message;
-	ui.cancelButton.textContent = cancelText;
-	ui.confirmButton.textContent = confirmText;
+	ui.confirmTitle.textContent = translateMaybeKey(title);
+	ui.confirmMessage.textContent = translateMaybeKey(message);
+	ui.cancelButton.textContent = translateMaybeKey(cancelText);
+	ui.confirmButton.textContent = translateMaybeKey(confirmText);
 	ui.confirmButton.className = `feedback-btn feedback-btn-${tone}`;
 	ui.confirmScrim.classList.remove("hidden");
 

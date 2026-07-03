@@ -2,8 +2,12 @@ const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const state = require("./state");
 const debugLog = require("./debugLog");
+const { initI18n, t } = require("../shared/i18n");
 const {
 	resetUpdateProgress,
+	renderLanguageOptions,
+	renderShortcuts,
+	renderResolutionPresets,
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
@@ -34,6 +38,7 @@ function handleSaveWithRestart() {
 			gitRemote: dom.gitRemoteInput.value,
 			gitName: dom.gitNameInput.value,
 			gitEmail: dom.gitEmailInput.value,
+			language: state.language,
 		});
 		ipcRenderer.send("save-resolution-presets", state.tempResolutionPresets);
 
@@ -52,10 +57,10 @@ function handleSaveWithRestart() {
 		ipcRenderer.send("settings-window-closing");
 		window.close();
 	} catch (error) {
-		console.error("保存设置失败:", error);
-		showToast("保存设置时出现错误，请重试。", {
+		console.error("logs.settings.saveFailed", error);
+		showToast(t("settings.save.errorMessage"), {
 			type: "error",
-			title: "设置未保存",
+			title: t("settings.save.errorTitle"),
 		});
 	}
 }
@@ -100,10 +105,12 @@ function bindCoreActions() {
 
 async function init() {
 	try {
+		await initI18n();
 		const version = await ipcRenderer.invoke("get-app-version");
 		if (dom.versionNumber) {
 			dom.versionNumber.innerText = `v${version}`;
 		}
+		renderLanguageOptions();
 
 		await initExperienceSection(debugLog);
 
@@ -116,11 +123,19 @@ async function init() {
 			confirmAction,
 		});
 		bindStatusListeners({ debugLog, showToast });
+		window.addEventListener("flux-language-changed", () => {
+			renderLanguageOptions();
+			renderShortcuts();
+			renderResolutionPresets(debugLog);
+			if (dom.languageSelect) {
+				dom.languageSelect.value = state.language;
+			}
+		});
 	} catch (error) {
-		console.error("初始化设置页面失败:", error);
-		showToast("设置页初始化失败，请重新打开。", {
+		console.error("logs.settings.initFailed", error);
+		showToast(t("settings.init.errorMessage"), {
 			type: "error",
-			title: "加载失败",
+			title: t("settings.init.errorTitle"),
 		});
 	}
 }

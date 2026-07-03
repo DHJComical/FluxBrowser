@@ -1,4 +1,5 @@
 const MAX_RECENT_MATCHES = 100;
+const { t } = require("../i18n");
 
 function createDefaultConfig() {
 	return {
@@ -149,7 +150,9 @@ class SubtitleKeywordDetector {
 		this.broadcast("live-subtitle-keyword-match", matches);
 		this.emitState();
 		this.logger.debug(
-			`字幕关键字命中: ${matches.map((match) => match.pattern).join(", ")}`,
+			t("logs.liveSubtitle.keywordMatched", {
+				patterns: matches.map((match) => match.pattern).join(", "),
+			}),
 		);
 		return matches;
 	}

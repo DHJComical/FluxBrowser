@@ -1,11 +1,12 @@
 const configManager = require("./ConfigManager");
+const { t } = require("./i18n");
 
 const DEFAULT_URL = "https://space.bilibili.com/563138217";
 
 function createDefaultTab() {
 	return {
 		id: `tab-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-		title: "新标签页",
+		title: t("main.tabs.newTab"),
 		url: DEFAULT_URL,
 		isLoading: false,
 		canGoBack: false,
@@ -33,7 +34,7 @@ function sanitizeTab(tab = {}) {
 		title:
 			typeof tab.title === "string" && tab.title.trim()
 				? tab.title.trim()
-				: "新标签页",
+				: t("main.tabs.newTab"),
 		url,
 		isLoading: tab.isLoading === true,
 		canGoBack: tab.canGoBack === true,

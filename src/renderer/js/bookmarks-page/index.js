@@ -1,14 +1,15 @@
 const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const { showToast, confirmAction } = require("../shared/feedback");
+const { initI18n, t } = require("../shared/i18n");
 const { renderBookmarks } = require("./renderers");
 
 const sortLabelMap = {
-	latest: "最近保存",
-	oldest: "最早保存",
-	"progress-desc": "进度最长",
-	"progress-asc": "进度最短",
-	title: "标题 A-Z",
+	latest: "bookmarks.sort.latest",
+	oldest: "bookmarks.sort.oldest",
+	"progress-desc": "bookmarks.sort.progressDesc",
+	"progress-asc": "bookmarks.sort.progressAsc",
+	title: "bookmarks.sort.title",
 };
 
 let allBookmarks = [];
@@ -26,7 +27,8 @@ function setSortMenuOpen(open) {
 
 function updateSortUI() {
 	if (dom.sortTriggerLabel) {
-		dom.sortTriggerLabel.textContent = sortLabelMap[currentSort] || "最近保存";
+		dom.sortTriggerLabel.textContent =
+			t(sortLabelMap[currentSort] || "bookmarks.sort.latest");
 	}
 
 	dom.sortOptions?.forEach((option) => {
@@ -103,18 +105,18 @@ function rerender() {
 
 function openBookmark(bookmark) {
 	ipcRenderer.send("open-bookmark", bookmark);
-	showToast("已将书签定位发送到主窗口。", {
+	showToast(t("bookmarks.open.message"), {
 		type: "success",
-		title: "正在跳转",
+		title: t("bookmarks.open.title"),
 	});
 	window.close();
 }
 
 async function deleteBookmark(originalIndex) {
 	const confirmed = await confirmAction({
-		title: "删除书签",
-		message: "确定要删除这条继续观看记录吗？删除后将无法恢复。",
-		confirmText: "确认删除",
+		title: "bookmarks.delete.title",
+		message: "bookmarks.delete.message",
+		confirmText: "bookmarks.delete.confirm",
 		tone: "danger",
 	});
 
@@ -123,9 +125,9 @@ async function deleteBookmark(originalIndex) {
 	}
 
 	ipcRenderer.send("delete-bookmark", originalIndex);
-	showToast("书签已删除。", {
+	showToast(t("bookmarks.delete.doneMessage"), {
 		type: "success",
-		title: "删除完成",
+		title: t("bookmarks.delete.doneTitle"),
 	});
 }
 
@@ -174,11 +176,15 @@ function bindToolbarEvents() {
 	});
 }
 
-function init() {
+async function init() {
+	await initI18n();
 	updateSortUI();
 	bindBookmarkListeners();
 	bindToolbarEvents();
 	requestBookmarks();
+	window.addEventListener("flux-language-changed", () => {
+		rerender();
+	});
 }
 
 init();

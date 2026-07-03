@@ -4,6 +4,7 @@ const {
 	DEFAULT_APP_CONFIG,
 	DEFAULT_RESOLUTION_PRESETS,
 } = require("../constants/config");
+const { normalizeLocale, t } = require("./i18n");
 const { getConfigPaths } = require("./config/configPaths");
 const { loadConfig, saveConfig } = require("./config/configStore");
 
@@ -31,6 +32,7 @@ class ConfigManager {
 			this.paths.appConfigPath,
 			DEFAULT_APP_CONFIG,
 		);
+		this.appConfig.language = normalizeLocale(this.appConfig.language);
 		this.resolutionPresets = this._loadConfig(
 			this.paths.resolutionPresetPath,
 			DEFAULT_RESOLUTION_PRESETS,
@@ -76,6 +78,7 @@ class ConfigManager {
 
 	saveAppConfig(config) {
 		this.appConfig = { ...this.appConfig, ...config };
+		this.appConfig.language = normalizeLocale(this.appConfig.language);
 		this._saveConfig(this.paths.appConfigPath, this.appConfig);
 	}
 
@@ -85,18 +88,24 @@ class ConfigManager {
 
 	getResolutionPresets() {
 		this._debugLog(
-			`获取分辨率预设，当前共有 ${this.resolutionPresets.length} 个预设`,
+			t("logs.config.getResolutionPresets", {
+				count: this.resolutionPresets.length,
+			}),
 		);
 		return this.resolutionPresets;
 	}
 
 	saveResolutionPresets(presets) {
 		if (!presets || !Array.isArray(presets)) {
-			this._debugLog("保存分辨率预设时收到无效参数，使用默认值");
+			this._debugLog("logs.config.invalidResolutionPresets");
 			presets = DEFAULT_RESOLUTION_PRESETS;
 		}
 
-		this._debugLog(`保存分辨率预设，共有 ${presets.length} 个预设`);
+		this._debugLog(
+			t("logs.config.saveResolutionPresets", {
+				count: presets.length,
+			}),
+		);
 		this.resolutionPresets = presets;
 		this._saveConfig(
 			this.paths.resolutionPresetPath,

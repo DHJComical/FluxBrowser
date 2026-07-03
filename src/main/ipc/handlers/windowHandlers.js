@@ -1,4 +1,5 @@
 const { app } = require("electron");
+const { t } = require("../../i18n");
 
 function registerWindowHandlers({ ipcMain, windowManager, logger }) {
 	ipcMain.on("open-settings", () => {
@@ -14,7 +15,12 @@ function registerWindowHandlers({ ipcMain, windowManager, logger }) {
 
 	ipcMain.on("set-window-size", (_event, { width, height }) => {
 		windowManager.setWindowSize(width, height);
-		logger.debug(`WebView 区域尺寸已设置: ${width} x ${height}`);
+		logger.debug(
+			t("logs.window.webviewSizeSet", {
+				width,
+				height,
+			}),
+		);
 	});
 
 	ipcMain.on("app-exit", () => {

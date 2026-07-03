@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { t } = require("../i18n");
 
 function loadConfig(filePath, defaultConfig, debugLog) {
 	try {
@@ -16,7 +17,9 @@ function loadConfig(filePath, defaultConfig, debugLog) {
 	} catch (error) {
 		if (debugLog) {
 			debugLog(
-				`加载配置文件 [${path.basename(filePath)}] 失败:`,
+				t("logs.config.loadFailed", {
+					name: path.basename(filePath),
+				}),
 				error,
 			);
 		}
@@ -31,7 +34,9 @@ function saveConfig(filePath, data, debugLog) {
 	} catch (error) {
 		if (debugLog) {
 			debugLog(
-				`保存配置文件 [${path.basename(filePath)}] 失败:`,
+				t("logs.config.saveFailed", {
+					name: path.basename(filePath),
+				}),
 				error,
 			);
 		}

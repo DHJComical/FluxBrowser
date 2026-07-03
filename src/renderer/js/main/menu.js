@@ -10,6 +10,7 @@ const {
 } = require("./dom");
 const debugLog = require("./debug");
 const { showToast } = require("../shared/feedback");
+const { t } = require("../shared/i18n");
 const { setWindowStatus } = require("./navigation");
 const { getActiveWebview } = require("./tabs");
 
@@ -28,9 +29,9 @@ async function addBookmarkFromCurrentPage() {
 	closeMenu();
 	const webview = getActiveWebview();
 	if (!webview) {
-		showToast("当前没有可用的网页标签。", {
+		showToast(t("main.bookmarks.unavailableMessage"), {
 			type: "warning",
-			title: "无法添加书签",
+			title: t("main.bookmarks.unavailableTitle"),
 		});
 		return;
 	}
@@ -53,26 +54,33 @@ async function addBookmarkFromCurrentPage() {
 			time: videoInfo.time,
 			timestamp: Date.now(),
 		});
-		setWindowStatus("当前进度已加入书签", "ready", { autoReset: true });
-		showToast("当前进度已经加入书签。", {
+		setWindowStatus("main.bookmarks.savedStatus", "ready", { autoReset: true });
+		showToast(t("main.bookmarks.savedMessage"), {
 			type: "success",
-			title: "书签已保存",
+			title: t("main.bookmarks.savedTitle"),
 		});
 	} catch (error) {
-		debugLog.error("获取视频信息失败:", error);
-		setWindowStatus("书签保存失败", "error", { autoReset: true, resetDelay: 2200 });
-		showToast("读取当前页面信息失败，暂时无法添加书签。", {
+		debugLog.error("logs.main.bookmarks.fetchVideoFailed", error);
+		setWindowStatus("main.bookmarks.addFailedStatus", "error", {
+			autoReset: true,
+			resetDelay: 2200,
+		});
+		showToast(t("main.bookmarks.addFailedMessage"), {
 			type: "error",
-			title: "添加失败",
+			title: t("main.bookmarks.addFailedTitle"),
 		});
 	}
 }
 
 async function loadResolutionPresets() {
 	try {
-		debugLog.info("开始加载分辨率预设");
+		debugLog.info("logs.main.resolution.loadStart");
 		const presets = await ipcRenderer.invoke("get-resolution-presets");
-		debugLog.info(`获取到 ${presets ? presets.length : 0} 个分辨率预设`);
+		debugLog.info(
+			t("main.resolution.loadedCount", {
+				count: presets ? presets.length : 0,
+			}),
+		);
 
 		resolutionSubmenu.innerHTML = "";
 		if (presets && Array.isArray(presets)) {
@@ -84,12 +92,16 @@ async function loadResolutionPresets() {
 				element.setAttribute("data-height", preset.height);
 				resolutionSubmenu.appendChild(element);
 			});
-			debugLog.info(`已渲染 ${presets.length} 个分辨率预设到下拉菜单`);
+			debugLog.info(
+				t("main.resolution.renderedCount", {
+					count: presets.length,
+				}),
+			);
 		} else {
-			debugLog.warn("分辨率预设数据无效或为空");
+			debugLog.warn("logs.main.resolution.invalidData");
 		}
 	} catch (error) {
-		debugLog.error("加载分辨率预设失败:", error);
+		debugLog.error("logs.main.resolution.loadFailed", error);
 	}
 }
 
@@ -116,7 +128,9 @@ function bindMenuEvents() {
 
 	viewBookmarksBtn.onclick = () => {
 		closeMenu();
-		setWindowStatus("正在打开书签页", "idle", { autoReset: true });
+		setWindowStatus("main.bookmarks.openWindowStatus", "idle", {
+			autoReset: true,
+		});
 		ipcRenderer.send("open-bookmarks-window");
 	};
 
@@ -128,16 +142,31 @@ function bindMenuEvents() {
 			const width = parseInt(event.target.getAttribute("data-width"), 10);
 			const height = parseInt(event.target.getAttribute("data-height"), 10);
 			debugLog.info(
-				`应用分辨率预设 ${event.target.textContent} (${width} x ${height})`,
+				t("main.resolution.applyLog", {
+					name: event.target.textContent,
+					width,
+					height,
+				}),
 			);
 			ipcRenderer.send("set-window-size", { width, height });
-			setWindowStatus(`已切换到 ${event.target.textContent}`, "ready", {
+			setWindowStatus(
+				t("main.resolution.switchedStatus", {
+					name: event.target.textContent,
+				}),
+				"ready",
+				{
 				autoReset: true,
-			});
-			showToast(`窗口已切换到 ${event.target.textContent}。`, {
+				},
+			);
+			showToast(
+				t("main.resolution.switchedMessage", {
+					name: event.target.textContent,
+				}),
+				{
 				type: "success",
-				title: "尺寸已应用",
-			});
+				title: t("main.resolution.appliedTitle"),
+				},
+			);
 			closeMenu();
 		}
 	});

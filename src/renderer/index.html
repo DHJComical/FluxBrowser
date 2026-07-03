@@ -14,19 +14,19 @@
     <div class="mainbar-row">
       <div class="brand-panel">
         <div class="drag-region" data-floating-handle>FluxBrowser</div>
-        <div class="window-status" id="window-status">&#20934;&#22791;&#23601;&#32490;</div>
+        <div class="window-status" id="window-status" data-i18n="main.status.idle">&#20934;&#22791;&#23601;&#32490;</div>
       </div>
 
       <div class="menu-container">
         <button id="menu-btn"><i class="material-icons">menu</i></button>
         <div id="dropdown-menu" class="hidden">
-          <div class="menu-item" id="settings-btn">
+          <div class="menu-item" id="settings-btn" data-i18n="main.menu.settings">
             <i class="material-icons">settings</i> &#35774;&#32622;
           </div>
           <div class="menu-divider"></div>
 
           <div class="menu-submenu" id="resolution-menu">
-            <div class="menu-item">
+            <div class="menu-item" data-i18n="main.menu.resolutionPresets">
               <i class="material-icons">aspect_ratio</i> &#20998;&#36776;&#29575;&#39044;&#35774;
               <i class="material-icons submenu-arrow">chevron_right</i>
             </div>
@@ -34,15 +34,15 @@
           </div>
           <div class="menu-divider"></div>
 
-          <div class="menu-item" id="add-bookmark-btn">
+          <div class="menu-item" id="add-bookmark-btn" data-i18n="main.menu.addBookmark">
             <i class="material-icons">bookmark_add</i> &#28155;&#21152;&#20070;&#31614;
           </div>
-          <div class="menu-item" id="view-bookmarks-btn">
+          <div class="menu-item" id="view-bookmarks-btn" data-i18n="main.menu.viewBookmarks">
             <i class="material-icons">bookmarks</i> &#26597;&#30475;&#20070;&#31614;
           </div>
           <div class="menu-divider"></div>
 
-          <div class="menu-item" id="exit-btn">
+          <div class="menu-item" id="exit-btn" data-i18n="main.menu.exit">
             <i class="material-icons">power_settings_new</i> &#36864;&#20986;
           </div>
         </div>
@@ -50,12 +50,13 @@
 
       <div class="input-group">
         <div class="address-meta">
-          <span class="address-label">&#22320;&#22336;</span>
-          <span class="page-title" id="page-title">&#26410;&#21152;&#36733;&#39029;&#38754;</span>
+          <span class="address-label" data-i18n="main.address.label">&#22320;&#22336;</span>
+          <span class="page-title" id="page-title" data-i18n="main.navigation.pageTitleIdle">&#26410;&#21152;&#36733;&#39029;&#38754;</span>
         </div>
         <input
           type="text"
           id="url-input"
+          data-i18n-placeholder="main.navigation.inputPlaceholder"
           placeholder="&#36755;&#20837;&#32593;&#22336;&#21518;&#22238;&#36710;&#25110;&#28857;&#20987;&#21069;&#24448;"
           value=""
         >
@@ -65,7 +66,12 @@
 
     <div class="mainbar-tabs">
       <div class="tabbar-strip" id="tabbar-strip"></div>
-      <button id="tabbar-add-btn" class="tabbar-add-btn" title="&#26032;&#24314;&#26631;&#31614;&#39029;">
+      <button
+        id="tabbar-add-btn"
+        class="tabbar-add-btn"
+        data-i18n-title="main.tabs.newTab"
+        title="&#26032;&#24314;&#26631;&#31614;&#39029;"
+      >
         <i class="material-icons">add</i>
       </button>
     </div>
@@ -81,6 +87,7 @@
     <div
       class="floating-panel-grip"
       data-floating-handle
+      data-i18n-title="main.webview.dragTitle"
       title="&#25302;&#21160;&#32593;&#39029;&#24748;&#28014;&#31383;"
     >
       <span></span>
@@ -108,46 +115,56 @@
         <button
           class="direction-indicator-handle handle-northwest"
           data-resize-handle="northwest"
+          data-i18n-aria-label="main.indicator.resizeNorthwest"
           aria-label="&#21521;&#24038;&#19978;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-north"
           data-resize-handle="north"
+          data-i18n-aria-label="main.indicator.resizeNorth"
           aria-label="&#21521;&#19978;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-northeast"
           data-resize-handle="northeast"
+          data-i18n-aria-label="main.indicator.resizeNortheast"
           aria-label="&#21521;&#21491;&#19978;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-east"
           data-resize-handle="east"
+          data-i18n-aria-label="main.indicator.resizeEast"
           aria-label="&#21521;&#21491;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-southeast"
           data-resize-handle="southeast"
+          data-i18n-aria-label="main.indicator.resizeSoutheast"
           aria-label="&#21521;&#21491;&#19979;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-south"
           data-resize-handle="south"
+          data-i18n-aria-label="main.indicator.resizeSouth"
           aria-label="&#21521;&#19979;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-southwest"
           data-resize-handle="southwest"
+          data-i18n-aria-label="main.indicator.resizeSouthwest"
           aria-label="&#21521;&#24038;&#19979;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-handle handle-west"
           data-resize-handle="west"
+          data-i18n-aria-label="main.indicator.resizeWest"
           aria-label="&#21521;&#24038;&#32553;&#25918;"
         ></button>
         <button
           class="direction-indicator-move"
           data-floating-handle
+          data-i18n-title="main.indicator.move"
+          data-i18n-aria-label="main.indicator.move"
           title="&#31227;&#21160;&#25351;&#31034;&#22120;"
           aria-label="&#31227;&#21160;&#25351;&#31034;&#22120;"
         ></button>
@@ -155,6 +172,8 @@
         <button
           class="direction-indicator-rotate"
           id="direction-indicator-rotate-handle"
+          data-i18n-title="main.indicator.rotate"
+          data-i18n-aria-label="main.indicator.rotate"
           title="&#26059;&#36716;&#25351;&#31034;&#22120;"
           aria-label="&#26059;&#36716;&#25351;&#31034;&#22120;"
         ></button>

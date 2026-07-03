@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html data-i18n-document-title="windows.bookmarks.title">
 <head>
     <meta charset="UTF-8">
     <title>书签管理</title>
@@ -11,22 +11,22 @@
     <div class="bookmarks-shell">
         <header class="bookmarks-hero">
             <div class="hero-copy">
-                <span class="hero-eyebrow">Continue Watching</span>
-                <h1>继续观看</h1>
-                <p>快速找到上次中断的位置，继续回到对应页面和进度。</p>
+                <span class="hero-eyebrow" data-i18n="bookmarks.hero.eyebrow">继续观看</span>
+                <h1 data-i18n="bookmarks.hero.title">继续观看</h1>
+                <p data-i18n="bookmarks.hero.description">快速找到上次中断的位置，继续回到对应页面和进度。</p>
             </div>
             <div class="hero-stats">
                 <div class="hero-stat">
-                    <span class="hero-stat-label">书签</span>
+                    <span class="hero-stat-label" data-i18n="bookmarks.summary.totalLabel">书签</span>
                     <strong id="summary-total">0</strong>
                 </div>
                 <div class="hero-stat">
-                    <span class="hero-stat-label">近 7 天</span>
+                    <span class="hero-stat-label" data-i18n="bookmarks.summary.recentLabel">近 7 天</span>
                     <strong id="summary-recent">0</strong>
                 </div>
                 <div class="hero-stat">
-                    <span class="hero-stat-label">累计进度</span>
-                    <strong id="summary-duration">0 秒</strong>
+                    <span class="hero-stat-label" data-i18n="bookmarks.summary.durationLabel">累计进度</span>
+                    <strong id="summary-duration" data-i18n="bookmarks.summary.initialDuration">0 秒</strong>
                 </div>
             </div>
         </header>
@@ -37,28 +37,29 @@
                 <input
                     id="bookmark-search"
                     type="text"
+                    data-i18n-placeholder="bookmarks.search.placeholder"
                     placeholder="搜索标题或网址"
                 >
             </div>
             <div class="toolbar-sort">
                 <button id="sort-trigger" class="sort-trigger" type="button">
-                    <span id="sort-trigger-label">最近保存</span>
+                    <span id="sort-trigger-label" data-i18n="bookmarks.sort.latest">最近保存</span>
                     <i class="material-icons">unfold_more</i>
                 </button>
                 <div id="sort-menu" class="sort-menu hidden">
-                    <button class="sort-option active" type="button" data-value="latest">最近保存</button>
-                    <button class="sort-option" type="button" data-value="oldest">最早保存</button>
-                    <button class="sort-option" type="button" data-value="progress-desc">进度最长</button>
-                    <button class="sort-option" type="button" data-value="progress-asc">进度最短</button>
-                    <button class="sort-option" type="button" data-value="title">标题 A-Z</button>
+                    <button class="sort-option active" type="button" data-value="latest" data-i18n="bookmarks.sort.latest">最近保存</button>
+                    <button class="sort-option" type="button" data-value="oldest" data-i18n="bookmarks.sort.oldest">最早保存</button>
+                    <button class="sort-option" type="button" data-value="progress-desc" data-i18n="bookmarks.sort.progressDesc">进度最长</button>
+                    <button class="sort-option" type="button" data-value="progress-asc" data-i18n="bookmarks.sort.progressAsc">进度最短</button>
+                    <button class="sort-option" type="button" data-value="title" data-i18n="bookmarks.sort.title">标题 A-Z</button>
                 </div>
             </div>
         </section>
 
         <section class="bookmarks-results">
             <div class="results-meta">
-                <strong id="results-count">0 条记录</strong>
-                <span class="results-hint">点击卡片继续播放，右侧可删除。</span>
+                <strong id="results-count" data-i18n="bookmarks.results.initialCount">0 条记录</strong>
+                <span class="results-hint" data-i18n="bookmarks.results.hint">点击卡片继续播放，右侧可删除。</span>
             </div>
             <div id="bookmark-list" class="bookmark-list"></div>
         </section>

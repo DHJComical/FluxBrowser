@@ -1,5 +1,6 @@
 const path = require("path");
 const { exec } = require("child_process");
+const { t } = require("../../i18n");
 const { filterPat, buildRemoteUrl } = require("./gitSyncUtils");
 const { EXCLUDED_FILES } = require("./constants");
 
@@ -11,12 +12,18 @@ class GitRuntime {
 	runGitCommand(cwd, subCmd) {
 		return new Promise((resolve, reject) => {
 			const gitCmd = `git --git-dir="${path.join(cwd, ".git")}" --work-tree="${cwd}" ${subCmd}`;
-			this.logger.debug(`执行Git命令: ${filterPat(gitCmd)}`);
+			this.logger.debug(
+				t("logs.gitRuntime.command", {
+					command: filterPat(gitCmd),
+				}),
+			);
 
 			exec(gitCmd, { cwd }, (error, stdout, stderr) => {
 				if (error) {
 					this.logger.debug(
-						`Git命令失败: ${filterPat(stderr || error.message)}`,
+						t("logs.gitRuntime.commandFailed", {
+							message: filterPat(stderr || error.message),
+						}),
 					);
 					reject(new Error(stderr || error.message));
 					return;

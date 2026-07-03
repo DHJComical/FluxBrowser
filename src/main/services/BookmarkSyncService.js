@@ -32,7 +32,7 @@ class BookmarkSyncService {
 			return { changed: false };
 		}
 
-		await this.gitSyncManager._runGitCommand(cwd, 'commit -m "更新书签"');
+		await this.gitSyncManager._runGitCommand(cwd, 'commit -m "Update bookmarks"');
 		await this.gitSyncManager._runGitCommand(cwd, "push -u origin HEAD");
 		return { changed: true };
 	}

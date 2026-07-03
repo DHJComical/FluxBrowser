@@ -153,7 +153,7 @@ function bindSubtitleCollectorEvents() {
 				...snapshot,
 			});
 		} catch (error) {
-			debugLog.warn("实时字幕采集失败", error);
+			debugLog.warn("logs.main.subtitle.captureFailed", error);
 			const currentUrl =
 				typeof webview.getURL === "function" ? webview.getURL() : "";
 			ipcRenderer.send("live-subtitle-snapshot", {

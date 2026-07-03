@@ -1,6 +1,7 @@
 const { windowStatus } = require("./dom");
 const debugLog = require("./debug");
 const { getWebview } = require("./state");
+const { t } = require("../shared/i18n");
 
 let statusResetTimer = null;
 
@@ -15,7 +16,7 @@ function setWindowStatus(message, tone = "idle", options = {}) {
 	if (!windowStatus) return;
 
 	const { autoReset = false, resetDelay = 1600 } = options;
-	windowStatus.textContent = message;
+	windowStatus.textContent = t(message);
 	windowStatus.dataset.tone = tone;
 
 	clearStatusResetTimer();
@@ -47,7 +48,7 @@ function syncWindowStatusWithWebview() {
 			typeof activeWebview.isLoading === "function" &&
 			activeWebview.isLoading()
 		) {
-			windowStatus.textContent = "页面加载中";
+			windowStatus.textContent = t("main.status.loading");
 			windowStatus.dataset.tone = "loading";
 			return;
 		}
@@ -57,15 +58,15 @@ function syncWindowStatusWithWebview() {
 				? activeWebview.getURL()
 				: "";
 		if (currentUrl && currentUrl !== "about:blank") {
-			windowStatus.textContent = "当前页面可继续操作";
+			windowStatus.textContent = t("main.status.ready");
 			windowStatus.dataset.tone = "ready";
 			return;
 		}
 	} catch (error) {
-		debugLog.warn("同步窗口状态失败", error);
+		debugLog.warn("logs.main.status.syncFailed", error);
 	}
 
-	windowStatus.textContent = "准备就绪";
+	windowStatus.textContent = t("main.status.idle");
 	windowStatus.dataset.tone = "idle";
 }
 

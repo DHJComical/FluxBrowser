@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html data-i18n-document-title="windows.settings.title">
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="css/style.css">
@@ -9,40 +9,40 @@
 <body>
     <div class="settings-container">
         <div class="settings-sidebar">
-            <div class="settings-sidebar-title">
+            <div class="settings-sidebar-title" data-i18n="settings.page.sidebarTitle">
                 <i class="material-icons">settings</i>
                 设置
             </div>
 
             <div class="settings-nav-group">
-                <div class="settings-nav-group-title">播放与窗口</div>
+                <div class="settings-nav-group-title" data-i18n="settings.navigation.experienceGroupTitle">播放与窗口</div>
                 <div class="settings-tab active" data-panel="experience">
                     <i class="material-icons">slideshow</i>
                     <div class="settings-tab-copy">
-                        <span class="settings-tab-label">播放与窗口</span>
-                        <span class="settings-tab-desc">快捷键、沉浸与分辨率</span>
+                        <span class="settings-tab-label" data-i18n="settings.navigation.experienceLabel">播放与窗口</span>
+                        <span class="settings-tab-desc" data-i18n="settings.navigation.experienceDesc">快捷键、沉浸与分辨率</span>
                     </div>
                 </div>
             </div>
 
             <div class="settings-nav-group">
-                <div class="settings-nav-group-title">数据与同步</div>
+                <div class="settings-nav-group-title" data-i18n="settings.navigation.syncGroupTitle">数据与同步</div>
                 <div class="settings-tab" data-panel="sync">
                     <i class="material-icons">cloud_sync</i>
                     <div class="settings-tab-copy">
-                        <span class="settings-tab-label">数据与同步</span>
-                        <span class="settings-tab-desc">书签与 Git 同步</span>
+                        <span class="settings-tab-label" data-i18n="settings.navigation.syncLabel">数据与同步</span>
+                        <span class="settings-tab-desc" data-i18n="settings.navigation.syncDesc">书签与 Git 同步</span>
                     </div>
                 </div>
             </div>
 
             <div class="settings-nav-group">
-                <div class="settings-nav-group-title">系统与维护</div>
+                <div class="settings-nav-group-title" data-i18n="settings.navigation.systemGroupTitle">系统与维护</div>
                 <div class="settings-tab" data-panel="system">
                     <i class="material-icons">build</i>
                     <div class="settings-tab-copy">
-                        <span class="settings-tab-label">系统与维护</span>
-                        <span class="settings-tab-desc">更新、调试与清理</span>
+                        <span class="settings-tab-label" data-i18n="settings.navigation.systemLabel">系统与维护</span>
+                        <span class="settings-tab-desc" data-i18n="settings.navigation.systemDesc">更新、调试与清理</span>
                     </div>
                 </div>
             </div>
@@ -50,15 +50,15 @@
 
         <div class="settings-content">
             <div class="settings-panel active" id="panel-experience">
-                <div class="panel-title">播放与窗口</div>
+                <div class="panel-title" data-i18n="settings.experience.panelTitle">播放与窗口</div>
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">快捷键</div>
-                        <div class="settings-section-desc">调整全局操作入口，覆盖播放、窗口和网页浏览动作。</div>
+                        <div class="settings-section-title" data-i18n="settings.shortcuts.sectionTitle">快捷键</div>
+                        <div class="settings-section-desc" data-i18n="settings.shortcuts.sectionDesc">调整全局操作入口，覆盖播放、窗口和网页浏览动作。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.shortcuts.cardTitle">
                             <i class="material-icons">keyboard</i>
                             播放与窗口快捷键
                         </div>
@@ -68,54 +68,54 @@
 
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">窗口行为</div>
-                        <div class="settings-section-desc">决定窗口显示方式、沉浸切换后的保护策略，以及视频控制手感。</div>
+                        <div class="settings-section-title" data-i18n="settings.windowBehavior.sectionTitle">窗口行为</div>
+                        <div class="settings-section-desc" data-i18n="settings.windowBehavior.sectionDesc">决定窗口显示方式、沉浸切换后的保护策略，以及视频控制手感。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.windowBehavior.alwaysOnTop.cardTitle">
                             <i class="material-icons">push_pin</i>
                             置顶
                         </div>
                         <div class="toggle-item">
                             <div class="toggle-info">
-                                <span class="toggle-label">浏览器窗口始终置顶</span>
-                                <span class="toggle-desc">即使不在沉浸模式，也让浏览器主窗口保持在其他窗口上方</span>
+                                <span class="toggle-label" data-i18n="settings.windowBehavior.alwaysOnTop.label">浏览器窗口始终置顶</span>
+                                <span class="toggle-desc" data-i18n="settings.windowBehavior.alwaysOnTop.desc">即使不在沉浸模式，也让浏览器主窗口保持在其他窗口上方</span>
                             </div>
                             <div class="toggle-switch" id="always-on-top-toggle"></div>
                         </div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.windowBehavior.immersion.cardTitle">
                             <i class="material-icons">privacy_tip</i>
                             沉浸行为
                         </div>
                         <div class="toggle-item">
                             <div class="toggle-info">
-                                <span class="toggle-label">隐藏时保护播放状态和快捷键</span>
-                                <span class="toggle-desc">触发老板键隐藏窗口后暂停视频，并只保留老板键快捷键用于恢复窗口</span>
+                                <span class="toggle-label" data-i18n="settings.windowBehavior.immersion.label">隐藏时保护播放状态和快捷键</span>
+                                <span class="toggle-desc" data-i18n="settings.windowBehavior.immersion.desc">触发老板键隐藏窗口后暂停视频，并只保留老板键快捷键用于恢复窗口</span>
                             </div>
                             <div class="toggle-switch" id="boss-key-protection-toggle"></div>
                         </div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.video.sectionTitle">
                             <i class="material-icons">movie</i>
                             视频控制
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label>快进时长 (秒)</label>
+                                <label data-i18n="settings.video.forwardLabel">快进时长 (秒)</label>
                                 <input type="number" id="video-forward-seconds" min="1" max="600" step="1">
                             </div>
                             <div class="form-group">
-                                <label>快退时长 (秒)</label>
+                                <label data-i18n="settings.video.backwardLabel">快退时长 (秒)</label>
                                 <input type="number" id="video-backward-seconds" min="1" max="600" step="1">
                             </div>
                             <div class="form-group">
-                                <label>长按快进倍速</label>
+                                <label data-i18n="settings.video.longPressRateLabel">长按快进倍速</label>
                                 <input type="number" id="video-long-press-rate" min="0.25" max="16" step="0.25">
                             </div>
                         </div>
@@ -124,12 +124,12 @@
 
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">尺寸与布局</div>
-                        <div class="settings-section-desc">保存常用窗口分辨率，快速切换不同观看场景。</div>
+                        <div class="settings-section-title" data-i18n="settings.layout.sectionTitle">尺寸与布局</div>
+                        <div class="settings-section-desc" data-i18n="settings.layout.sectionDesc">保存常用窗口分辨率，快速切换不同观看场景。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.layout.presetsCardTitle">
                             <i class="material-icons">aspect_ratio</i>
                             分辨率预设
                         </div>
@@ -137,58 +137,83 @@
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.layout.addPresetCardTitle">
                             <i class="material-icons">add_circle</i>
                             添加新预设
                         </div>
                         <div class="resolution-form">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>名称</label>
-                                    <input type="text" id="preset-name" placeholder="例如: 16:9 720P" maxlength="30">
+                                    <label data-i18n="settings.layout.nameLabel">名称</label>
+                                    <input
+                                        type="text"
+                                        id="preset-name"
+                                        data-i18n-placeholder="settings.layout.namePlaceholder"
+                                        placeholder="例如: 16:9 720P"
+                                        maxlength="30"
+                                    >
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>宽度 (px)</label>
-                                    <input type="number" id="preset-width" placeholder="例如: 1280" min="200" max="4000">
+                                    <label data-i18n="settings.layout.widthLabel">宽度 (px)</label>
+                                    <input
+                                        type="number"
+                                        id="preset-width"
+                                        data-i18n-placeholder="settings.layout.widthPlaceholder"
+                                        placeholder="例如: 1280"
+                                        min="200"
+                                        max="4000"
+                                    >
                                 </div>
                                 <div class="form-group">
-                                    <label>高度 (px)</label>
-                                    <input type="number" id="preset-height" placeholder="例如: 720" min="150" max="3000">
+                                    <label data-i18n="settings.layout.heightLabel">高度 (px)</label>
+                                    <input
+                                        type="number"
+                                        id="preset-height"
+                                        data-i18n-placeholder="settings.layout.heightPlaceholder"
+                                        placeholder="例如: 720"
+                                        min="150"
+                                        max="3000"
+                                    >
                                 </div>
                                 <div class="form-group aspect-ratio-group">
-                                    <label>纵横比锁定</label>
-                                    <button id="aspect-ratio-lock" class="aspect-lock-btn" title="锁定纵横比，修改一边会自动计算另一边">
+                                    <label data-i18n="settings.layout.aspectRatioLabel">纵横比锁定</label>
+                                    <button
+                                        id="aspect-ratio-lock"
+                                        class="aspect-lock-btn"
+                                        data-i18n-title="settings.layout.aspectRatioHint"
+                                        title="锁定纵横比，修改一边会自动计算另一边"
+                                    >
                                         <i class="material-icons">lock_open</i>
                                     </button>
                                 </div>
                             </div>
-                            <button id="add-preset-btn" class="btn btn-primary">添加预设</button>
+                            <button id="add-preset-btn" class="btn btn-primary" data-i18n="settings.layout.addPresetAction">添加预设</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="settings-panel" id="panel-sync">
-                <div class="panel-title">数据与同步</div>
+                <div class="panel-title" data-i18n="settings.sync.panelTitle">数据与同步</div>
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">书签</div>
-                        <div class="settings-section-desc">书签可单独上传或下载，适合只处理内容数据的场景。</div>
+                        <div class="settings-section-title" data-i18n="settings.bookmarks.sectionTitle">书签</div>
+                        <div class="settings-section-desc" data-i18n="settings.bookmarks.sectionDesc">书签可单独上传或下载，适合只处理内容数据的场景。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.bookmarks.cardTitle">
                             <i class="material-icons">bookmark</i>
                             书签同步
                         </div>
                         <div class="git-actions">
-                            <button id="sync-bookmarks-btn" class="btn btn-secondary">
+                            <button id="sync-bookmarks-btn" class="btn btn-secondary" data-i18n="settings.sync.uploadBookmarks">
                                 <i class="material-icons">bookmark</i>
                                 仅上传书签
                             </button>
-                            <button id="pull-bookmarks-btn" class="btn btn-secondary">
+                            <button id="pull-bookmarks-btn" class="btn btn-secondary" data-i18n="settings.sync.downloadBookmarks">
                                 <i class="material-icons">bookmark</i>
                                 仅下载书签
                             </button>
@@ -198,53 +223,68 @@
 
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">Git 同步</div>
-                        <div class="settings-section-desc">使用 GitHub 仓库存放配置快照和书签记录。</div>
+                        <div class="settings-section-title" data-i18n="settings.git.sectionTitle">Git 同步</div>
+                        <div class="settings-section-desc" data-i18n="settings.git.sectionDesc">使用 GitHub 仓库存放配置快照和书签记录。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.git.cardTitle">
                             <i class="material-icons">settings_input_component</i>
                             Git 配置
                         </div>
                         <div class="form-group">
-                            <label>GitHub PAT</label>
-                            <input type="password" id="git-pat" placeholder="输入 GitHub Personal Access Token">
+                            <label data-i18n="settings.git.patLabel">GitHub PAT</label>
+                            <input
+                                type="password"
+                                id="git-pat"
+                                data-i18n-placeholder="settings.git.patPlaceholder"
+                                placeholder="输入 GitHub Personal Access Token"
+                            >
                         </div>
                         <div class="form-group">
-                            <label>远程仓库地址 (HTTPS)</label>
+                            <label data-i18n="settings.git.remoteLabel">远程仓库地址 (HTTPS)</label>
                             <input type="text" id="git-remote" placeholder="https://github.com/username/repo.git">
                         </div>
                         <div class="form-group">
-                            <label>Git 用户名</label>
-                            <input type="text" id="git-name" placeholder="例如: YourName">
+                            <label data-i18n="settings.git.nameLabel">Git 用户名</label>
+                            <input
+                                type="text"
+                                id="git-name"
+                                data-i18n-placeholder="settings.git.namePlaceholder"
+                                placeholder="例如: YourName"
+                            >
                         </div>
                         <div class="form-group">
-                            <label>Git 邮箱</label>
-                            <input type="email" id="git-email" placeholder="例如: email@example.com">
+                            <label data-i18n="settings.git.emailLabel">Git 邮箱</label>
+                            <input
+                                type="email"
+                                id="git-email"
+                                data-i18n-placeholder="settings.git.emailPlaceholder"
+                                placeholder="例如: email@example.com"
+                            >
                         </div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.syncAll.cardTitle">
                             <i class="material-icons">cloud_upload</i>
                             配置与书签总同步
                         </div>
                         <div class="sync-info">
-                            <p>同步内容包括：</p>
+                            <p data-i18n="settings.syncAll.includesLabel">同步内容包括：</p>
                             <ul>
-                                <li>快捷键配置</li>
-                                <li>窗口边界设置</li>
-                                <li>分辨率预设</li>
-                                <li>书签记录</li>
+                                <li data-i18n="settings.syncAll.includeShortcuts">快捷键配置</li>
+                                <li data-i18n="settings.syncAll.includeWindowBounds">窗口边界设置</li>
+                                <li data-i18n="settings.syncAll.includeResolutionPresets">分辨率预设</li>
+                                <li data-i18n="settings.syncAll.includeBookmarks">书签记录</li>
                             </ul>
                         </div>
                         <div class="git-actions">
-                            <button id="sync-all-btn" class="btn btn-primary">
+                            <button id="sync-all-btn" class="btn btn-primary" data-i18n="settings.sync.uploadAll">
                                 <i class="material-icons">cloud_upload</i>
                                 上传所有配置到云端
                             </button>
-                            <button id="pull-all-btn" class="btn btn-warning">
+                            <button id="pull-all-btn" class="btn btn-warning" data-i18n="settings.sync.downloadAll">
                                 <i class="material-icons">cloud_download</i>
                                 从云端下载覆盖本地
                             </button>
@@ -254,15 +294,35 @@
             </div>
 
             <div class="settings-panel" id="panel-system">
-                <div class="panel-title">系统与维护</div>
+                <div class="panel-title" data-i18n="settings.system.panelTitle">系统与维护</div>
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">系统更新</div>
-                        <div class="settings-section-desc">检查版本、下载更新，并在准备好时触发安装。</div>
+                        <div class="settings-section-title" data-i18n="settings.language.sectionTitle">语言</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.language.cardTitle">
+                            <i class="material-icons">translate</i>
+                            界面语言
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="settings.language.currentLabel">当前语言</label>
+                            <select id="language-select">
+                                <option value="zh-CN" data-i18n="settings.language.optionZhCN">简体中文</option>
+                                <option value="en-US" data-i18n="settings.language.optionEnUS">English</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-header">
+                        <div class="settings-section-title" data-i18n="settings.update.sectionTitle">系统更新</div>
+                        <div class="settings-section-desc" data-i18n="settings.update.sectionDesc">检查版本、下载更新，并在准备好时触发安装。</div>
+                    </div>
+
+                    <div class="settings-card">
+                        <div class="card-title" data-i18n="settings.update.cardTitle">
                             <i class="material-icons">system_update</i>
                             软件更新
                         </div>
@@ -270,18 +330,18 @@
                             <div class="version-info">
                                 <i class="material-icons">new_releases</i>
                                 <div class="version-text">
-                                    <span class="version-label">当前版本</span>
+                                    <span class="version-label" data-i18n="settings.update.versionLabel">当前版本</span>
                                     <span class="version-number" id="version-number">v1.0.0</span>
                                 </div>
                             </div>
-                            <div class="update-status" id="update-status">点击下方按钮检查更新</div>
+                            <div class="update-status" id="update-status" data-i18n="settings.update.idleStatus">点击下方按钮检查更新</div>
                             <div class="update-progress" id="update-progress-container">
                                 <div class="update-progress-bar" id="update-progress-bar"></div>
                             </div>
                             <div class="update-actions">
-                                <button id="check-update-btn" class="btn btn-secondary">检查更新</button>
-                                <button id="download-update-btn" class="btn btn-primary hidden">下载更新</button>
-                                <button id="install-update-btn" class="btn btn-success hidden">立即安装</button>
+                                <button id="check-update-btn" class="btn btn-secondary" data-i18n="settings.update.checkAction">检查更新</button>
+                                <button id="download-update-btn" class="btn btn-primary hidden" data-i18n="settings.update.downloadAction">下载更新</button>
+                                <button id="install-update-btn" class="btn btn-success hidden" data-i18n="settings.update.installAction">立即安装</button>
                             </div>
                         </div>
                     </div>
@@ -289,19 +349,19 @@
 
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">调试</div>
-                        <div class="settings-section-desc">需要排查问题时，再开启额外日志输出。</div>
+                        <div class="settings-section-title" data-i18n="settings.debug.sectionTitle">调试</div>
+                        <div class="settings-section-desc" data-i18n="settings.debug.sectionDesc">需要排查问题时，再开启额外日志输出。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.debug.cardTitle">
                             <i class="material-icons">bug_report</i>
                             调试模式
                         </div>
                         <div class="toggle-item">
                             <div class="toggle-info">
-                                <span class="toggle-label">启用调试日志</span>
-                                <span class="toggle-desc">在控制台输出窗口位置和大小相关的调试信息</span>
+                                <span class="toggle-label" data-i18n="settings.debug.toggleLabel">启用调试日志</span>
+                                <span class="toggle-desc" data-i18n="settings.debug.toggleDesc">在控制台输出窗口位置和大小相关的调试信息</span>
                             </div>
                             <div class="toggle-switch" id="debug-mode-toggle"></div>
                         </div>
@@ -310,52 +370,52 @@
 
                 <div class="settings-section">
                     <div class="settings-section-header">
-                        <div class="settings-section-title">缓存清理</div>
-                        <div class="settings-section-desc">重置配置和日志前，先明确影响范围，避免误清理常用数据。</div>
+                        <div class="settings-section-title" data-i18n="settings.cache.sectionTitle">缓存清理</div>
+                        <div class="settings-section-desc" data-i18n="settings.cache.sectionDesc">重置配置和日志前，先明确影响范围，避免误清理常用数据。</div>
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.cache.cardTitle">
                             <i class="material-icons">delete_forever</i>
                             清理缓存文件
                         </div>
                         <div class="cache-section">
                             <div class="toggle-item">
                                 <div class="toggle-info">
-                                    <span class="toggle-label">日志文件</span>
-                                    <span class="toggle-desc">清理所有日志文件，包括主日志和调试日志</span>
+                                    <span class="toggle-label" data-i18n="settings.cache.logsLabel">日志文件</span>
+                                    <span class="toggle-desc" data-i18n="settings.cache.logsDesc">清理所有日志文件，包括主日志和调试日志</span>
                                 </div>
                                 <div class="toggle-switch" id="clear-logs-toggle"></div>
                             </div>
 
                             <div class="toggle-item">
                                 <div class="toggle-info">
-                                    <span class="toggle-label">快捷键配置</span>
-                                    <span class="toggle-desc">重置所有快捷键配置为默认值</span>
+                                    <span class="toggle-label" data-i18n="settings.cache.shortcutsLabel">快捷键配置</span>
+                                    <span class="toggle-desc" data-i18n="settings.cache.shortcutsDesc">重置所有快捷键配置为默认值</span>
                                 </div>
                                 <div class="toggle-switch" id="clear-key-config-toggle"></div>
                             </div>
 
                             <div class="toggle-item">
                                 <div class="toggle-info">
-                                    <span class="toggle-label">窗口配置</span>
-                                    <span class="toggle-desc">重置窗口位置、大小和透明度为默认值</span>
+                                    <span class="toggle-label" data-i18n="settings.cache.windowLabel">窗口配置</span>
+                                    <span class="toggle-desc" data-i18n="settings.cache.windowDesc">重置窗口位置、大小和透明度为默认值</span>
                                 </div>
                                 <div class="toggle-switch" id="clear-window-config-toggle"></div>
                             </div>
 
                             <div class="toggle-item">
                                 <div class="toggle-info">
-                                    <span class="toggle-label">应用配置</span>
-                                    <span class="toggle-desc">重置应用设置，包括调试模式</span>
+                                    <span class="toggle-label" data-i18n="settings.cache.appLabel">应用配置</span>
+                                    <span class="toggle-desc" data-i18n="settings.cache.appDesc">重置应用设置，包括调试模式</span>
                                 </div>
                                 <div class="toggle-switch" id="clear-app-config-toggle"></div>
                             </div>
 
                             <div class="toggle-item">
                                 <div class="toggle-info">
-                                    <span class="toggle-label">分辨率预设</span>
-                                    <span class="toggle-desc">重置所有分辨率预设为默认值</span>
+                                    <span class="toggle-label" data-i18n="settings.cache.resolutionLabel">分辨率预设</span>
+                                    <span class="toggle-desc" data-i18n="settings.cache.resolutionDesc">重置所有分辨率预设为默认值</span>
                                 </div>
                                 <div class="toggle-switch" id="clear-resolution-presets-toggle"></div>
                             </div>
@@ -363,20 +423,20 @@
                     </div>
 
                     <div class="settings-card">
-                        <div class="card-title">
+                        <div class="card-title" data-i18n="settings.cache.confirmCardTitle">
                             <i class="material-icons">warning</i>
                             操作确认
                         </div>
                         <div class="cache-actions">
                             <div class="cache-warning">
                                 <span class="warning-icon">⚠️</span>
-                                <span class="warning-text">注意：清理配置文件后需要重启应用才能生效</span>
+                                <span class="warning-text" data-i18n="settings.cache.restartNotice">注意：清理配置文件后需要重启应用才能生效</span>
                             </div>
                             <div class="auto-restart-info">
                                 <i class="material-icons">autorenew</i>
-                                <span>应用将在保存后自动重启</span>
+                                <span data-i18n="settings.cache.autoRestart">应用将在保存后自动重启</span>
                             </div>
-                            <button id="cache-clear-btn" class="btn btn-success">开始清理</button>
+                            <button id="cache-clear-btn" class="btn btn-success" data-i18n="settings.cache.startAction">开始清理</button>
                         </div>
                     </div>
                 </div>
@@ -387,8 +447,8 @@
     </div>
 
     <div class="save-bar">
-        <button id="cancel-btn" class="btn btn-secondary">取消</button>
-        <button id="save-btn" class="btn btn-primary">保存设置</button>
+        <button id="cancel-btn" class="btn btn-secondary" data-i18n="common.actions.cancel">取消</button>
+        <button id="save-btn" class="btn btn-primary" data-i18n="settings.actions.save">保存设置</button>
     </div>
 
     <script src="js/settings.js"></script>

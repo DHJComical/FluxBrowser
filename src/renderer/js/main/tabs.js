@@ -1,6 +1,7 @@
 const { ipcRenderer } = require("electron");
 const { webviewStack } = require("./dom");
 const debugLog = require("./debug");
+const { t } = require("../shared/i18n");
 const {
 	state,
 	setTabsState,
@@ -39,6 +40,7 @@ const STARTUP_PAUSE_VIDEO_SCRIPT = `
 `;
 
 const STARTUP_PAUSE_DELAYS = [0, 500, 1500, 3000];
+const HYDRATE_RETRY_LIMIT = 10;
 const startupMutedWebviews = new WeakMap();
 const startupPauseScheduledWebviews = new WeakSet();
 
@@ -154,7 +156,7 @@ function createWebview(tab) {
 		ipcRenderer.send("update-tab", {
 			tabId: tab.id,
 			patch: {
-				title: webview.getTitle() || "当前页面",
+				title: webview.getTitle() || t("main.tabs.currentPage"),
 			},
 		});
 	});
@@ -179,7 +181,7 @@ function createWebview(tab) {
 			},
 		});
 		if (tab.id === state.activeTabId) {
-			setWindowStatus("页面加载中", "loading");
+			setWindowStatus("main.tabs.loadingStatus", "loading");
 		}
 	});
 
@@ -188,7 +190,7 @@ function createWebview(tab) {
 		ipcRenderer.send("update-tab", {
 			tabId: tab.id,
 			patch: {
-				title: webview.getTitle() || "当前页面",
+				title: webview.getTitle() || t("main.tabs.currentPage"),
 				url: webview.getURL() || tab.url,
 				isLoading: false,
 				canGoBack: webview.canGoBack(),
@@ -197,7 +199,7 @@ function createWebview(tab) {
 		});
 		if (tab.id === state.activeTabId) {
 			syncActiveTabUi();
-			setWindowStatus("页面已就绪", "ready", { autoReset: true });
+			setWindowStatus("main.tabs.readyStatus", "ready", { autoReset: true });
 		}
 	};
 
@@ -215,7 +217,7 @@ function createWebview(tab) {
 			},
 		});
 		if (tab.id === state.activeTabId) {
-			setWindowStatus("页面加载失败", "error", {
+			setWindowStatus("main.tabs.loadFailedStatus", "error", {
 				autoReset: true,
 				resetDelay: 2200,
 			});
@@ -263,15 +265,25 @@ function renderTabsState(nextState) {
 	syncActiveTabUi();
 }
 
-async function hydrateTabsState() {
-	const tabsState = await ipcRenderer.invoke("get-tabs-state");
-	markStartupPauseTabs((tabsState.tabs || []).map((tab) => tab.id));
-	markStartupBackgroundMutedTabs(
-		(tabsState.tabs || [])
-			.filter((tab) => tab.id !== tabsState.activeTabId)
-			.map((tab) => tab.id),
-	);
-	renderTabsState(tabsState);
+async function hydrateTabsState(attempt = 0) {
+	try {
+		const tabsState = await ipcRenderer.invoke("get-tabs-state");
+		markStartupPauseTabs((tabsState.tabs || []).map((tab) => tab.id));
+		markStartupBackgroundMutedTabs(
+			(tabsState.tabs || [])
+				.filter((tab) => tab.id !== tabsState.activeTabId)
+				.map((tab) => tab.id),
+		);
+		renderTabsState(tabsState);
+	} catch (error) {
+		debugLog.warn("hydrate tabs state failed", error);
+		if (attempt >= HYDRATE_RETRY_LIMIT) {
+			return;
+		}
+		setTimeout(() => {
+			hydrateTabsState(attempt + 1);
+		}, 150 * (attempt + 1));
+	}
 }
 
 function bindTabsEvents() {
@@ -304,6 +316,10 @@ function bindTabsEvents() {
 
 		clearStartupBackgroundMutedTab(tabId);
 		syncStartupBackgroundMute(getWebview(tabId), tabId);
+	});
+
+	window.addEventListener("flux-language-changed", () => {
+		syncActiveTabUi();
 	});
 }
 

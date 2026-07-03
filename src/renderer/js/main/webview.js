@@ -2,6 +2,7 @@ const { ipcRenderer } = require("electron");
 const debugLog = require("./debug");
 const { getActiveWebview } = require("./tabs");
 const { syncActiveTabUi } = require("./activeTabUi");
+const { syncWindowStatusWithWebview } = require("./status");
 const {
 	state,
 	getWebview,
@@ -15,7 +16,7 @@ async function restoreOpacity() {
 	try {
 		const opacity = await ipcRenderer.invoke("get-opacity");
 		if (!hasLoggedInitialOpacity) {
-			debugLog.info("启动恢复透明度", opacity);
+			debugLog.info("logs.main.webview.restoreOpacityStart", opacity);
 			hasLoggedInitialOpacity = true;
 		}
 		setWebviewOpacity(opacity);
@@ -23,7 +24,7 @@ async function restoreOpacity() {
 			webview.style.opacity = opacity;
 		});
 	} catch (error) {
-		debugLog.error("恢复透明度失败", error);
+		debugLog.error("logs.main.webview.restoreOpacityFailed", error);
 	}
 }
 
@@ -40,7 +41,7 @@ function bindWebviewEvents() {
 			payload && typeof payload === "object" ? payload.tabId : undefined;
 		const code =
 			payload && typeof payload === "object" ? payload.code : payload;
-		debugLog.info("收到活动标签页脚本指令", code);
+		debugLog.info("logs.main.webview.receivedScriptCommand", code);
 		const webview = tabId ? getWebview(tabId) : getActiveWebview();
 		if (webview && code) {
 			webview.executeJavaScript(code);
@@ -53,6 +54,11 @@ function bindWebviewEvents() {
 
 	ipcRenderer.on("tabs-state-changed", () => {
 		syncActiveTabUi();
+	});
+
+	window.addEventListener("flux-language-changed", () => {
+		syncActiveTabUi();
+		syncWindowStatusWithWebview();
 	});
 
 	window.onerror = (message, url, line) => {

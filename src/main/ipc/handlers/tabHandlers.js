@@ -1,4 +1,5 @@
 const { sanitizeUrl } = require("../../TabStateManager");
+const { t } = require("../../i18n");
 
 function broadcastTabs(tabStateManager, broadcast) {
 	broadcast("tabs-state-changed", tabStateManager.getState());
@@ -28,7 +29,12 @@ function registerTabHandlers({
 			url: sanitizeUrl(input.url),
 			title: input.title,
 		});
-		logger.debug(`创建标签页: ${tab.id} -> ${tab.url}`);
+		logger.debug(
+			t("logs.tabs.create", {
+				tabId: tab.id,
+				url: tab.url,
+			}),
+		);
 		broadcastTabs(tabStateManager, broadcast);
 		sendActiveTabNavigation(tabStateManager, sendToMainWindow);
 		sendToMainWindow("focus-active-tab");
@@ -36,14 +42,22 @@ function registerTabHandlers({
 
 	ipcMain.on("close-tab", (_event, tabId) => {
 		tabStateManager.closeTab(tabId);
-		logger.debug(`关闭标签页: ${tabId}`);
+		logger.debug(
+			t("logs.tabs.close", {
+				tabId,
+			}),
+		);
 		broadcastTabs(tabStateManager, broadcast);
 		sendActiveTabNavigation(tabStateManager, sendToMainWindow);
 	});
 
 	ipcMain.on("activate-tab", (_event, tabId) => {
 		tabStateManager.activateTab(tabId);
-		logger.debug(`切换活动标签页: ${tabId}`);
+		logger.debug(
+			t("logs.tabs.activate", {
+				tabId,
+			}),
+		);
 		broadcastTabs(tabStateManager, broadcast);
 		sendActiveTabNavigation(tabStateManager, sendToMainWindow);
 	});
@@ -103,7 +117,11 @@ function registerTabHandlers({
 			code: payload.script,
 		});
 		sendToMainWindow("focus-active-tab");
-		logger.debug(`书签在新标签页中打开: ${tab.id}`);
+		logger.debug(
+			t("logs.tabs.openBookmark", {
+				tabId: tab.id,
+			}),
+		);
 	});
 }
 

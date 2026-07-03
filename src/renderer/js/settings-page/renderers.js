@@ -2,6 +2,7 @@ const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const state = require("./state");
 const { labelMap } = require("./constants");
+const { t } = require("../shared/i18n");
 
 function setUpdateProgress(percent) {
 	const progressContainer = document.getElementById(
@@ -63,25 +64,42 @@ function updateVideoControlInputs() {
 	}
 }
 
+function renderLanguageOptions() {
+	if (!dom.languageSelect) return;
+
+	const options = Array.from(dom.languageSelect.options);
+	options.forEach((option) => {
+		if (option.value === "zh-CN") {
+			option.textContent = t("locale.zh-CN");
+			return;
+		}
+		if (option.value === "en-US") {
+			option.textContent = t("locale.en-US");
+		}
+	});
+}
+
 function renderShortcuts() {
 	if (!dom.shortcutList) return;
 	dom.shortcutList.innerHTML = "";
 	Object.entries(state.tempKeyMap).forEach(([id, key]) => {
 		const div = document.createElement("div");
 		div.className = "shortcut-item";
-		div.innerHTML = `<span>${labelMap[id] || id}</span><input type="text" class="shortcut-input" value="${key}" readonly>`;
+		div.innerHTML = `<span>${t(labelMap[id] || id)}</span><input type="text" class="shortcut-input" value="${key}" readonly>`;
 		const input = div.querySelector("input");
 
 		input.onfocus = () => {
 			ipcRenderer.send("suspend-shortcuts");
-			input.value = "请按键...";
+			input.value = t("settings.shortcuts.pressKey");
 			input.classList.add("recording");
 		};
 
 		input.onblur = () => {
 			ipcRenderer.send("resume-shortcuts");
 			input.classList.remove("recording");
-			if (input.value === "请按键...") input.value = state.tempKeyMap[id];
+			if (input.value === t("settings.shortcuts.pressKey")) {
+				input.value = state.tempKeyMap[id];
+			}
 		};
 
 		input.onkeydown = (event) => {
@@ -122,7 +140,9 @@ function renderShortcuts() {
 function renderResolutionPresets(debugLog) {
 	if (!dom.resolutionList) return;
 	debugLog.info(
-		`渲染分辨率预设，共有 ${state.tempResolutionPresets.length} 个预设`,
+		t("settings.log.resolutionRendered", {
+			count: state.tempResolutionPresets.length,
+		}),
 	);
 
 	dom.resolutionList.innerHTML = "";
@@ -136,8 +156,8 @@ function renderResolutionPresets(debugLog) {
 				<span class="preset-size">${preset.width} × ${preset.height} px</span>
 			</div>
 			<div class="preset-actions">
-				<button class="preset-btn use-btn" data-index="${index}">应用</button>
-				<button class="preset-btn delete-btn" data-index="${index}">删除</button>
+				<button class="preset-btn use-btn" data-index="${index}">${t("common.actions.apply")}</button>
+				<button class="preset-btn delete-btn" data-index="${index}">${t("common.actions.delete")}</button>
 			</div>
 		`;
 
@@ -146,7 +166,11 @@ function renderResolutionPresets(debugLog) {
 
 		useBtn.addEventListener("click", () => {
 			debugLog.info(
-				`应用分辨率预设: ${preset.name} (${preset.width} × ${preset.height})`,
+				t("settings.log.resolutionApply", {
+					name: preset.name,
+					width: preset.width,
+					height: preset.height,
+				}),
 			);
 			ipcRenderer.send("set-window-size", {
 				width: preset.width,
@@ -155,7 +179,11 @@ function renderResolutionPresets(debugLog) {
 		});
 
 		deleteBtn.addEventListener("click", () => {
-			debugLog.info(`删除分辨率预设: ${preset.name}`);
+			debugLog.info(
+				t("settings.log.resolutionDelete", {
+					name: preset.name,
+				}),
+			);
 			state.tempResolutionPresets.splice(index, 1);
 			renderResolutionPresets(debugLog);
 		});
@@ -186,6 +214,7 @@ module.exports = {
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
 	updateVideoControlInputs,
+	renderLanguageOptions,
 	renderShortcuts,
 	renderResolutionPresets,
 	updateAspectLockButton,

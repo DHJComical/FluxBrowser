@@ -1,3 +1,5 @@
+const { t } = require("../../i18n");
+
 function registerLiveSubtitleHandlers({
 	ipcMain,
 	liveSubtitleMonitor,
@@ -29,17 +31,19 @@ function registerLiveSubtitleHandlers({
 	ipcMain.on("toggle-live-subtitle-capture", () => {
 		const state = liveSubtitleMonitor.toggle();
 		logger.debug(
-			`实时字幕采集状态已切换: ${state.enabled ? "enabled" : "disabled"}`,
+			t("logs.liveSubtitle.stateToggled", {
+				enabled: state.enabled ? "enabled" : "disabled",
+			}),
 		);
 	});
 
 	ipcMain.on("set-live-subtitle-keyword-config", (_event, config = {}) => {
 		const nextConfig = subtitleKeywordDetector.saveConfig(config);
-		subtitleKeywordDetector.handleSnapshot(
-			liveSubtitleMonitor.getLatestSnapshot(),
-		);
+		subtitleKeywordDetector.handleSnapshot(liveSubtitleMonitor.getLatestSnapshot());
 		logger.debug(
-			`字幕关键字规则已更新: ${nextConfig.rules.length} 条`,
+			t("logs.liveSubtitle.rulesUpdated", {
+				count: nextConfig.rules.length,
+			}),
 		);
 	});
 

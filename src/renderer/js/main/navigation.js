@@ -25,19 +25,21 @@ function navigate() {
 
 	const url = normalizeUrl(urlInput.value);
 	if (!url) {
-		showToast("请输入有效的网址后再前往。", {
+		showToast(t("main.navigation.invalidUrlMessage"), {
 			type: "warning",
-			title: "地址为空",
+			title: t("main.navigation.invalidUrlTitle"),
 		});
 		return;
 	}
 
-	setWindowStatus("正在前往页面", "loading");
+	setWindowStatus("main.navigation.navigating", "loading");
 	ipcRenderer.send("navigate-tab", { tabId: activeTab.id, url });
 }
 
 function bindNavigationEvents() {
-	setWindowStatus("已恢复标签会话", "idle", { autoReset: true });
+	setWindowStatus("main.navigation.restoredSession", "idle", {
+		autoReset: true,
+	});
 
 	goBtn.onclick = navigate;
 	urlInput.onkeydown = (event) => {
@@ -48,10 +50,12 @@ function bindNavigationEvents() {
 		const webview = getActiveWebview();
 		if (webview && webview.canGoBack()) {
 			webview.goBack();
-			setWindowStatus("已返回上一页", "idle", { autoReset: true });
-			debugLog.info("执行网页后退操作");
+			setWindowStatus("main.navigation.wentBack", "idle", { autoReset: true });
+			debugLog.info("logs.main.navigation.goBack");
 		} else {
-			setWindowStatus("已经在起始页", "idle", { autoReset: true });
+			setWindowStatus("main.navigation.atFirstPage", "idle", {
+				autoReset: true,
+			});
 		}
 	});
 
@@ -59,10 +63,14 @@ function bindNavigationEvents() {
 		const webview = getActiveWebview();
 		if (webview && webview.canGoForward()) {
 			webview.goForward();
-			setWindowStatus("已前往下一页", "idle", { autoReset: true });
-			debugLog.info("执行网页前进操作");
+			setWindowStatus("main.navigation.wentForward", "idle", {
+				autoReset: true,
+			});
+			debugLog.info("logs.main.navigation.goForward");
 		} else {
-			setWindowStatus("已经在最新页", "idle", { autoReset: true });
+			setWindowStatus("main.navigation.atLatestPage", "idle", {
+				autoReset: true,
+			});
 		}
 	});
 

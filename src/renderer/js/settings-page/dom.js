@@ -16,6 +16,7 @@ module.exports = {
 	gitRemoteInput: document.getElementById("git-remote"),
 	gitNameInput: document.getElementById("git-name"),
 	gitEmailInput: document.getElementById("git-email"),
+	languageSelect: document.getElementById("language-select"),
 	videoForwardSecondsInput: document.getElementById("video-forward-seconds"),
 	videoBackwardSecondsInput: document.getElementById("video-backward-seconds"),
 	videoLongPressRateInput: document.getElementById("video-long-press-rate"),

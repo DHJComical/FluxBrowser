@@ -1,4 +1,5 @@
 const { BrowserWindow } = require("electron");
+const { t } = require("../i18n");
 const {
 	getCenteredPosition,
 	getRendererPath,
@@ -18,7 +19,7 @@ function createSettingsWindow({ parentWindow, onClosed }) {
 		minWidth: 820,
 		minHeight: 560,
 		parent: parentWindow,
-		title: "FluxBrowser 设置",
+		title: t("windows.settings.title"),
 		icon: getWindowIconPath(),
 		backgroundColor: "#1e1e1e",
 		webPreferences: {

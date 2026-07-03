@@ -1,4 +1,5 @@
 const dom = require("./dom");
+const { t } = require("../shared/i18n");
 const {
 	formatTime,
 	formatDurationLabel,
@@ -11,9 +12,9 @@ function createEmptyState(keyword) {
 	emptyState.className = "empty-state";
 	emptyState.innerHTML = `
 		<i class="material-icons">auto_stories</i>
-		<h2>${keyword ? "没有匹配的书签" : "还没有继续观看记录"}</h2>
+		<h2>${keyword ? t("bookmarks.empty.matchTitle") : t("bookmarks.empty.defaultTitle")}</h2>
 		<p>
-			${keyword ? "试试更换关键词，或者清空搜索条件后重新查看。" : "你在主窗口添加书签后，这里会展示可继续观看的内容。"}
+			${keyword ? t("bookmarks.empty.matchDescription") : t("bookmarks.empty.defaultDescription")}
 		</p>
 	`;
 	return emptyState;
@@ -24,8 +25,8 @@ function createBookmarkItem(entry, handlers) {
 	const div = document.createElement("article");
 	div.className = "bookmark-item";
 
-	const title = bookmark.title || "未命名页面";
-	const url = bookmark.url || "无来源地址";
+	const title = bookmark.title || t("bookmarks.item.untitled");
+	const url = bookmark.url || t("bookmarks.item.noUrl");
 	const savedAt = formatBookmarkDate(bookmark.timestamp);
 	const progress = formatTime(bookmark.time);
 
@@ -41,11 +42,11 @@ function createBookmarkItem(entry, handlers) {
 					<div class="bookmark-badges">
 						<span class="bookmark-badge">
 							<i class="material-icons">schedule</i>
-							进度 ${progress}
+							${t("bookmarks.item.progress", { progress })}
 						</span>
 						<span class="bookmark-badge">
 							<i class="material-icons">event</i>
-							保存于 ${savedAt}
+							${t("bookmarks.item.savedAt", { savedAt })}
 						</span>
 					</div>
 				</div>
@@ -56,10 +57,10 @@ function createBookmarkItem(entry, handlers) {
 			</div>
 		</div>
 		<div class="bookmark-actions">
-			<button class="bookmark-btn open" data-index="${originalIndex}" title="继续播放">
+			<button class="bookmark-btn open" data-index="${originalIndex}" title="${t("bookmarks.item.open")}">
 				<i class="material-icons">play_arrow</i>
 			</button>
-			<button class="bookmark-btn delete" data-index="${originalIndex}" title="删除书签">
+			<button class="bookmark-btn delete" data-index="${originalIndex}" title="${t("bookmarks.item.delete")}">
 				<i class="material-icons">delete</i>
 			</button>
 		</div>
@@ -114,7 +115,9 @@ function renderBookmarks(entries, sourceBookmarks, handlers, keyword = "") {
 
 	renderSummary(sourceBookmarks);
 	dom.bookmarkList.innerHTML = "";
-	dom.resultsCount.textContent = `${entries.length} 条记录`;
+	dom.resultsCount.textContent = t("bookmarks.results.count", {
+		count: entries.length,
+	});
 
 	if (entries.length === 0) {
 		dom.bookmarkList.appendChild(createEmptyState(keyword));

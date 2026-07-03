@@ -5,6 +5,7 @@ const {
 	getRegisteredShortcutsMap,
 } = require("./shortcutUtils");
 const { forEachPluginShortcut } = require("./shortcutPluginOps");
+const { t } = require("../i18n");
 
 class ShortcutManager {
 	constructor(core, pluginLoader, logger) {
@@ -18,7 +19,7 @@ class ShortcutManager {
 	reloadShortcuts() {
 		this.unregisterAllShortcuts();
 		this.reloadPluginShortcuts();
-		this.logger.debug("快捷键重载完成");
+		this.logger.debug("logs.shortcuts.reloadComplete");
 	}
 
 	reloadPluginShortcuts(options = {}) {
@@ -63,7 +64,11 @@ class ShortcutManager {
 		try {
 			// 检查快捷键是否已经被注册
 			if (this.registeredShortcuts.has(key)) {
-				this.logger.debug(`快捷键 ${key} 已被注册，跳过`);
+				this.logger.debug(
+					t("logs.shortcuts.alreadyRegistered", {
+						key,
+					}),
+				);
 				return false;
 			}
 
@@ -72,20 +77,40 @@ class ShortcutManager {
 				try {
 					actionFunc(this.core);
 				} catch (error) {
-					this.logger.error(`执行快捷键 ${key} (${actionId}) 时出错:`, error);
+					this.logger.error(
+						t("logs.shortcuts.handlerError", {
+							key,
+							actionId,
+						}),
+						error,
+					);
 				}
 			});
 
 			if (success) {
 				this.registeredShortcuts.set(key, actionId);
-				this.logger.debug(`注册成功: [${actionId}] -> ${key}`);
+				this.logger.debug(
+					t("logs.shortcuts.registerSuccess", {
+						actionId,
+						key,
+					}),
+				);
 				return true;
 			} else {
-				this.logger.error(`注册失败: ${key} (可能已被其他应用占用)`);
+				this.logger.error(
+					t("logs.shortcuts.registerFailed", {
+						key,
+					}),
+				);
 				return false;
 			}
 		} catch (error) {
-			this.logger.error(`注册快捷键 ${key} 时出错:`, error);
+			this.logger.error(
+				t("logs.shortcuts.registerError", {
+					key,
+				}),
+				error,
+			);
 			return false;
 		}
 	}
@@ -96,12 +121,21 @@ class ShortcutManager {
 			if (globalShortcut.isRegistered(key)) {
 				globalShortcut.unregister(key);
 				this.registeredShortcuts.delete(key);
-				this.logger.debug(`注销快捷键: ${key}`);
+				this.logger.debug(
+					t("logs.shortcuts.unregisterSuccess", {
+						key,
+					}),
+				);
 				return true;
 			}
 			return false;
 		} catch (error) {
-			this.logger.error(`注销快捷键 ${key} 时出错:`, error);
+			this.logger.error(
+				t("logs.shortcuts.unregisterError", {
+					key,
+				}),
+				error,
+			);
 			return false;
 		}
 	}
@@ -111,10 +145,10 @@ class ShortcutManager {
 		try {
 			globalShortcut.unregisterAll();
 			this.registeredShortcuts.clear();
-			this.logger.debug("所有快捷键已注销");
+			this.logger.debug("logs.shortcuts.unregisterAllSuccess");
 			return true;
 		} catch (error) {
-			this.logger.error("注销所有快捷键时出错:", error);
+			this.logger.error("logs.shortcuts.unregisterAllError", error);
 			return false;
 		}
 	}
@@ -137,7 +171,7 @@ class ShortcutManager {
 	// 暂停所有快捷键（临时禁用）
 	suspendShortcuts() {
 		this.unregisterAllShortcuts();
-		this.logger.debug("快捷键已暂停");
+		this.logger.debug("logs.shortcuts.suspended");
 	}
 
 	// 暂停除指定动作外的快捷键
@@ -149,14 +183,16 @@ class ShortcutManager {
 			}
 		}
 		this.logger.debug(
-			`快捷键已部分暂停，保留: ${Array.from(preservedActionIds).join(", ")}`,
+			t("logs.shortcuts.suspendedPartial", {
+				actionIds: Array.from(preservedActionIds).join(", "),
+			}),
 		);
 	}
 
 	// 恢复快捷键
 	resumeShortcuts() {
 		this.reloadShortcuts();
-		this.logger.debug("快捷键已恢复");
+		this.logger.debug("logs.shortcuts.resumed");
 	}
 
 	// 恢复除指定动作外的快捷键
@@ -164,7 +200,9 @@ class ShortcutManager {
 		const skippedActionIds = new Set(actionIds);
 		this.reloadPluginShortcuts({ skipActionIds: skippedActionIds });
 		this.logger.debug(
-			`快捷键已部分恢复，跳过: ${Array.from(skippedActionIds).join(", ")}`,
+			t("logs.shortcuts.resumedPartial", {
+				actionIds: Array.from(skippedActionIds).join(", "),
+			}),
 		);
 	}
 

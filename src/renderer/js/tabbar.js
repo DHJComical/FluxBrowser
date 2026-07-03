@@ -1,7 +1,9 @@
 const { ipcRenderer } = require("electron");
+const { initI18n, t } = require("./js/shared/i18n");
 
 const strip = document.getElementById("tabbar-strip");
 const addBtn = document.getElementById("tabbar-add-btn");
+const HYDRATE_RETRY_LIMIT = 10;
 
 let tabsState = {
 	tabs: [],
@@ -32,16 +34,16 @@ function buildTabElement(tab) {
 	element.className = "tab-pill";
 	element.dataset.tabId = tab.id;
 	element.classList.toggle("is-active", tab.id === tabsState.activeTabId);
-	element.title = tab.title || tab.url || "New tab";
+	element.title = tab.title || tab.url || t("main.tabs.newTab");
 
 	const title = document.createElement("span");
 	title.className = "tab-pill-title";
-	title.textContent = tab.title || tab.url || "New tab";
+	title.textContent = tab.title || tab.url || t("main.tabs.newTab");
 
 	const closeBtn = document.createElement("span");
 	closeBtn.className = "tab-pill-close material-icons";
 	closeBtn.textContent = "close";
-	closeBtn.title = "Close tab";
+	closeBtn.title = t("main.tabs.closeTab");
 
 	closeBtn.addEventListener("click", (event) => {
 		event.stopPropagation();
@@ -73,6 +75,7 @@ function scrollActiveTabIntoView() {
 }
 
 function renderTabs() {
+	if (!strip) return;
 	strip.innerHTML = "";
 	tabsState.tabs.forEach((tab) => {
 		strip.appendChild(buildTabElement(tab));
@@ -80,12 +83,25 @@ function renderTabs() {
 	requestAnimationFrame(scrollActiveTabIntoView);
 }
 
-async function hydrate() {
-	tabsState = await ipcRenderer.invoke("get-tabs-state");
-	renderTabs();
+async function hydrate(attempt = 0) {
+	try {
+		await initI18n();
+		tabsState = await ipcRenderer.invoke("get-tabs-state");
+		renderTabs();
+	} catch (error) {
+		console.error("tabbar hydrate failed:", error);
+		if (attempt >= HYDRATE_RETRY_LIMIT) {
+			return;
+		}
+		setTimeout(() => {
+			hydrate(attempt + 1);
+		}, 150 * (attempt + 1));
+	}
 }
 
 function bindEvents() {
+	if (!strip || !addBtn) return;
+
 	addBtn.addEventListener("click", () => {
 		ipcRenderer.send("create-tab");
 	});
@@ -104,6 +120,8 @@ function bindEvents() {
 		tabsState = nextState;
 		renderTabs();
 	});
+
+	window.addEventListener("flux-language-changed", renderTabs);
 
 }
 
