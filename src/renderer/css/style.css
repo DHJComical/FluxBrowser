@@ -395,6 +395,243 @@ body.immersion #webview-stack {
 	min-height: 240px;
 }
 
+.direction-indicator-panel {
+	width: 220px;
+	height: 220px;
+	min-width: 160px;
+	min-height: 160px;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.direction-indicator-shell {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	overflow: visible;
+}
+
+.direction-indicator-transform {
+	position: absolute;
+	inset: 14px;
+	pointer-events: none;
+}
+
+.direction-indicator-frame {
+	position: absolute;
+	inset: 0;
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	background: rgba(255, 255, 255, 0.01);
+}
+
+.direction-indicator-dial {
+	position: absolute;
+	inset: 18px;
+	border-radius: 50%;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	transform-origin: center;
+	pointer-events: none;
+}
+
+.direction-indicator-ring,
+.direction-indicator-cross,
+.direction-indicator-markers {
+	position: absolute;
+	inset: 0;
+}
+
+.direction-indicator-ring {
+	border-radius: 50%;
+	border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.direction-indicator-cross::before,
+.direction-indicator-cross::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	background: rgba(255, 255, 255, 0.14);
+	transform: translate(-50%, -50%);
+}
+
+.direction-indicator-cross::before {
+	width: 1px;
+	height: calc(100% - 22px);
+}
+
+.direction-indicator-cross::after {
+	width: calc(100% - 22px);
+	height: 1px;
+}
+
+.direction-indicator-handle,
+.direction-indicator-move,
+.direction-indicator-rotate {
+	position: absolute;
+	z-index: 4;
+	width: 10px;
+	height: 10px;
+	padding: 0;
+	border-radius: 50%;
+	border: 1px solid rgba(255, 255, 255, 0.55);
+	background: rgba(255, 255, 255, 0.035);
+	transform: translate(-50%, -50%);
+	pointer-events: auto;
+}
+
+.direction-indicator-handle:hover,
+.direction-indicator-move:hover,
+.direction-indicator-rotate:hover {
+	border-color: rgba(255, 255, 255, 0.88);
+	background: rgba(255, 255, 255, 0.08);
+}
+
+.direction-indicator-handle.handle-northwest {
+	left: 0;
+	top: 0;
+	cursor: nwse-resize;
+}
+
+.direction-indicator-handle.handle-north {
+	left: 50%;
+	top: 0;
+	cursor: ns-resize;
+}
+
+.direction-indicator-handle.handle-northeast {
+	left: 100%;
+	top: 0;
+	cursor: nesw-resize;
+}
+
+.direction-indicator-handle.handle-east {
+	left: 100%;
+	top: 50%;
+	cursor: ew-resize;
+}
+
+.direction-indicator-handle.handle-southeast {
+	left: 100%;
+	top: 100%;
+	cursor: nwse-resize;
+}
+
+.direction-indicator-handle.handle-south {
+	left: 50%;
+	top: 100%;
+	cursor: ns-resize;
+}
+
+.direction-indicator-handle.handle-southwest {
+	left: 0;
+	top: 100%;
+	cursor: nesw-resize;
+}
+
+.direction-indicator-handle.handle-west {
+	left: 0;
+	top: 50%;
+	cursor: ew-resize;
+}
+
+.direction-indicator-move {
+	left: 50%;
+	top: 50%;
+	width: 12px;
+	height: 12px;
+	cursor: move;
+}
+
+.direction-indicator-rotate-stem {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	width: 1px;
+	height: 18px;
+	background: rgba(255, 255, 255, 0.16);
+	transform: translate(-50%, -100%);
+	pointer-events: none;
+}
+
+.direction-indicator-rotate {
+	left: 50%;
+	top: -18px;
+	cursor: grab;
+}
+
+.direction-label {
+	position: absolute;
+	z-index: 2;
+	font-size: 11px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.36);
+	letter-spacing: 0.12em;
+	pointer-events: none;
+}
+
+.direction-label.north {
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.direction-label.east {
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.direction-label.south {
+	bottom: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.direction-label.west {
+	left: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.direction-hit-marker {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 10px;
+	height: 10px;
+	margin-left: -5px;
+	margin-top: -5px;
+	border-radius: 50%;
+	background: rgba(255, 70, 70, 0.18);
+	border: 1px solid rgba(255, 80, 80, 0.96);
+	box-shadow: 0 0 14px rgba(255, 48, 48, 0.42);
+	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
+		scale(0.72);
+	opacity: 0;
+	transition:
+		opacity 0.28s ease,
+		transform 0.28s ease,
+		box-shadow 0.28s ease;
+}
+
+.direction-hit-marker.is-active {
+	opacity: 1;
+	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
+		scale(1);
+}
+
+.direction-hit-marker.is-fading {
+	opacity: 0;
+	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
+		scale(0.92);
+	box-shadow: 0 0 0 rgba(255, 48, 48, 0);
+}
+
 .floating-panel-grip {
 	flex: 0 0 22px;
 	display: flex;
@@ -469,6 +706,15 @@ body.immersion .webview-panel {
 body.immersion .webview-panel .floating-panel-grip,
 body.immersion .webview-panel .floating-panel-resize {
 	display: none;
+}
+
+body.immersion .direction-indicator-transform {
+	display: none;
+}
+
+body.immersion .direction-indicator-panel,
+body.immersion .direction-indicator-panel * {
+	pointer-events: none !important;
 }
 
 .browser-webview {

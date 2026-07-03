@@ -62,9 +62,313 @@ function setInteractionShield(active, cursor = "") {
 	shield.style.cursor = cursor || "";
 }
 
+function getPanelMinWidth(panel) {
+	return Math.max(120, Math.round(Number(panel.dataset.minWidth) || 240));
+}
+
+function getPanelMinHeight(panel) {
+	return Math.max(120, Math.round(Number(panel.dataset.minHeight) || 120));
+}
+
+function getPanelResizeMode(panel) {
+	return panel.dataset.resizeMode || "free";
+}
+
+function isPanelInteractionLocked(panel) {
+	return (
+		panel &&
+		panel.dataset.panelId === "direction-indicator" &&
+		document.body.classList.contains("immersion")
+	);
+}
+
+function getResizeCursor(direction) {
+	switch (direction) {
+		case "north":
+		case "south":
+			return "ns-resize";
+		case "east":
+		case "west":
+			return "ew-resize";
+		case "northeast":
+		case "southwest":
+			return "nesw-resize";
+		case "northwest":
+		case "southeast":
+		default:
+			return "nwse-resize";
+	}
+}
+
+function getSquareResizePointerSize(resizeState, event) {
+	switch (resizeState.direction) {
+		case "east":
+			return event.clientX - resizeState.anchorX;
+		case "west":
+			return resizeState.anchorX - event.clientX;
+		case "south":
+			return event.clientY - resizeState.anchorY;
+		case "north":
+			return resizeState.anchorY - event.clientY;
+		case "northeast":
+			return Math.max(
+				event.clientX - resizeState.anchorX,
+				resizeState.anchorY - event.clientY,
+			);
+		case "northwest":
+			return Math.max(
+				resizeState.anchorX - event.clientX,
+				resizeState.anchorY - event.clientY,
+			);
+		case "southwest":
+			return Math.max(
+				resizeState.anchorX - event.clientX,
+				event.clientY - resizeState.anchorY,
+			);
+		case "southeast":
+		default:
+			return Math.max(
+				event.clientX - resizeState.anchorX,
+				event.clientY - resizeState.anchorY,
+			);
+	}
+}
+
+function getSquareResizeMaxSize(resizeState, minSize) {
+	const horizontalHalfSpan =
+		Math.min(
+			resizeState.centerX - FLOATING_PANEL_MARGIN,
+			window.innerWidth - resizeState.centerX - FLOATING_PANEL_MARGIN,
+		) * 2;
+	const verticalHalfSpan =
+		Math.min(
+			resizeState.centerY - FLOATING_PANEL_MARGIN,
+			window.innerHeight - resizeState.centerY - FLOATING_PANEL_MARGIN,
+		) * 2;
+
+	switch (resizeState.direction) {
+		case "east":
+			return Math.max(
+				minSize,
+				Math.min(
+					window.innerWidth - resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					verticalHalfSpan,
+				),
+			);
+		case "west":
+			return Math.max(
+				minSize,
+				Math.min(
+					resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					verticalHalfSpan,
+				),
+			);
+		case "south":
+			return Math.max(
+				minSize,
+				Math.min(
+					window.innerHeight - resizeState.anchorY - FLOATING_PANEL_MARGIN,
+					horizontalHalfSpan,
+				),
+			);
+		case "north":
+			return Math.max(
+				minSize,
+				Math.min(
+					resizeState.anchorY - FLOATING_PANEL_MARGIN,
+					horizontalHalfSpan,
+				),
+			);
+		case "northeast":
+			return Math.max(
+				minSize,
+				Math.min(
+					window.innerWidth - resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					resizeState.anchorY - FLOATING_PANEL_MARGIN,
+				),
+			);
+		case "northwest":
+			return Math.max(
+				minSize,
+				Math.min(
+					resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					resizeState.anchorY - FLOATING_PANEL_MARGIN,
+				),
+			);
+		case "southwest":
+			return Math.max(
+				minSize,
+				Math.min(
+					resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					window.innerHeight - resizeState.anchorY - FLOATING_PANEL_MARGIN,
+				),
+			);
+		case "southeast":
+		default:
+			return Math.max(
+				minSize,
+				Math.min(
+					window.innerWidth - resizeState.anchorX - FLOATING_PANEL_MARGIN,
+					window.innerHeight - resizeState.anchorY - FLOATING_PANEL_MARGIN,
+				),
+			);
+	}
+}
+
+function getSquareResizeBoundsFromSize(resizeState, size) {
+	switch (resizeState.direction) {
+		case "east":
+			return {
+				x: resizeState.anchorX,
+				y: resizeState.centerY - size / 2,
+				width: size,
+				height: size,
+			};
+		case "west":
+			return {
+				x: resizeState.anchorX - size,
+				y: resizeState.centerY - size / 2,
+				width: size,
+				height: size,
+			};
+		case "south":
+			return {
+				x: resizeState.centerX - size / 2,
+				y: resizeState.anchorY,
+				width: size,
+				height: size,
+			};
+		case "north":
+			return {
+				x: resizeState.centerX - size / 2,
+				y: resizeState.anchorY - size,
+				width: size,
+				height: size,
+			};
+		case "northeast":
+			return {
+				x: resizeState.anchorX,
+				y: resizeState.anchorY - size,
+				width: size,
+				height: size,
+			};
+		case "northwest":
+			return {
+				x: resizeState.anchorX - size,
+				y: resizeState.anchorY - size,
+				width: size,
+				height: size,
+			};
+		case "southwest":
+			return {
+				x: resizeState.anchorX - size,
+				y: resizeState.anchorY,
+				width: size,
+				height: size,
+			};
+		case "southeast":
+		default:
+			return {
+				x: resizeState.anchorX,
+				y: resizeState.anchorY,
+				width: size,
+				height: size,
+			};
+	}
+}
+
+function getSquareResizeBounds(panel, resizeState, event) {
+	const minWidth = getPanelMinWidth(panel);
+	const minHeight = getPanelMinHeight(panel);
+	const minSize = Math.max(minWidth, minHeight);
+	const nextSize = clamp(
+		getSquareResizePointerSize(resizeState, event),
+		minSize,
+		getSquareResizeMaxSize(resizeState, minSize),
+	);
+	const nextBounds = getSquareResizeBoundsFromSize(resizeState, nextSize);
+
+	return {
+		x: Math.round(nextBounds.x),
+		y: Math.round(nextBounds.y),
+		width: Math.round(nextBounds.width),
+		height: Math.round(nextBounds.height),
+	};
+}
+
+function createResizeState(bounds, direction, event) {
+	const right = bounds.x + bounds.width;
+	const bottom = bounds.y + bounds.height;
+	const centerX = bounds.x + bounds.width / 2;
+	const centerY = bounds.y + bounds.height / 2;
+	let anchorX = bounds.x;
+	let anchorY = bounds.y;
+
+	switch (direction) {
+		case "east":
+			anchorX = bounds.x;
+			anchorY = centerY;
+			break;
+		case "west":
+			anchorX = right;
+			anchorY = centerY;
+			break;
+		case "south":
+			anchorX = centerX;
+			anchorY = bounds.y;
+			break;
+		case "north":
+			anchorX = centerX;
+			anchorY = bottom;
+			break;
+		case "northeast":
+			anchorX = bounds.x;
+			anchorY = bottom;
+			break;
+		case "northwest":
+			anchorX = right;
+			anchorY = bottom;
+			break;
+		case "southwest":
+			anchorX = right;
+			anchorY = bounds.y;
+			break;
+		case "southeast":
+		default:
+			anchorX = bounds.x;
+			anchorY = bounds.y;
+			break;
+	}
+
+	return {
+		direction,
+		pointerX: event.clientX,
+		pointerY: event.clientY,
+		width: bounds.width,
+		height: bounds.height,
+		x: bounds.x,
+		y: bounds.y,
+		centerX,
+		centerY,
+		anchorX,
+		anchorY,
+	};
+}
+
 function resizePanel(panel, nextWidth, nextHeight) {
-	panel.style.width = `${Math.max(240, Math.round(nextWidth))}px`;
-	panel.style.height = `${Math.max(120, Math.round(nextHeight))}px`;
+	const minWidth = getPanelMinWidth(panel);
+	const minHeight = getPanelMinHeight(panel);
+	let width = Math.max(minWidth, Math.round(nextWidth));
+	let height = Math.max(minHeight, Math.round(nextHeight));
+
+	if (getPanelResizeMode(panel) === "square") {
+		const squareSize = Math.max(width, height, minWidth, minHeight);
+		width = squareSize;
+		height = squareSize;
+	}
+
+	panel.style.width = `${width}px`;
+	panel.style.height = `${height}px`;
 }
 
 function getPanelId(panel) {
@@ -187,15 +491,14 @@ function initializePanelPosition(panel) {
 
 	const persistedBounds = getPersistedBounds(panel);
 	if (persistedBounds) {
-		panel.style.width = `${Math.max(240, Math.round(persistedBounds.width || 0))}px`;
-		panel.style.height = `${Math.max(120, Math.round(persistedBounds.height || 0))}px`;
+		resizePanel(panel, persistedBounds.width || 0, persistedBounds.height || 0);
 		placePanel(panel, persistedBounds.x || 0, persistedBounds.y || 0);
 		panel.dataset.positioned = "true";
 		return;
 	}
 
 	const panelWidth = panel.offsetWidth || Math.min(960, window.innerWidth - 48);
-	const x = Math.max(FLOATING_PANEL_MARGIN, (window.innerWidth - panelWidth) / 2);
+	let x = Math.max(FLOATING_PANEL_MARGIN, (window.innerWidth - panelWidth) / 2);
 	let y = FLOATING_PANEL_MARGIN;
 
 	if (panel.dataset.panelId !== "mainbar") {
@@ -205,6 +508,13 @@ function initializePanelPosition(panel) {
 			window.innerHeight - FLOATING_PANEL_MARGIN,
 			mainbarRect.bottom + 18,
 		);
+
+		if (panel.dataset.panelId === "direction-indicator") {
+			x = Math.max(
+				FLOATING_PANEL_MARGIN,
+				window.innerWidth - panelWidth - FLOATING_PANEL_MARGIN * 2,
+			);
+		}
 	}
 
 	placePanel(panel, x, y);
@@ -219,6 +529,7 @@ function bindPanelDrag(panel) {
 
 	handle.addEventListener("mousedown", (event) => {
 		if (event.button !== 0) return;
+		if (isPanelInteractionLocked(panel)) return;
 		event.preventDefault();
 
 		const bounds = getPanelBounds(panel);
@@ -255,65 +566,67 @@ function bindPanelDrag(panel) {
 function bindPanelResize(panel) {
 	const handles = Array.from(panel.querySelectorAll("[data-resize-handle]"));
 	if (handles.length === 0) return;
+	let resizeState = null;
 
 	handles.forEach((handle) => {
 		handle.addEventListener("mousedown", (event) => {
 			if (event.button !== 0) return;
-			if (document.body.classList.contains("immersion")) return;
+			if (
+				(document.body.classList.contains("immersion") &&
+					panel.dataset.panelId !== "webview") ||
+				isPanelInteractionLocked(panel)
+			) {
+				return;
+			}
 			event.preventDefault();
 			event.stopPropagation();
 
 			const direction = handle.dataset.resizeHandle;
 			const bounds = getPanelBounds(panel);
-			activeResizeState = {
-				direction,
-				pointerX: event.clientX,
-				pointerY: event.clientY,
-				width: bounds.width,
-				height: bounds.height,
-				x: bounds.x,
-				y: bounds.y,
-			};
+			resizeState = createResizeState(bounds, direction, event);
+			activeResizeState = resizeState;
 			setMousePassthrough(false);
-			const cursor =
-				direction === "east"
-					? "e-resize"
-					: direction === "south"
-						? "s-resize"
-						: "se-resize";
-			setInteractionShield(true, cursor);
+			setInteractionShield(true, getResizeCursor(direction));
 			panel.classList.add("is-dragging");
 		});
 	});
 
 	window.addEventListener("mousemove", (event) => {
-		if (!activeResizeState) return;
-		if (activeResizeState.direction === "east") {
+		if (!resizeState || activeResizeState !== resizeState) return;
+		if (getPanelResizeMode(panel) === "square") {
+			const nextBounds = getSquareResizeBounds(panel, resizeState, event);
+			panel.style.width = `${nextBounds.width}px`;
+			panel.style.height = `${nextBounds.height}px`;
+			placePanel(panel, nextBounds.x, nextBounds.y);
+			return;
+		}
+		if (resizeState.direction === "east") {
 			resizePanel(
 				panel,
-				activeResizeState.width + (event.clientX - activeResizeState.pointerX),
-				activeResizeState.height,
+				resizeState.width + (event.clientX - resizeState.pointerX),
+				resizeState.height,
 			);
 		}
-		if (activeResizeState.direction === "south") {
+		if (resizeState.direction === "south") {
 			resizePanel(
 				panel,
-				activeResizeState.width,
-				activeResizeState.height + (event.clientY - activeResizeState.pointerY),
+				resizeState.width,
+				resizeState.height + (event.clientY - resizeState.pointerY),
 			);
 		}
-		if (activeResizeState.direction === "southeast") {
+		if (resizeState.direction === "southeast") {
 			resizePanel(
 				panel,
-				activeResizeState.width + (event.clientX - activeResizeState.pointerX),
-				activeResizeState.height + (event.clientY - activeResizeState.pointerY),
+				resizeState.width + (event.clientX - resizeState.pointerX),
+				resizeState.height + (event.clientY - resizeState.pointerY),
 			);
 		}
 		keepPanelInView(panel);
 	});
 
 	window.addEventListener("mouseup", () => {
-		if (!activeResizeState) return;
+		if (!resizeState || activeResizeState !== resizeState) return;
+		resizeState = null;
 		activeResizeState = null;
 		setInteractionShield(false);
 		panel.classList.remove("is-dragging");
@@ -361,17 +674,36 @@ async function bindFloatingPanels() {
 	});
 
 	window.addEventListener("blur", stopActiveInteractions);
+	window.addEventListener("immersion-mode-change", () => {
+		stopActiveInteractions();
+	});
 }
 
 function isInteractivePoint(x, y) {
 	const element = document.elementFromPoint(x, y);
-	return Boolean(element && element.closest(INTERACTIVE_SELECTOR));
+	if (!element) return false;
+
+	const lockedPanel = element.closest('[data-panel-id="direction-indicator"]');
+	if (lockedPanel && isPanelInteractionLocked(lockedPanel)) {
+		return false;
+	}
+
+	return Boolean(element.closest(INTERACTIVE_SELECTOR));
 }
 
 function setMousePassthrough(enabled) {
 	if (lastMousePassthroughState === enabled) return;
 	lastMousePassthroughState = enabled;
 	ipcRenderer.send("set-ignore-mouse", enabled);
+}
+
+function beginFloatingPanelInteraction(cursor = "") {
+	setMousePassthrough(false);
+	setInteractionShield(true, cursor);
+}
+
+function endFloatingPanelInteraction() {
+	setInteractionShield(false);
 }
 
 function bindMousePassthrough() {
@@ -396,4 +728,6 @@ module.exports = {
 	enterImmersionPanelLayout,
 	exitImmersionPanelLayout,
 	setMousePassthrough,
+	beginFloatingPanelInteraction,
+	endFloatingPanelInteraction,
 };

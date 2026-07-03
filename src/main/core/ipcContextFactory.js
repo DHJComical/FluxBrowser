@@ -29,6 +29,8 @@ function createIPCSharedContext(ipcManager) {
 		gitSyncManager: ipcManager.gitSyncManager,
 		bookmarkService: ipcManager.bookmarkService,
 		bookmarkSyncService: ipcManager.bookmarkSyncService,
+		liveSubtitleMonitor: ipcManager.liveSubtitleMonitor,
+		subtitleKeywordDetector: ipcManager.subtitleKeywordDetector,
 		tabStateManager: ipcManager.tabStateManager,
 		broadcast: ipcManager.broadcast.bind(ipcManager),
 		sendToRenderer: ipcManager.sendToRenderer.bind(ipcManager),

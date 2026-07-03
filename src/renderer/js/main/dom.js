@@ -12,4 +12,10 @@ module.exports = {
 	resolutionSubmenu: document.getElementById("resolution-submenu"),
 	windowStatus: document.getElementById("window-status"),
 	pageTitle: document.getElementById("page-title"),
+	directionIndicatorPanel: document.getElementById("direction-indicator-panel"),
+	directionIndicatorDial: document.getElementById("direction-indicator-dial"),
+	directionIndicatorMarkers: document.getElementById("direction-indicator-markers"),
+	directionIndicatorRotateHandle: document.getElementById(
+		"direction-indicator-rotate-handle",
+	),
 };

@@ -5,6 +5,7 @@ module.exports = {
 		"Video-Pause": "视频 暂停/播放",
 		"Video-Forward": "视频 快进",
 		"Video-Backward": "视频 快退",
+		"Subtitle-Capture-Toggle": "实时字幕采集 开关",
 		"Opacity-Up": "透明度 +",
 		"Opacity-Down": "透明度 -",
 		GoBack: "网页后退",

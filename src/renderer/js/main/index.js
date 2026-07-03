@@ -8,6 +8,8 @@ const { bindWebviewEvents, restoreOpacity } = require("./webview");
 const { bindTabsEvents, hydrateTabsState } = require("./tabs");
 const { bindLayoutEvents } = require("./layout");
 const { bindFloatingPanels } = require("./floatingPanels");
+const { bindDirectionIndicatorEvents } = require("./directionIndicator");
+const { bindSubtitleCollectorEvents } = require("./subtitleCollector");
 
 async function init() {
 	await bindFloatingPanels();
@@ -17,6 +19,8 @@ async function init() {
 	bindImmersionEvents();
 	bindWebviewEvents();
 	bindLayoutEvents();
+	bindDirectionIndicatorEvents();
+	bindSubtitleCollectorEvents();
 	await hydrateTabsState();
 
 	ipcRenderer

@@ -18,6 +18,11 @@ function bindImmersionEvents() {
 			document.body.classList.remove("immersion");
 		}
 		setImmersionMode(isImmersion);
+		window.dispatchEvent(
+			new CustomEvent("immersion-mode-change", {
+				detail: { isImmersion },
+			}),
+		);
 		if (!isImmersion) setMousePassthrough(false);
 		ipcRenderer.send("immersion-mode-changed", isImmersion);
 	});
