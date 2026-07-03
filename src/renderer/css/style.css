@@ -602,39 +602,34 @@ body.immersion #webview-stack {
 	position: absolute;
 	left: 50%;
 	top: 50%;
-	width: 7px;
-	height: 7px;
-	margin-left: -3.5px;
-	margin-top: -3.5px;
+	width: 10px;
+	height: 10px;
+	margin-left: -5px;
+	margin-top: -5px;
 	border-radius: 50%;
-	background: rgba(255, 255, 255, 0.04);
-	border: 1px solid rgba(255, 255, 255, 0.7);
-	box-shadow: none;
+	background: rgba(255, 70, 70, 0.18);
+	border: 1px solid rgba(255, 80, 80, 0.96);
+	box-shadow: 0 0 14px rgba(255, 48, 48, 0.42);
 	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
 		scale(0.72);
 	opacity: 0;
-	animation: direction-marker-pop 6s linear forwards;
+	transition:
+		opacity 0.28s ease,
+		transform 0.28s ease,
+		box-shadow 0.28s ease;
 }
 
-@keyframes direction-marker-pop {
-	0% {
-		opacity: 0;
-		transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
-			scale(0.6);
-	}
+.direction-hit-marker.is-active {
+	opacity: 1;
+	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
+		scale(1);
+}
 
-	10%,
-	72% {
-		opacity: 1;
-		transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
-			scale(1.05);
-	}
-
-	100% {
-		opacity: 0;
-		transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
-			scale(0.85);
-	}
+.direction-hit-marker.is-fading {
+	opacity: 0;
+	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
+		scale(0.92);
+	box-shadow: 0 0 0 rgba(255, 48, 48, 0);
 }
 
 .floating-panel-grip {

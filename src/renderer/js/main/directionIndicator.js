@@ -93,7 +93,7 @@ const DIRECTION_VECTORS = {
 	northwest: { x: -Math.SQRT1_2, y: -Math.SQRT1_2 },
 };
 
-const TRANSIENT_MARKER_LIFETIME_MS = 6000;
+const MARKER_FADE_OUT_MS = 3000;
 const ROTATION_SAVE_DELAY_MS = 160;
 
 let currentRotation = 0;
@@ -101,6 +101,7 @@ let savedIndicatorConfig = { rotation: 0 };
 let rotateState = null;
 let saveRotationTimer = null;
 let hasBoundEvents = false;
+let activeMarkerEntries = [];
 
 function isInteractionLocked() {
 	return document.body.classList.contains("immersion");
@@ -183,11 +184,41 @@ function detectDirections(snapshot = {}) {
 	return matches;
 }
 
+function removeMarkerEntry(entry) {
+	if (!entry || !entry.element) return;
+	if (entry.removeTimer) {
+		clearTimeout(entry.removeTimer);
+	}
+	entry.element.remove();
+}
+
+function clearActiveMarkers() {
+	activeMarkerEntries.forEach((entry) => {
+		removeMarkerEntry(entry);
+	});
+	activeMarkerEntries = [];
+}
+
+function fadeActiveMarkers() {
+	if (activeMarkerEntries.length === 0) return;
+
+	const fadingEntries = activeMarkerEntries;
+	activeMarkerEntries = [];
+	fadingEntries.forEach((entry) => {
+		if (!entry || !entry.element) return;
+		entry.element.classList.remove("is-active");
+		entry.element.classList.add("is-fading");
+		entry.removeTimer = window.setTimeout(() => {
+			entry.element.remove();
+		}, MARKER_FADE_OUT_MS);
+	});
+}
+
 function createMarker(direction, matchedText) {
-	if (!directionIndicatorMarkers) return;
+	if (!directionIndicatorMarkers) return null;
 
 	const vector = DIRECTION_VECTORS[direction];
-	if (!vector) return;
+	if (!vector) return null;
 
 	const radius = getDialRadius();
 	const marker = document.createElement("div");
@@ -197,19 +228,31 @@ function createMarker(direction, matchedText) {
 	marker.style.setProperty("--marker-x", Math.round(vector.x * radius));
 	marker.style.setProperty("--marker-y", Math.round(vector.y * radius));
 	directionIndicatorMarkers.appendChild(marker);
+	window.requestAnimationFrame(() => {
+		marker.classList.add("is-active");
+	});
 
-	window.setTimeout(() => {
-		marker.remove();
-	}, TRANSIENT_MARKER_LIFETIME_MS);
+	return {
+		element: marker,
+		removeTimer: null,
+	};
+}
+
+function showMarkers(matches = []) {
+	clearActiveMarkers();
+	activeMarkerEntries = matches
+		.map((match) => createMarker(match.direction, match.matchedText))
+		.filter(Boolean);
 }
 
 function handleSubtitleUpdate(snapshot = {}) {
 	const matches = detectDirections(snapshot);
-	if (matches.length === 0) return;
+	if (matches.length === 0) {
+		fadeActiveMarkers();
+		return;
+	}
 
-	matches.forEach((match) => {
-		createMarker(match.direction, match.matchedText);
-	});
+	showMarkers(matches);
 
 	debugLog.info(
 		`Direction indicator matched: ${matches
