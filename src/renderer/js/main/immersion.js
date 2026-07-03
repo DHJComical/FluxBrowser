@@ -1,10 +1,11 @@
 const { ipcRenderer } = require("electron");
-const { fluxBar, resizeHandles, dragRegion } = require("./dom");
+const { fluxBar } = require("./dom");
 const { state, setImmersionMode } = require("./state");
 const { getActiveWebview } = require("./tabs");
 const {
 	enterImmersionPanelLayout,
 	exitImmersionPanelLayout,
+	setMousePassthrough,
 } = require("./floatingPanels");
 
 function bindImmersionEvents() {
@@ -17,42 +18,21 @@ function bindImmersionEvents() {
 			document.body.classList.remove("immersion");
 		}
 		setImmersionMode(isImmersion);
-		if (!isImmersion) ipcRenderer.send("set-ignore-mouse", false);
+		if (!isImmersion) setMousePassthrough(false);
 		ipcRenderer.send("immersion-mode-changed", isImmersion);
 	});
 
-	[fluxBar, ...resizeHandles].forEach((element) => {
-		element.onmouseenter = () => ipcRenderer.send("set-ignore-mouse", false);
-	});
+	if (fluxBar) {
+		fluxBar.onmouseenter = () => setMousePassthrough(false);
+	}
 
 	document.addEventListener("mouseover", (event) => {
 		const activeWebview = getActiveWebview();
 		if (!activeWebview) return;
 		if (event.target === activeWebview && state.isImmersionMode) {
-			ipcRenderer.send("set-ignore-mouse", true);
+			setMousePassthrough(true);
 		}
 	});
-
-	resizeHandles.forEach((handle) => {
-		handle.onmousedown = () => {
-			if (state.isImmersionMode) return;
-			ipcRenderer.send("start-resizing", handle.getAttribute("data-direction"));
-		};
-	});
-
-	if (dragRegion) {
-		dragRegion.onmousedown = (event) => {
-			if (state.isImmersionMode) return;
-			if (event.target.closest("[data-floating-handle]")) return;
-			event.preventDefault();
-			ipcRenderer.send("start-moving");
-		};
-	}
-
-	window.onmouseup = () => {
-		ipcRenderer.send("stop-moving");
-		ipcRenderer.send("stop-resizing");
-	};
 }
 
 module.exports = {

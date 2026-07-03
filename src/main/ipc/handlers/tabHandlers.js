@@ -19,7 +19,6 @@ function registerTabHandlers({
 	tabStateManager,
 	broadcast,
 	sendToMainWindow,
-	sendToTabBar,
 	logger,
 }) {
 	ipcMain.handle("get-tabs-state", () => tabStateManager.getState());
@@ -33,7 +32,6 @@ function registerTabHandlers({
 		broadcastTabs(tabStateManager, broadcast);
 		sendActiveTabNavigation(tabStateManager, sendToMainWindow);
 		sendToMainWindow("focus-active-tab");
-		sendToTabBar("focus");
 	});
 
 	ipcMain.on("close-tab", (_event, tabId) => {

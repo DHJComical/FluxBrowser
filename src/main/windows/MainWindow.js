@@ -5,12 +5,10 @@ const {
 } = require("./windowUtils");
 
 function createMainWindow({
-	savedBounds,
 	userAlwaysOnTop,
 	onClose,
 	onRequestNewTab,
 }) {
-	const { x, y, width, height } = savedBounds;
 	const { workArea } = screen.getPrimaryDisplay();
 	const windowWidth = workArea.width;
 	const windowHeight = workArea.height;
