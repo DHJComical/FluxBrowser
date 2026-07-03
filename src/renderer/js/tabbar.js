@@ -49,6 +49,11 @@ function buildTabElement(tab) {
 	});
 
 	element.addEventListener("click", () => {
+		window.dispatchEvent(
+			new CustomEvent("flux-tab-click-activate", {
+				detail: { tabId: tab.id },
+			}),
+		);
 		ipcRenderer.send("activate-tab", tab.id);
 	});
 

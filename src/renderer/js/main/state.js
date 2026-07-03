@@ -7,6 +7,7 @@ const state = {
 	webviewOpacity: 1,
 	pendingScripts: new Map(),
 	startupPauseTabIds: new Set(),
+	startupBackgroundMutedTabIds: new Set(),
 };
 
 function setDebugMode(enabled) {
@@ -70,6 +71,20 @@ function clearStartupPauseTab(tabId) {
 	state.startupPauseTabIds.delete(tabId);
 }
 
+function markStartupBackgroundMutedTabs(tabIds = []) {
+	state.startupBackgroundMutedTabIds = new Set(
+		tabIds.filter((tabId) => typeof tabId === "string" && tabId),
+	);
+}
+
+function shouldStartupBackgroundMuteTab(tabId) {
+	return state.startupBackgroundMutedTabIds.has(tabId);
+}
+
+function clearStartupBackgroundMutedTab(tabId) {
+	state.startupBackgroundMutedTabIds.delete(tabId);
+}
+
 module.exports = {
 	state,
 	setDebugMode,
@@ -85,4 +100,7 @@ module.exports = {
 	markStartupPauseTabs,
 	shouldStartupPauseTab,
 	clearStartupPauseTab,
+	markStartupBackgroundMutedTabs,
+	shouldStartupBackgroundMuteTab,
+	clearStartupBackgroundMutedTab,
 };
