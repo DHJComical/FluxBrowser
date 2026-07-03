@@ -41,6 +41,9 @@ const DEFAULT_APP_CONFIG = {
 		enabled: true,
 		rules: [],
 	},
+	directionIndicator: {
+		rotation: 0,
+	},
 };
 
 // 默认分辨率预设
