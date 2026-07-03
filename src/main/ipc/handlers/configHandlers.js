@@ -1,6 +1,24 @@
 const configManager = require("../../ConfigManager");
 const { app } = require("electron");
 
+function normalizeBounds(bounds = {}) {
+	return {
+		x: Math.round(Number(bounds.x) || 0),
+		y: Math.round(Number(bounds.y) || 0),
+		width: Math.round(Number(bounds.width) || 0),
+		height: Math.round(Number(bounds.height) || 0),
+	};
+}
+
+function areBoundsEqual(left, right) {
+	return (
+		left.x === right.x &&
+		left.y === right.y &&
+		left.width === right.width &&
+		left.height === right.height
+	);
+}
+
 function registerConfigHandlers({
 	ipcMain,
 	logger,
@@ -64,23 +82,20 @@ function registerConfigHandlers({
 				: "";
 		if (!panelId) return;
 
-		const bounds = payload.bounds || {};
-		const nextBounds = {
-			x: Math.round(Number(bounds.x) || 0),
-			y: Math.round(Number(bounds.y) || 0),
-			width: Math.round(Number(bounds.width) || 0),
-			height: Math.round(Number(bounds.height) || 0),
-		};
-
+		const nextBounds = normalizeBounds(payload.bounds);
 		const appConfig = configManager.getAppConfig();
+		const floatingPanels = appConfig.floatingPanels || {};
+		const previousBounds = normalizeBounds(floatingPanels[panelId]);
+		if (areBoundsEqual(previousBounds, nextBounds)) return;
+
 		configManager.saveAppConfig({
 			floatingPanels: {
-				...(appConfig.floatingPanels || {}),
+				...floatingPanels,
 				[panelId]: nextBounds,
 			},
 		});
 		logger.debug(
-			`悬浮窗位置已保存: ${panelId} X=${nextBounds.x}, Y=${nextBounds.y}, Width=${nextBounds.width}, Height=${nextBounds.height}`,
+			`悬浮窗布局已保存: ${panelId} X=${nextBounds.x}, Y=${nextBounds.y}, Width=${nextBounds.width}, Height=${nextBounds.height}`,
 		);
 	});
 }

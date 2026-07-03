@@ -28,7 +28,6 @@ const DEFAULT_APP_CONFIG = {
 	debugMode: false,
 	bossKeyProtection: true,
 	alwaysOnTop: false,
-	tabBarDetached: true,
 	videoForwardSeconds: 10,
 	videoBackwardSeconds: 10,
 	videoLongPressRate: 2.0,
@@ -102,11 +101,6 @@ const IPC_CHANNELS = {
 	SET_IGNORE_MOUSE: "set-ignore-mouse",
 	SET_WINDOW_SIZE: "set-window-size",
 	APP_EXIT: "app-exit",
-	START_RESIZING: "start-resizing",
-	STOP_RESIZING: "stop-resizing",
-	START_MOVING: "start-moving",
-	STOP_MOVING: "stop-moving",
-	START_MOVING_TAB_BAR: "start-moving-tab-bar",
 
 	// 配置相关
 	GET_SHORTCUTS: "get-shortcuts",

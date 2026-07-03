@@ -3,8 +3,6 @@ const registerWindowHandlers = require("../ipc/handlers/windowHandlers");
 const registerConfigHandlers = require("../ipc/handlers/configHandlers");
 const registerShortcutHandlers = require("../ipc/handlers/shortcutHandlers");
 const registerAppHandlers = require("../ipc/handlers/appHandlers");
-const registerResizeHandlers = require("../ipc/handlers/resizeHandlers");
-const registerMoveHandlers = require("../ipc/handlers/moveHandlers");
 const registerSyncHandlers = require("../ipc/handlers/syncHandlers");
 const registerBookmarkHandlers = require("../ipc/handlers/bookmarkHandlers");
 const registerTabHandlers = require("../ipc/handlers/tabHandlers");
@@ -38,8 +36,6 @@ class IPCManager {
 		registerConfigHandlers(sharedContext);
 		registerShortcutHandlers(sharedContext);
 		registerAppHandlers(sharedContext);
-		registerResizeHandlers(sharedContext);
-		registerMoveHandlers(sharedContext);
 		registerBookmarkHandlers(sharedContext);
 		registerSyncHandlers(sharedContext);
 		registerTabHandlers(sharedContext);
@@ -55,10 +51,6 @@ class IPCManager {
 
 	sendToMainWindow(channel, data) {
 		sendToWindow(this.windowManager.getMainWindow(), channel, data);
-	}
-
-	sendToTabBar(channel, data) {
-		sendToWindow(this.windowManager.getTabBarWindow(), channel, data);
 	}
 
 	setCurrentOpacity(opacity) {

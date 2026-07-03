@@ -9,8 +9,6 @@ module.exports = {
 	addBookmarkBtn: document.getElementById("add-bookmark-btn"),
 	viewBookmarksBtn: document.getElementById("view-bookmarks-btn"),
 	exitBtn: document.getElementById("exit-btn"),
-	resizeHandles: document.querySelectorAll(".resize-handle"),
-	dragRegion: document.querySelector(".drag-region"),
 	resolutionSubmenu: document.getElementById("resolution-submenu"),
 	windowStatus: document.getElementById("window-status"),
 	pageTitle: document.getElementById("page-title"),

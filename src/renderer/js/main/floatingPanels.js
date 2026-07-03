@@ -8,6 +8,7 @@ let floatingPanelsConfig = {};
 const saveTimers = new Map();
 const temporaryPanelBounds = new Map();
 let interactionShield = null;
+let lastMousePassthroughState = null;
 
 function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
@@ -54,6 +55,8 @@ function ensureInteractionShield() {
 }
 
 function setInteractionShield(active, cursor = "") {
+	if (!active && !interactionShield) return;
+
 	const shield = ensureInteractionShield();
 	shield.classList.toggle("is-active", active);
 	shield.style.cursor = cursor || "";
@@ -83,6 +86,17 @@ function serializePanelBounds(panel) {
 	};
 }
 
+function areBoundsEqual(left, right) {
+	if (!left || !right) return false;
+
+	return (
+		Math.round(left.x) === Math.round(right.x) &&
+		Math.round(left.y) === Math.round(right.y) &&
+		Math.round(left.width) === Math.round(right.width) &&
+		Math.round(left.height) === Math.round(right.height)
+	);
+}
+
 function scheduleSavePanelBounds(panel) {
 	const panelId = getPanelId(panel);
 	if (!panelId) return;
@@ -92,9 +106,19 @@ function scheduleSavePanelBounds(panel) {
 	}
 
 	const timer = setTimeout(() => {
+		const bounds = serializePanelBounds(panel);
+		if (areBoundsEqual(floatingPanelsConfig[panelId], bounds)) {
+			saveTimers.delete(panelId);
+			return;
+		}
+
+		floatingPanelsConfig = {
+			...floatingPanelsConfig,
+			[panelId]: bounds,
+		};
 		ipcRenderer.send("save-floating-panel", {
 			panelId,
-			bounds: serializePanelBounds(panel),
+			bounds,
 		});
 		saveTimers.delete(panelId);
 	}, 160);
@@ -211,7 +235,7 @@ function bindPanelDrag(panel) {
 	});
 
 	window.addEventListener("mousemove", (event) => {
-		if (!dragState) return;
+		if (!dragState || activeDragState !== dragState) return;
 
 		const deltaX = event.clientX - dragState.pointerX;
 		const deltaY = event.clientY - dragState.pointerY;
@@ -219,7 +243,7 @@ function bindPanelDrag(panel) {
 	});
 
 	window.addEventListener("mouseup", () => {
-		if (!dragState) return;
+		if (!dragState || activeDragState !== dragState) return;
 		dragState = null;
 		activeDragState = null;
 		setInteractionShield(false);
@@ -297,6 +321,15 @@ function bindPanelResize(panel) {
 	});
 }
 
+function stopActiveInteractions() {
+	document
+		.querySelectorAll("[data-floating-panel].is-dragging")
+		.forEach((panel) => panel.classList.remove("is-dragging"));
+	activeDragState = null;
+	activeResizeState = null;
+	setInteractionShield(false);
+}
+
 async function bindFloatingPanels() {
 	try {
 		floatingPanelsConfig = await ipcRenderer.invoke("get-floating-panels");
@@ -326,6 +359,8 @@ async function bindFloatingPanels() {
 			scheduleSavePanelBounds(panel);
 		});
 	});
+
+	window.addEventListener("blur", stopActiveInteractions);
 }
 
 function isInteractivePoint(x, y) {
@@ -334,6 +369,8 @@ function isInteractivePoint(x, y) {
 }
 
 function setMousePassthrough(enabled) {
+	if (lastMousePassthroughState === enabled) return;
+	lastMousePassthroughState = enabled;
 	ipcRenderer.send("set-ignore-mouse", enabled);
 }
 
@@ -358,4 +395,5 @@ module.exports = {
 	setFloatingPanelSize,
 	enterImmersionPanelLayout,
 	exitImmersionPanelLayout,
+	setMousePassthrough,
 };
