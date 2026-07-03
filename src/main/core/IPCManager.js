@@ -6,6 +6,9 @@ const registerAppHandlers = require("../ipc/handlers/appHandlers");
 const registerSyncHandlers = require("../ipc/handlers/syncHandlers");
 const registerBookmarkHandlers = require("../ipc/handlers/bookmarkHandlers");
 const registerTabHandlers = require("../ipc/handlers/tabHandlers");
+const registerLiveSubtitleHandlers = require("../ipc/handlers/liveSubtitleHandlers");
+const LiveSubtitleMonitor = require("../services/LiveSubtitleMonitor");
+const SubtitleKeywordDetector = require("../services/SubtitleKeywordDetector");
 const {
 	createIPCServices,
 	createIPCSharedContext,
@@ -27,6 +30,16 @@ class IPCManager {
 		this.gitSyncManager = services.gitSyncManager;
 		this.bookmarkService = services.bookmarkService;
 		this.bookmarkSyncService = services.bookmarkSyncService;
+		this.liveSubtitleMonitor = new LiveSubtitleMonitor({
+			logger,
+			sendToMainWindow: this.sendToMainWindow.bind(this),
+			broadcast: this.broadcast.bind(this),
+		});
+		this.subtitleKeywordDetector = new SubtitleKeywordDetector({
+			logger,
+			configManager,
+			broadcast: this.broadcast.bind(this),
+		});
 	}
 
 	setupAllHandlers() {
@@ -39,6 +52,7 @@ class IPCManager {
 		registerBookmarkHandlers(sharedContext);
 		registerSyncHandlers(sharedContext);
 		registerTabHandlers(sharedContext);
+		registerLiveSubtitleHandlers(sharedContext);
 	}
 
 	broadcast(channel, data) {

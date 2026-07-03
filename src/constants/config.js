@@ -10,6 +10,7 @@ const DEFAULT_KEY_CONFIG = {
 	"Video-Pause": "Down",
 	"Video-Forward": "Right",
 	"Video-Backward": "Left",
+	"Subtitle-Capture-Toggle": "Alt+S",
 	"Opacity-Up": "Alt+Up",
 	"Opacity-Down": "Alt+Down",
 	GoBack: "Alt+Left",
@@ -36,6 +37,10 @@ const DEFAULT_APP_CONFIG = {
 	gitName: "",
 	gitEmail: "",
 	floatingPanels: {},
+	liveSubtitleKeywordDetection: {
+		enabled: true,
+		rules: [],
+	},
 };
 
 // 默认分辨率预设
