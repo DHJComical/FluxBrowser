@@ -12,6 +12,9 @@ const {
 	markStartupPauseTabs,
 	shouldStartupPauseTab,
 	clearStartupPauseTab,
+	markStartupBackgroundMutedTabs,
+	shouldStartupBackgroundMuteTab,
+	clearStartupBackgroundMutedTab,
 } = require("./state");
 const { syncActiveTabUi } = require("./activeTabUi");
 const { setWindowStatus } = require("./status");
@@ -63,11 +66,26 @@ function restoreStartupMute(webview) {
 	const wasMuted = startupMutedWebviews.get(webview);
 	startupMutedWebviews.delete(webview);
 	try {
+		if (shouldStartupBackgroundMuteTab(webview.dataset.tabId)) {
+			return;
+		}
 		if (!wasMuted && typeof webview.setAudioMuted === "function") {
 			webview.setAudioMuted(false);
 		}
 	} catch (_error) {
 		// Audio state restoration must never block tab loading.
+	}
+}
+
+function syncStartupBackgroundMute(webview, tabId) {
+	if (!webview || startupMutedWebviews.has(webview)) return;
+
+	try {
+		if (typeof webview.setAudioMuted === "function") {
+			webview.setAudioMuted(shouldStartupBackgroundMuteTab(tabId));
+		}
+	} catch (_error) {
+		// Background mute sync must never block tab rendering.
 	}
 }
 
@@ -217,6 +235,7 @@ function ensureWebview(tab) {
 	setWebview(tab.id, webview);
 	webviewStack.appendChild(webview);
 	muteUntilStartupPauseCompletes(webview, tab.id);
+	syncStartupBackgroundMute(webview, tab.id);
 	return webview;
 }
 
@@ -229,6 +248,7 @@ function renderTabsState(nextState) {
 		const isActive = tab.id === state.activeTabId;
 		webview.classList.toggle("is-active", isActive);
 		webview.classList.toggle("is-hidden", !isActive);
+		syncStartupBackgroundMute(webview, tab.id);
 	});
 
 	Array.from(state.webviews.keys()).forEach((tabId) => {
@@ -246,6 +266,11 @@ function renderTabsState(nextState) {
 async function hydrateTabsState() {
 	const tabsState = await ipcRenderer.invoke("get-tabs-state");
 	markStartupPauseTabs((tabsState.tabs || []).map((tab) => tab.id));
+	markStartupBackgroundMutedTabs(
+		(tabsState.tabs || [])
+			.filter((tab) => tab.id !== tabsState.activeTabId)
+			.map((tab) => tab.id),
+	);
 	renderTabsState(tabsState);
 }
 
@@ -271,6 +296,14 @@ function bindTabsEvents() {
 		if (webview) {
 			webview.focus();
 		}
+	});
+
+	window.addEventListener("flux-tab-click-activate", (event) => {
+		const tabId = event.detail && event.detail.tabId;
+		if (!tabId) return;
+
+		clearStartupBackgroundMutedTab(tabId);
+		syncStartupBackgroundMute(getWebview(tabId), tabId);
 	});
 }
 
