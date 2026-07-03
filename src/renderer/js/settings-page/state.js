@@ -1,5 +1,6 @@
 const state = {
 	tempKeyMap: {},
+	language: "zh-CN",
 	debugModeState: false,
 	bossKeyProtectionState: true,
 	alwaysOnTopState: false,

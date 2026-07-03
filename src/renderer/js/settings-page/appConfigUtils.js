@@ -2,11 +2,13 @@ const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const state = require("./state");
 const { normalizeNumber } = require("./helpers");
+const { normalizeLocale } = require("../../../i18n");
 const {
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
 	updateVideoControlInputs,
+	renderLanguageOptions,
 } = require("./renderers");
 
 function applyAppConfig(appConfig) {
@@ -14,6 +16,11 @@ function applyAppConfig(appConfig) {
 	if (dom.gitRemoteInput) dom.gitRemoteInput.value = appConfig.gitRemote || "";
 	if (dom.gitNameInput) dom.gitNameInput.value = appConfig.gitName || "";
 	if (dom.gitEmailInput) dom.gitEmailInput.value = appConfig.gitEmail || "";
+	state.language = normalizeLocale(appConfig.language);
+	if (dom.languageSelect) {
+		dom.languageSelect.value = state.language;
+	}
+	renderLanguageOptions();
 
 	state.bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 	state.alwaysOnTopState = appConfig.alwaysOnTop === true;

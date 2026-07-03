@@ -1,23 +1,27 @@
 const { app, ipcMain } = require("electron");
+const { t } = require("../i18n");
 
 function registerUpdaterEvents(autoUpdater, core, debugLog) {
 	autoUpdater.on("checking-for-update", () => {
-		debugLog.log("正在检查更新...");
+		debugLog.log("logs.updater.checking");
 	});
 
 	autoUpdater.on("update-available", (info) => {
-		debugLog.log("发现新版本:", info.version);
+		debugLog.log("logs.updater.available", info.version);
 		core.broadcast("update-message", {
 			status: "available",
-			msg: `发现新版本 v${info.version} (当前: v${app.getVersion()})`,
+			msg: t("messages.updater.available", {
+				version: info.version,
+				currentVersion: app.getVersion(),
+			}),
 		});
 	});
 
 	autoUpdater.on("update-not-available", () => {
-		debugLog.log("当前已是最新版本");
+		debugLog.log("logs.updater.notAvailable");
 		core.broadcast("update-message", {
 			status: "not-available",
-			msg: "当前已是最新版本",
+			msg: t("messages.updater.notAvailable"),
 		});
 	});
 
@@ -31,18 +35,18 @@ function registerUpdaterEvents(autoUpdater, core, debugLog) {
 	});
 
 	autoUpdater.on("update-downloaded", (info) => {
-		debugLog.log("更新已下载完成", info);
+		debugLog.log("logs.updater.downloaded", info);
 		core.broadcast("update-message", {
 			status: "downloaded",
-			msg: "更新已下载完成，重启应用即可应用更新。",
+			msg: t("messages.updater.downloaded"),
 		});
 	});
 
 	autoUpdater.on("error", (error) => {
-		debugLog.error("更新错误:", error);
+		debugLog.error("logs.updater.error", error);
 		core.broadcast("update-message", {
 			status: "error",
-			msg: "检查更新失败，请稍后再试",
+			msg: t("messages.updater.error"),
 		});
 	});
 }

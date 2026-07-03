@@ -1,4 +1,5 @@
 const { BrowserWindow } = require("electron");
+const { t } = require("../i18n");
 const {
 	getCenteredPosition,
 	getRendererPath,
@@ -18,7 +19,7 @@ function createBookmarksWindow({ parentWindow, onClosed }) {
 		minWidth: 620,
 		minHeight: 520,
 		parent: parentWindow,
-		title: "书签管理",
+		title: t("windows.bookmarks.title"),
 		icon: getWindowIconPath(),
 		webPreferences: {
 			nodeIntegration: true,

@@ -1,5 +1,7 @@
 const configManager = require("../../ConfigManager");
 const { app } = require("electron");
+const { normalizeLocale, setLocale, t } = require("../../i18n");
+const { IPC_CHANNELS } = require("../../../constants/config");
 
 function normalizeBounds(bounds = {}) {
 	return {
@@ -38,12 +40,20 @@ function registerConfigHandlers({
 
 	ipcMain.handle("get-resolution-presets", () => {
 		const presets = configManager.getResolutionPresets();
-		logger.debug(`IPC: 返回分辨率预设，数量: ${presets.length}`);
+		logger.debug(
+			t("logs.config.ipcReturnResolutionPresets", {
+				count: presets.length,
+			}),
+		);
 		return presets;
 	});
 
 	ipcMain.on("save-resolution-presets", (_event, presets) => {
-		logger.debug(`IPC: 收到保存分辨率预设请求，数量: ${presets.length}`);
+		logger.debug(
+			t("logs.config.ipcSaveResolutionPresets", {
+				count: presets.length,
+			}),
+		);
 		configManager.saveResolutionPresets(presets);
 		broadcast("resolution-presets-updated");
 	});
@@ -62,9 +72,20 @@ function registerConfigHandlers({
 	});
 
 	ipcMain.on("save-app-config", (_event, config) => {
-		configManager.saveAppConfig(config);
-		if (Object.hasOwn(config, "alwaysOnTop")) {
-			windowManager.setUserAlwaysOnTop(config.alwaysOnTop);
+		const nextConfig = { ...config };
+		if (Object.hasOwn(nextConfig, "language")) {
+			nextConfig.language = normalizeLocale(nextConfig.language);
+		}
+		configManager.saveAppConfig(nextConfig);
+		if (Object.hasOwn(nextConfig, "language")) {
+			const activeLocale = setLocale(nextConfig.language);
+			if (windowManager && typeof windowManager.updateWindowTitles === "function") {
+				windowManager.updateWindowTitles();
+			}
+			broadcast(IPC_CHANNELS.LANGUAGE_CHANGED, { locale: activeLocale });
+		}
+		if (Object.hasOwn(nextConfig, "alwaysOnTop")) {
+			windowManager.setUserAlwaysOnTop(nextConfig.alwaysOnTop);
 		}
 	});
 
@@ -95,7 +116,13 @@ function registerConfigHandlers({
 			},
 		});
 		logger.debug(
-			`悬浮窗布局已保存: ${panelId} X=${nextBounds.x}, Y=${nextBounds.y}, Width=${nextBounds.width}, Height=${nextBounds.height}`,
+			t("logs.config.floatingPanelSaved", {
+				panelId,
+				x: nextBounds.x,
+				y: nextBounds.y,
+				width: nextBounds.width,
+				height: nextBounds.height,
+			}),
 		);
 	});
 }

@@ -1,3 +1,5 @@
+const { t } = require("../../i18n");
+
 function registerSyncHandlers({ ipcMain, gitSyncManager, broadcast, logger }) {
 	ipcMain.on("sync-all", () => {
 		gitSyncManager.pushAll((data) => {
@@ -18,12 +20,17 @@ function registerSyncHandlers({ ipcMain, gitSyncManager, broadcast, logger }) {
 	ipcMain.on("export-configs", () => {
 		const result = gitSyncManager.exportConfigs();
 		if (result.success) {
-			logger.debug("配置已导出到同步目录");
-			broadcast("sync-all-status", { success: true, message: "配置已导出" });
+			logger.debug("logs.sync.exported");
+			broadcast("sync-all-status", {
+				success: true,
+				message: "messages.sync.exported",
+			});
 		} else {
 			broadcast("sync-all-status", {
 				success: false,
-				message: `导出失败: ${result.error}`,
+				message: t("messages.sync.exportFailed", {
+					error: result.error,
+				}),
 			});
 		}
 	});
@@ -31,7 +38,9 @@ function registerSyncHandlers({ ipcMain, gitSyncManager, broadcast, logger }) {
 	ipcMain.on("import-configs", () => {
 		const result = gitSyncManager.importConfigs();
 		if (result.success) {
-			const msg = `已导入: ${result.imported.join(", ")}`;
+			const msg = t("messages.sync.imported", {
+				items: result.imported.join(", "),
+			});
 			logger.debug(msg);
 			broadcast("sync-all-status", {
 				success: true,
@@ -41,7 +50,9 @@ function registerSyncHandlers({ ipcMain, gitSyncManager, broadcast, logger }) {
 		} else {
 			broadcast("sync-all-status", {
 				success: false,
-				message: `导入失败: ${result.error}`,
+				message: t("messages.sync.importFailed", {
+					error: result.error,
+				}),
 			});
 		}
 	});

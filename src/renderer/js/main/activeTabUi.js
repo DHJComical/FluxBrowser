@@ -1,5 +1,6 @@
 const { urlInput, pageTitle } = require("./dom");
 const { getActiveTab } = require("./state");
+const { t } = require("../shared/i18n");
 
 function syncActiveTabUi() {
 	const activeTab = getActiveTab();
@@ -9,7 +10,7 @@ function syncActiveTabUi() {
 		urlInput.value = activeTab.url || "";
 	}
 	if (pageTitle) {
-		pageTitle.textContent = activeTab.title || "当前页面";
+		pageTitle.textContent = activeTab.title || t("main.tabs.currentPage");
 	}
 }
 

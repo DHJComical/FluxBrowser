@@ -1,6 +1,7 @@
 const { ipcRenderer } = require("electron");
 const dom = require("./dom");
 const state = require("./state");
+const { t } = require("../shared/i18n");
 
 async function performCacheClear({ confirmAction, showToast }) {
 	try {
@@ -8,14 +9,14 @@ async function performCacheClear({ confirmAction, showToast }) {
 			(option) => option,
 		);
 		if (!hasAnyOption) {
-			showToast("请至少选择一个要清理的项目", { type: "warning" });
+			showToast(t("settings.cache.selectOneMessage"), { type: "warning" });
 			return;
 		}
 
 		const confirmed = await confirmAction({
-			title: "清理本地缓存",
-			message: "确定要清理选中的文件吗？此操作不可逆。",
-			confirmText: "开始清理",
+			title: "settings.cache.confirmTitle",
+			message: "settings.cache.confirmMessage",
+			confirmText: "settings.cache.startAction",
 			tone: "danger",
 		});
 		if (!confirmed) {
@@ -24,12 +25,12 @@ async function performCacheClear({ confirmAction, showToast }) {
 
 		ipcRenderer.send("clear-cache", state.cacheClearOptions);
 		dom.cacheClearBtn.disabled = true;
-		dom.cacheClearBtn.textContent = "清理中...";
+		dom.cacheClearBtn.textContent = t("settings.cache.runningAction");
 	} catch (error) {
-		console.error("执行缓存清理失败:", error);
-		showToast("清理过程中出现错误，请重试", { type: "error" });
+		console.error("logs.settings.cache.performFailed", error);
+		showToast(t("settings.cache.runningErrorMessage"), { type: "error" });
 		dom.cacheClearBtn.disabled = false;
-		dom.cacheClearBtn.textContent = "开始清理";
+		dom.cacheClearBtn.textContent = t("settings.cache.startAction");
 	}
 }
 
@@ -37,7 +38,7 @@ function bindSystemActions({ resetUpdateProgress, showToast, confirmAction }) {
 	if (dom.checkUpdateBtn) {
 		dom.checkUpdateBtn.addEventListener("click", () => {
 			ipcRenderer.send("check-for-updates");
-			dom.updateStatus.innerText = "正在检查更新...";
+			dom.updateStatus.innerText = t("settings.update.checking");
 			dom.checkUpdateBtn.disabled = true;
 			if (dom.downloadUpdateBtn) dom.downloadUpdateBtn.classList.add("hidden");
 			if (dom.installUpdateBtn) dom.installUpdateBtn.classList.add("hidden");
@@ -53,7 +54,7 @@ function bindSystemActions({ resetUpdateProgress, showToast, confirmAction }) {
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.disabled = true;
 			resetUpdateProgress({ hide: false, percent: 0 });
 			if (dom.updateStatus) {
-				dom.updateStatus.innerText = "正在下载更新...";
+				dom.updateStatus.innerText = t("settings.update.downloading");
 			}
 		});
 	}

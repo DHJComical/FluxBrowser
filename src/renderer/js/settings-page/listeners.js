@@ -4,7 +4,9 @@ const state = require("./state");
 const {
 	setUpdateProgress,
 	resetUpdateProgress,
+	renderLanguageOptions,
 	renderResolutionPresets,
+	setLanguageSelectOpen,
 	updateAspectLockButton,
 	updateToggleState,
 } = require("./renderers");
@@ -12,6 +14,7 @@ const {
 	reloadAppConfig,
 	reloadDebugMode,
 } = require("./appConfigUtils");
+const { t } = require("../shared/i18n");
 const {
 	loadShortcuts,
 	loadResolutionPresets,
@@ -74,6 +77,83 @@ function bindVideoControlEvents() {
 			}
 		});
 	}
+
+	if (dom.languageSelect) {
+		dom.languageSelect.addEventListener("change", () => {
+			state.language = dom.languageSelect.value || "zh-CN";
+			renderLanguageOptions();
+		});
+	}
+
+	if (dom.languageSelectTrigger && dom.languageSelectCustom) {
+		dom.languageSelectTrigger.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			const isHidden = dom.languageSelectMenu?.classList.contains("hidden");
+			setLanguageSelectOpen(Boolean(isHidden));
+		});
+
+		dom.languageSelectTrigger.addEventListener("keydown", (event) => {
+			if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				setLanguageSelectOpen(true);
+				const activeOption =
+					dom.languageSelectOptions.find(
+						(option) => option.dataset.value === state.language,
+					) || dom.languageSelectOptions[0];
+				activeOption?.focus();
+			}
+		});
+
+		dom.languageSelectOptions.forEach((option, index) => {
+			option.addEventListener("click", (event) => {
+				event.preventDefault();
+				const nextLanguage = option.dataset.value || "zh-CN";
+				state.language = nextLanguage;
+				if (dom.languageSelect) {
+					dom.languageSelect.value = nextLanguage;
+				}
+				renderLanguageOptions();
+				setLanguageSelectOpen(false);
+			});
+
+			option.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") {
+					event.preventDefault();
+					setLanguageSelectOpen(false);
+					dom.languageSelectTrigger?.focus();
+					return;
+				}
+
+				if (event.key === "ArrowDown") {
+					event.preventDefault();
+					dom.languageSelectOptions[index + 1]?.focus();
+					return;
+				}
+
+				if (event.key === "ArrowUp") {
+					event.preventDefault();
+					if (index === 0) {
+						dom.languageSelectTrigger?.focus();
+						return;
+					}
+					dom.languageSelectOptions[index - 1]?.focus();
+				}
+			});
+		});
+
+		document.addEventListener("click", (event) => {
+			if (!dom.languageSelectCustom.contains(event.target)) {
+				setLanguageSelectOpen(false);
+			}
+		});
+
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Escape") {
+				setLanguageSelectOpen(false);
+			}
+		});
+	}
 }
 
 function bindResolutionEvents({ debugLog, showToast }) {
@@ -111,17 +191,17 @@ function bindResolutionEvents({ debugLog, showToast }) {
 		const height = parseInt(dom.presetHeight.value, 10);
 
 		if (!name || !width || !height) {
-			showToast("请填写完整的分辨率名称、宽度和高度。", {
+			showToast(t("settings.resolution.incompleteMessage"), {
 				type: "warning",
-				title: "信息不完整",
+				title: t("settings.resolution.incompleteTitle"),
 			});
 			return;
 		}
 
 		if (width < 200 || width > 4000 || height < 150 || height > 3000) {
-			showToast("分辨率范围不合法，请保持宽度 200-4000、高度 150-3000。", {
+			showToast(t("settings.resolution.outOfRangeMessage"), {
 				type: "warning",
-				title: "数值超出范围",
+				title: t("settings.resolution.outOfRangeTitle"),
 			});
 			return;
 		}
@@ -130,9 +210,9 @@ function bindResolutionEvents({ debugLog, showToast }) {
 			(preset) => preset.width === width && preset.height === height,
 		);
 		if (duplicate) {
-			showToast("该分辨率预设已经存在。", {
+			showToast(t("settings.resolution.duplicateMessage"), {
 				type: "warning",
-				title: "重复预设",
+				title: t("settings.resolution.duplicateTitle"),
 			});
 			return;
 		}
@@ -146,9 +226,9 @@ function bindResolutionEvents({ debugLog, showToast }) {
 		state.aspectLocked = false;
 		state.lockedAspectRatio = null;
 		updateAspectLockButton();
-		showToast(`已添加预设：${name}`, {
+		showToast(t("settings.resolution.addedMessage", { name }), {
 			type: "success",
-			title: "分辨率已保存",
+			title: t("settings.resolution.savedTitle"),
 		});
 	});
 }
@@ -213,22 +293,22 @@ function resetSyncButtons() {
 	if (dom.syncBookmarksBtn) {
 		dom.syncBookmarksBtn.disabled = false;
 		dom.syncBookmarksBtn.innerHTML =
-			'<i class="material-icons">bookmark</i> 仅上传书签';
+			`<i class="material-icons">bookmark</i> ${t("settings.sync.uploadBookmarks")}`;
 	}
 	if (dom.pullBookmarksBtn) {
 		dom.pullBookmarksBtn.disabled = false;
 		dom.pullBookmarksBtn.innerHTML =
-			'<i class="material-icons">bookmark</i> 仅下载书签';
+			`<i class="material-icons">bookmark</i> ${t("settings.sync.downloadBookmarks")}`;
 	}
 	if (dom.syncAllBtn) {
 		dom.syncAllBtn.disabled = false;
 		dom.syncAllBtn.innerHTML =
-			'<i class="material-icons">cloud_upload</i> 上传所有配置到云端';
+			`<i class="material-icons">cloud_upload</i> ${t("settings.sync.uploadAll")}`;
 	}
 	if (dom.pullAllBtn) {
 		dom.pullAllBtn.disabled = false;
 		dom.pullAllBtn.innerHTML =
-			'<i class="material-icons">cloud_download</i> 从云端下载覆盖本地';
+			`<i class="material-icons">cloud_download</i> ${t("settings.sync.downloadAll")}`;
 	}
 }
 
@@ -243,7 +323,7 @@ function resetCacheClearState() {
 		});
 	if (dom.cacheClearBtn) {
 		dom.cacheClearBtn.disabled = false;
-		dom.cacheClearBtn.textContent = "开始清理";
+		dom.cacheClearBtn.textContent = t("settings.cache.startAction");
 	}
 }
 
@@ -265,7 +345,7 @@ async function reloadClearedState(debugLog) {
 function bindStatusListeners({ debugLog, showToast }) {
 	ipcRenderer.on("update-message", (_event, data) => {
 		if (dom.updateStatus) {
-			dom.updateStatus.innerText = data.msg;
+			dom.updateStatus.innerText = t(data.msg || "");
 		}
 
 		if (data.status === "not-available" || data.status === "error") {
@@ -276,9 +356,9 @@ function bindStatusListeners({ debugLog, showToast }) {
 			}
 			resetUpdateProgress();
 			if (data.status === "error") {
-				showToast(data.msg || "更新检查失败，请稍后重试。", {
+				showToast(data.msg || t("settings.update.errorMessage"), {
 					type: "error",
-					title: "更新失败",
+					title: t("settings.update.errorTitle"),
 				});
 			}
 		}
@@ -292,14 +372,14 @@ function bindStatusListeners({ debugLog, showToast }) {
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.classList.add("hidden");
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.disabled = false;
 			resetUpdateProgress({ hide: false, percent: 100 });
-			showToast("更新已下载完成，随时可以安装。", {
+			showToast(t("settings.update.readyMessage"), {
 				type: "success",
-				title: "更新已就绪",
+				title: t("settings.update.readyTitle"),
 			});
 		}
 
 		if (data.status === "available") {
-			if (dom.updateStatus) dom.updateStatus.innerText = data.msg;
+			if (dom.updateStatus) dom.updateStatus.innerText = t(data.msg || "");
 			if (dom.checkUpdateBtn) dom.checkUpdateBtn.disabled = false;
 			if (dom.downloadUpdateBtn) {
 				dom.downloadUpdateBtn.classList.remove("hidden");
@@ -307,9 +387,9 @@ function bindStatusListeners({ debugLog, showToast }) {
 			}
 			if (dom.installUpdateBtn) dom.installUpdateBtn.classList.add("hidden");
 			resetUpdateProgress();
-			showToast(data.msg || "发现新版本，可开始下载。", {
+			showToast(data.msg || t("settings.update.availableMessage"), {
 				type: "info",
-				title: "发现更新",
+				title: t("settings.update.availableTitle"),
 			});
 		}
 	});
@@ -318,7 +398,9 @@ function bindStatusListeners({ debugLog, showToast }) {
 		if (!data || data.percent === undefined) return;
 		setUpdateProgress(data.percent);
 		if (dom.updateStatus) {
-			dom.updateStatus.innerText = `正在下载更新... ${Math.round(data.percent)}%`;
+			dom.updateStatus.innerText = t("settings.update.downloadingProgress", {
+				percent: Math.round(data.percent),
+			});
 		}
 	});
 
@@ -327,7 +409,7 @@ function bindStatusListeners({ debugLog, showToast }) {
 			if (dom.syncBookmarksBtn) {
 				dom.syncBookmarksBtn.disabled = true;
 				dom.syncBookmarksBtn.innerHTML =
-					'<i class="material-icons">sync</i> 同步中...';
+					`<i class="material-icons">sync</i> ${t("settings.sync.syncing")}`;
 			}
 			if (dom.pullBookmarksBtn) dom.pullBookmarksBtn.disabled = true;
 			return;
@@ -337,7 +419,7 @@ function bindStatusListeners({ debugLog, showToast }) {
 			if (dom.pullBookmarksBtn) {
 				dom.pullBookmarksBtn.disabled = true;
 				dom.pullBookmarksBtn.innerHTML =
-					'<i class="material-icons">sync</i> 拉取中...';
+					`<i class="material-icons">sync</i> ${t("settings.sync.pulling")}`;
 			}
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
 			return;
@@ -346,7 +428,9 @@ function bindStatusListeners({ debugLog, showToast }) {
 		resetSyncButtons();
 		showToast(data.message, {
 			type: data.success ? "success" : "error",
-			title: data.success ? "书签同步完成" : "书签同步失败",
+			title: data.success
+				? t("settings.sync.bookmarksSuccessTitle")
+				: t("settings.sync.bookmarksErrorTitle"),
 		});
 	});
 
@@ -355,7 +439,7 @@ function bindStatusListeners({ debugLog, showToast }) {
 			if (dom.syncAllBtn) {
 				dom.syncAllBtn.disabled = true;
 				dom.syncAllBtn.innerHTML =
-					'<i class="material-icons">sync</i> 同步中...';
+					`<i class="material-icons">sync</i> ${t("settings.sync.syncing")}`;
 			}
 			if (dom.pullAllBtn) dom.pullAllBtn.disabled = true;
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
@@ -367,7 +451,7 @@ function bindStatusListeners({ debugLog, showToast }) {
 			if (dom.pullAllBtn) {
 				dom.pullAllBtn.disabled = true;
 				dom.pullAllBtn.innerHTML =
-					'<i class="material-icons">sync</i> 下载中...';
+					`<i class="material-icons">sync</i> ${t("settings.sync.downloading")}`;
 			}
 			if (dom.syncAllBtn) dom.syncAllBtn.disabled = true;
 			if (dom.syncBookmarksBtn) dom.syncBookmarksBtn.disabled = true;
@@ -378,15 +462,17 @@ function bindStatusListeners({ debugLog, showToast }) {
 		resetSyncButtons();
 		showToast(data.message, {
 			type: data.success ? "success" : "error",
-			title: data.success ? "同步完成" : "同步失败",
+			title: data.success
+				? t("settings.sync.successTitle")
+				: t("settings.sync.errorTitle"),
 		});
 	});
 
 	ipcRenderer.on("cache-cleared", async (_event, data) => {
 		if (!data.success) {
-			showToast("缓存清理失败，请重试。", {
+			showToast(t("settings.cache.errorMessage"), {
 				type: "error",
-				title: "清理失败",
+				title: t("settings.cache.errorTitle"),
 			});
 			resetCacheClearState();
 			return;
@@ -395,17 +481,17 @@ function bindStatusListeners({ debugLog, showToast }) {
 		try {
 			await reloadClearedState(debugLog);
 		} catch (error) {
-			console.error("重新加载配置数据失败:", error);
-			showToast("缓存已清理，但界面状态刷新失败，请重新打开设置页。", {
+			console.error("logs.settings.cache.reloadFailed", error);
+			showToast(t("settings.cache.partialRefreshMessage"), {
 				type: "warning",
-				title: "状态未完全刷新",
+				title: t("settings.cache.partialRefreshTitle"),
 			});
 		}
 
 		resetCacheClearState();
-		showToast(data.message || "缓存清理完成。", {
+		showToast(data.message || t("settings.cache.doneMessage"), {
 			type: "success",
-			title: "清理完成",
+			title: t("settings.cache.doneTitle"),
 		});
 	});
 }

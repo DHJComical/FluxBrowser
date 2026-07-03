@@ -2,6 +2,7 @@ const { app } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const configManager = require("../ConfigManager");
+const { t } = require("../i18n");
 
 function debugLog(...args) {
 	if (configManager.isDebugMode()) {
@@ -10,13 +11,33 @@ function debugLog(...args) {
 }
 
 function logStartupInfo() {
-	debugLog("--- FluxCore 启动 (重构版) ---");
-	debugLog(`运行环境: ${app.isPackaged ? "生产" : "开发"}`);
-	debugLog(`存储路径: ${app.getPath("userData")}`);
+	debugLog("logs.core.startupBanner");
+	debugLog(
+		t("logs.core.runtimeEnvironment", {
+			mode: t(
+				app.isPackaged ? "common.env.production" : "common.env.development",
+			),
+		}),
+	);
+	debugLog(
+		t("logs.core.storagePath", {
+			path: app.getPath("userData"),
+		}),
+	);
 
 	const savedBounds = configManager.getBoundsConfig();
-	debugLog(`启动窗口位置: X=${savedBounds.x}, Y=${savedBounds.y}`);
-	debugLog(`启动窗口大小: Width=${savedBounds.width}, Height=${savedBounds.height}`);
+	debugLog(
+		t("logs.core.startupWindowPosition", {
+			x: savedBounds.x,
+			y: savedBounds.y,
+		}),
+	);
+	debugLog(
+		t("logs.core.startupWindowSize", {
+			width: savedBounds.width,
+			height: savedBounds.height,
+		}),
+	);
 }
 
 function clearLogFiles() {
@@ -26,17 +47,21 @@ function clearLogFiles() {
 
 		if (fs.existsSync(logPath)) {
 			fs.unlinkSync(logPath);
-			debugLog("日志文件已删除");
+			debugLog("logs.core.logFileDeleted");
 		}
 
 		if (!fs.existsSync(logFolder)) {
 			fs.mkdirSync(logFolder, { recursive: true });
-			debugLog("日志文件夹已创建");
+			debugLog("logs.core.logFolderCreated");
 		}
 
-		debugLog("日志清理完成");
+		debugLog("logs.core.logCleanupCompleted");
 	} catch (error) {
-		debugLog("清理日志文件时出错:", error.message);
+		debugLog(
+			t("logs.core.logCleanupFailed", {
+				message: error.message,
+			}),
+		);
 	}
 }
 

@@ -1,3 +1,5 @@
+const { t } = require("../../i18n");
+
 function broadcastBookmarkSyncStatus(broadcast, data) {
 	broadcast("bookmark-sync-status", data);
 }
@@ -10,49 +12,55 @@ async function syncBookmarks({
 }) {
 	const config = configManager.getAppConfig();
 	if (!bookmarkSyncService.isGitConfigured(config)) {
-		logger.debug("Git 配置不完整，无法同步");
+		logger.debug("logs.bookmarks.sync.gitConfigMissing");
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: false,
-			message: "请先配置 Git 设置",
+			message: "messages.bookmarks.gitConfigRequired",
 		});
 		return;
 	}
 
 	if (!bookmarkSyncService.hasBookmarksFile()) {
-		logger.debug("书签文件不存在，无法同步");
+		logger.debug("logs.bookmarks.sync.fileMissing");
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: false,
-			message: "书签文件不存在",
+			message: "messages.bookmarks.fileMissing",
 		});
 		return;
 	}
 
 	broadcastBookmarkSyncStatus(broadcast, {
 		status: "syncing",
-		message: "正在同步...",
+		message: "messages.sync.syncing",
 	});
 
 	try {
 		const result = await bookmarkSyncService.sync(config);
 		if (result.changed) {
-			logger.debug("Git 同步成功");
+			logger.debug("logs.bookmarks.sync.success");
 			broadcastBookmarkSyncStatus(broadcast, {
 				success: true,
-				message: "同步成功",
+				message: "messages.sync.success",
 			});
 			return;
 		}
 
-		logger.debug("没有变更需要同步");
+		logger.debug("logs.bookmarks.sync.noChanges");
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: true,
-			message: "没有变更需要同步",
+			message: "messages.sync.noChanges",
 		});
 	} catch (error) {
-		logger.debug(`Git 同步失败: ${error.message}`);
+		logger.debug(
+			t("logs.bookmarks.sync.failed", {
+				message: error.message,
+			}),
+		);
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: false,
-			message: `同步失败: ${error.message}`,
+			message: t("messages.sync.failed", {
+				message: error.message,
+			}),
 		});
 	}
 }
@@ -65,32 +73,40 @@ async function pullBookmarks({
 }) {
 	const config = configManager.getAppConfig();
 	if (!bookmarkSyncService.isGitConfigured(config)) {
-		logger.debug("Git 配置不完整，无法拉取");
+		logger.debug("logs.bookmarks.pull.gitConfigMissing");
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: false,
-			message: "请先配置 Git 设置",
+			message: "messages.bookmarks.gitConfigRequired",
 		});
 		return;
 	}
 
 	broadcastBookmarkSyncStatus(broadcast, {
 		status: "pulling",
-		message: "正在拉取...",
+		message: "messages.sync.pulling",
 	});
 
 	try {
-		logger.debug("正在获取远程分支信息...");
+		logger.debug("logs.bookmarks.pull.fetchRemoteBranch");
 		const result = await bookmarkSyncService.pull(config);
-		logger.debug(`远程默认分支: ${result.defaultBranch}`);
+		logger.debug(
+			t("logs.bookmarks.pull.defaultBranch", {
+				branch: result.defaultBranch,
+			}),
+		);
 
-		logger.debug("Git 拉取成功");
+		logger.debug("logs.bookmarks.pull.success");
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: true,
-			message: "拉取成功",
+			message: "messages.sync.pullSuccess",
 		});
 		broadcast("bookmarks-data", result.bookmarks);
 	} catch (error) {
-		logger.debug(`Git 拉取失败: ${error.message}`);
+		logger.debug(
+			t("logs.bookmarks.pull.failed", {
+				message: error.message,
+			}),
+		);
 		if (
 			error.message.includes("Couldn") ||
 			error.message.includes("connection") ||
@@ -98,14 +114,16 @@ async function pullBookmarks({
 		) {
 			broadcastBookmarkSyncStatus(broadcast, {
 				success: false,
-				message: "网络连接失败，请检查网络或代理设置",
+				message: "messages.sync.networkFailed",
 			});
 			return;
 		}
 
 		broadcastBookmarkSyncStatus(broadcast, {
 			success: false,
-			message: `拉取失败: ${error.message}`,
+			message: t("messages.sync.pullFailed", {
+				message: error.message,
+			}),
 		});
 	}
 }

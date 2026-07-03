@@ -1,10 +1,11 @@
 const { app } = require("electron");
 const log = require("electron-log");
+const { t } = require("../main/i18n");
 
 module.exports = {
 	name: "SiteFixes",
 	initialize: (core) => {
-		log.info("[Plugin: SiteFixes] 已加载，正在监听网页内容...");
+		log.info(t("logs.siteFixes.loaded"));
 
 		app.on("web-contents-created", (event, webContents) => {
 			webContents.on("did-finish-load", () => {
@@ -30,9 +31,9 @@ module.exports = {
 							/* 强制去除可能存在的 fixed，恢复其纯占位功能 */
 						}
 					`).then(() => {
-						log.info("[SiteFixes] 成功为 Bilibili 注入顶栏修复 CSS");
+						log.info(t("logs.siteFixes.bilibiliCssInjected"));
 					}).catch(err => {
-						log.error("[SiteFixes] 为 Bilibili 注入 CSS 失败:", err);
+						log.error(t("logs.siteFixes.bilibiliCssFailed"), err);
 					});
 				}
 				

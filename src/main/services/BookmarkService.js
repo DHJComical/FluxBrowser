@@ -1,6 +1,7 @@
 const { app } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const { t } = require("../i18n");
 
 class BookmarkService {
 	constructor(logger) {
@@ -32,7 +33,11 @@ class BookmarkService {
 		try {
 			return JSON.parse(fs.readFileSync(localBookmarksPath, "utf8"));
 		} catch (error) {
-			this.logger.debug(`解析书签文件失败: ${error.message}`);
+			this.logger.debug(
+				t("logs.bookmarks.parseFailed", {
+					message: error.message,
+				}),
+			);
 			return [];
 		}
 	}
@@ -48,7 +53,7 @@ class BookmarkService {
 		const bookmarks = this.readBookmarks();
 		bookmarks.push(bookmark);
 		this.writeBookmarks(bookmarks);
-		this.logger.debug("书签已保存", bookmark.title);
+		this.logger.debug("logs.bookmarks.saved", bookmark.title);
 		return bookmarks;
 	}
 

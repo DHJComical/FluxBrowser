@@ -1,4 +1,5 @@
 const POLL_INTERVAL_MS = 450;
+const { t } = require("../i18n");
 
 function createEmptySnapshot(overrides = {}) {
 	return {
@@ -58,7 +59,7 @@ class LiveSubtitleMonitor {
 		this.pollTimer = setInterval(() => {
 			this.requestSnapshot();
 		}, POLL_INTERVAL_MS);
-		this.logger.debug("实时字幕采集已启动");
+		this.logger.debug("logs.liveSubtitle.captureStarted");
 		return this.getState();
 	}
 
@@ -72,7 +73,7 @@ class LiveSubtitleMonitor {
 		}
 		this.inFlightRequestId = null;
 		this.emitState();
-		this.logger.debug("实时字幕采集已停止");
+		this.logger.debug("logs.liveSubtitle.captureStopped");
 		return this.getState();
 	}
 

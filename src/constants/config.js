@@ -26,6 +26,7 @@ const DEFAULT_BOUNDS_CONFIG = {
 
 // 默认应用配置
 const DEFAULT_APP_CONFIG = {
+	language: "zh-CN",
 	debugMode: false,
 	bossKeyProtection: true,
 	alwaysOnTop: false,
@@ -150,6 +151,7 @@ const IPC_CHANNELS = {
 	IMMERSION_MODE_CHANGED: "immersion-mode-changed",
 	TABS_STATE_CHANGED: "tabs-state-changed",
 	ACTIVE_TAB_NAVIGATION: "active-tab-navigation",
+	LANGUAGE_CHANGED: "language-changed",
 };
 
 // 插件相关常量

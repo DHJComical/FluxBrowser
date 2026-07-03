@@ -1,6 +1,7 @@
 const { app } = require("electron");
 const configManager = require("./ConfigManager");
 const setupLogger = require("./Logger");
+const { setLocale, t } = require("./i18n");
 const launchRuntime = require("./core/launchRuntime");
 const {
 	debugLog,
@@ -22,6 +23,7 @@ const WindowManager = require("./core/WindowManager");
 class FluxCore {
 	constructor() {
 		this.logger = setupLogger();
+		setLocale(configManager.getAppConfig().language);
 		logStartupInfo();
 
 		// 初始化核心管理器
@@ -40,7 +42,7 @@ class FluxCore {
 
 	launch(PluginLoaderClass) {
 		launchRuntime(this, PluginLoaderClass);
-		this.debugLog("FluxCore 启动完成");
+		this.debugLog(t("logs.core.launchCompleted"));
 	}
 
 	// 获取快捷键（供插件系统使用）

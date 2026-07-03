@@ -2,6 +2,7 @@ const log = require("electron-log");
 const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
+const { t, translateLogArgs } = require("./i18n");
 
 // 全局调试模式标志（需要从 ConfigManager 获取）
 let debugMode = false;
@@ -29,16 +30,16 @@ function setDebugMode(enabled) {
  */
 const debugLog = {
 	log: (...args) => {
-		if (debugMode) console.log(...args);
+		if (debugMode) console.log(...translateLogArgs(args));
 	},
 	info: (...args) => {
-		if (debugMode) console.log(...args);
+		if (debugMode) console.log(...translateLogArgs(args));
 	},
 	warn: (...args) => {
-		if (debugMode) console.warn(...args);
+		if (debugMode) console.warn(...translateLogArgs(args));
 	},
 	error: (...args) => {
-		if (debugMode) console.error(...args);
+		if (debugMode) console.error(...translateLogArgs(args));
 	},
 };
 
@@ -62,7 +63,9 @@ module.exports = function () {
 		}
 	} catch (err) {
 		// 此时 logger 还没好，只能先用原生 console 输出错误
-		process.stdout.write("无法清理日志文件: " + err.message + "\n");
+		process.stdout.write(
+			`${t("logs.logger.cleanupFailed", { message: err.message })}\n`,
+		);
 	}
 
 	// electron-log
@@ -82,7 +85,11 @@ module.exports = function () {
 	}
 
 	// 接管全局 console
-	Object.assign(console, log.functions);
+	const originalFunctions = log.functions;
+	console.log = (...args) => originalFunctions.log(...translateLogArgs(args));
+	console.info = (...args) => originalFunctions.info(...translateLogArgs(args));
+	console.warn = (...args) => originalFunctions.warn(...translateLogArgs(args));
+	console.error = (...args) => originalFunctions.error(...translateLogArgs(args));
 
 	// 导出模块
 	return {

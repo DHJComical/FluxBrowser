@@ -1,3 +1,5 @@
+const { getLocale, t } = require("../shared/i18n");
+
 function formatTime(seconds) {
 	const safeSeconds = Math.max(0, Math.floor(Number(seconds) || 0));
 	const hours = Math.floor(safeSeconds / 3600);
@@ -5,36 +7,40 @@ function formatTime(seconds) {
 	const secs = safeSeconds % 60;
 
 	if (hours > 0) {
-		return `${hours}小时 ${mins}分 ${secs}秒`;
+		return t("bookmarks.time.hms", { hours, mins, secs });
 	}
 	if (mins > 0) {
-		return `${mins}分 ${secs}秒`;
+		return t("bookmarks.time.ms", { mins, secs });
 	}
-	return `${secs}秒`;
+	return t("bookmarks.time.s", { secs });
 }
 
 function formatDurationLabel(totalSeconds) {
 	const safeSeconds = Math.max(0, Math.floor(Number(totalSeconds) || 0));
 	if (safeSeconds >= 3600) {
-		return `${(safeSeconds / 3600).toFixed(1)} 小时`;
+		return t("bookmarks.duration.hours", {
+			value: (safeSeconds / 3600).toFixed(1),
+		});
 	}
 	if (safeSeconds >= 60) {
-		return `${Math.floor(safeSeconds / 60)} 分钟`;
+		return t("bookmarks.duration.minutes", {
+			value: Math.floor(safeSeconds / 60),
+		});
 	}
-	return `${safeSeconds} 秒`;
+	return t("bookmarks.duration.seconds", { value: safeSeconds });
 }
 
 function formatBookmarkDate(timestamp) {
 	if (!timestamp) {
-		return "时间未知";
+		return t("bookmarks.time.unknown");
 	}
 
 	const date = new Date(timestamp);
 	if (Number.isNaN(date.getTime())) {
-		return "时间未知";
+		return t("bookmarks.time.unknown");
 	}
 
-	return new Intl.DateTimeFormat("zh-CN", {
+	return new Intl.DateTimeFormat(getLocale(), {
 		month: "numeric",
 		day: "numeric",
 		hour: "2-digit",

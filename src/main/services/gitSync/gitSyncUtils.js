@@ -1,3 +1,5 @@
+const { t } = require("../../i18n");
+
 function filterPat(text) {
 	if (!text) return "";
 	return text
@@ -8,9 +10,9 @@ function filterPat(text) {
 function checkGitConfig(config) {
 	const errors = [];
 	if (!config.gitPat) errors.push("GitHub PAT");
-	if (!config.gitRemote) errors.push("远程仓库地址");
-	if (!config.gitName) errors.push("Git用户名");
-	if (!config.gitEmail) errors.push("Git邮箱");
+	if (!config.gitRemote) errors.push(t("settings.git.remoteLabel"));
+	if (!config.gitName) errors.push(t("settings.git.nameLabel"));
+	if (!config.gitEmail) errors.push(t("settings.git.emailLabel"));
 
 	if (errors.length > 0) {
 		return { valid: false, missing: errors };
@@ -31,13 +33,13 @@ function mapPullErrorMessage(message) {
 		message.includes("Connection refused") ||
 		message.includes("Failed to connect")
 	) {
-		return "网络连接失败，请检查网络或代理设置";
+		return t("messages.sync.networkFailed");
 	}
 	if (message.includes("Authentication failed")) {
-		return "认证失败，请检查GitHub PAT是否正确";
+		return t("messages.sync.authFailed");
 	}
 	if (message.includes("Repository not found")) {
-		return "仓库不存在，请检查仓库地址是否正确";
+		return t("messages.sync.repositoryNotFound");
 	}
 	return message;
 }

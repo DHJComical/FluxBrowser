@@ -2,6 +2,7 @@ const configManager = require("../ConfigManager");
 const createMainWindow = require("../windows/MainWindow");
 const createSettingsWindow = require("../windows/SettingsWindow");
 const createBookmarksWindow = require("../windows/BookmarksWindow");
+const { t } = require("../i18n");
 const {
 	focusBorderlessMaximizedApp,
 	bringWindowToFront,
@@ -224,6 +225,15 @@ class WindowManager {
 		});
 
 		return this.bookmarksWindow;
+	}
+
+	updateWindowTitles() {
+		if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+			this.settingsWindow.setTitle(t("windows.settings.title"));
+		}
+		if (this.bookmarksWindow && !this.bookmarksWindow.isDestroyed()) {
+			this.bookmarksWindow.setTitle(t("windows.bookmarks.title"));
+		}
 	}
 
 	setImmersionMode(isImmersionMode) {

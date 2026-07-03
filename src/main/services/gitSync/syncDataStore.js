@@ -2,6 +2,7 @@ const { app } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const configManager = require("../../ConfigManager");
+const { t } = require("../../i18n");
 const { CONFIG_FILES } = require("./constants");
 
 class SyncDataStore {
@@ -67,10 +68,14 @@ class SyncDataStore {
 				JSON.stringify(metadata, null, 2),
 			);
 
-			this.logger.debug("配置导出完成");
+			this.logger.debug("logs.syncData.exportCompleted");
 			return { success: true, path: this.syncDataPath };
 		} catch (error) {
-			this.logger.debug(`导出配置失败: ${error.message}`);
+			this.logger.debug(
+				t("logs.syncData.exportFailed", {
+					message: error.message,
+				}),
+			);
 			return { success: false, error: error.message };
 		}
 	}
@@ -84,13 +89,13 @@ class SyncDataStore {
 			this.importJsonConfig(
 				path.join(this.syncDataPath, `${prefix}${CONFIG_FILES.KEY_CONFIG}`),
 				(data) => configManager.saveKeyConfig(data),
-				"快捷键配置",
+				t("settings.syncAll.includeShortcuts"),
 				results,
 			);
 			this.importJsonConfig(
 				path.join(this.syncDataPath, `${prefix}${CONFIG_FILES.BOUNDS_CONFIG}`),
 				(data) => configManager.saveBoundsConfig(data),
-				"窗口边界配置",
+				t("settings.syncAll.includeWindowBounds"),
 				results,
 			);
 			this.importJsonConfig(
@@ -99,7 +104,7 @@ class SyncDataStore {
 					`${prefix}${CONFIG_FILES.RESOLUTION_PRESETS}`,
 				),
 				(data) => configManager.saveResolutionPresets(data),
-				"分辨率预设",
+				t("settings.syncAll.includeResolutionPresets"),
 				results,
 			);
 
@@ -114,18 +119,30 @@ class SyncDataStore {
 						fs.mkdirSync(bookmarksDir, { recursive: true });
 					}
 					fs.copyFileSync(bookmarksSrc, bookmarksDst);
-					results.imported.push("书签");
+					results.imported.push(t("settings.syncAll.includeBookmarks"));
 				} catch (error) {
-					results.failed.push(`书签: ${error.message}`);
+					results.failed.push(
+						t("logs.syncData.importItemFailed", {
+							item: t("settings.syncAll.includeBookmarks"),
+							message: error.message,
+						}),
+					);
 				}
 			}
 
 			this.logger.debug(
-				`配置导入完成: 成功${results.imported.length}项, 失败${results.failed.length}项`,
+				t("logs.syncData.importCompleted", {
+					imported: results.imported.length,
+					failed: results.failed.length,
+				}),
 			);
 			return { success: true, ...results };
 		} catch (error) {
-			this.logger.debug(`导入配置失败: ${error.message}`);
+			this.logger.debug(
+				t("logs.syncData.importFailed", {
+					message: error.message,
+				}),
+			);
 			return { success: false, error: error.message };
 		}
 	}

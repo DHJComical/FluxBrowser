@@ -11,9 +11,9 @@ function bindSyncActions({ confirmAction }) {
 	if (dom.pullBookmarksBtn) {
 		dom.pullBookmarksBtn.addEventListener("click", async () => {
 			const confirmed = await confirmAction({
-				title: "下载远程书签",
-				message: "确定要从远程仓库覆盖本地书签吗？此操作不可逆。",
-				confirmText: "确认覆盖",
+				title: "settings.sync.pullBookmarksConfirmTitle",
+				message: "settings.sync.pullBookmarksConfirmMessage",
+				confirmText: "settings.sync.confirmOverwrite",
 				tone: "danger",
 			});
 			if (confirmed) {
@@ -25,9 +25,9 @@ function bindSyncActions({ confirmAction }) {
 	if (dom.syncAllBtn) {
 		dom.syncAllBtn.addEventListener("click", async () => {
 			const confirmed = await confirmAction({
-				title: "上传全部配置",
-				message: "确定要上传所有配置和书签到云端吗？",
-				confirmText: "开始上传",
+				title: "settings.sync.pushAllConfirmTitle",
+				message: "settings.sync.pushAllConfirmMessage",
+				confirmText: "settings.sync.startUpload",
 			});
 			if (confirmed) {
 				ipcRenderer.send("sync-all");
@@ -38,9 +38,9 @@ function bindSyncActions({ confirmAction }) {
 	if (dom.pullAllBtn) {
 		dom.pullAllBtn.addEventListener("click", async () => {
 			const confirmed = await confirmAction({
-				title: "下载并覆盖本地配置",
-				message: "确定要从云端下载并覆盖本地所有配置吗？此操作不可逆。",
-				confirmText: "确认覆盖",
+				title: "settings.sync.pullAllConfirmTitle",
+				message: "settings.sync.pullAllConfirmMessage",
+				confirmText: "settings.sync.confirmOverwrite",
 				tone: "danger",
 			});
 			if (confirmed) {

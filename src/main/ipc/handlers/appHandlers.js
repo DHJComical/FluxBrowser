@@ -1,5 +1,7 @@
 const { app } = require("electron");
 const configManager = require("../../ConfigManager");
+const { setLocale, t } = require("../../i18n");
+const { IPC_CHANNELS } = require("../../../constants/config");
 
 function registerAppHandlers({
 	ipcMain,
@@ -8,49 +10,60 @@ function registerAppHandlers({
 	broadcast,
 }) {
 	ipcMain.on("clear-cache", (_event, options) => {
-		logger.debug("开始清理缓存...");
-		logger.debug(`清理选项: ${JSON.stringify(options)}`);
+		logger.debug("logs.app.cache.start");
+		logger.debug(
+			t("logs.app.cache.options", {
+				options: JSON.stringify(options),
+			}),
+		);
 
 		if (options.clearLogs && logger.clearLogFiles) {
-			logger.debug("正在清理日志文件...");
+			logger.debug("logs.app.cache.clearLogs");
 			logger.clearLogFiles();
 		}
 
 		if (options.clearKeyConfig) {
-			logger.debug("正在重置快捷键配置...");
+			logger.debug("logs.app.cache.resetShortcuts");
 			configManager.saveKeyConfig(configManager.DEFAULT_KEY_CONFIG);
 		}
 
 		if (options.clearWindowConfig) {
-			logger.debug("正在重置窗口配置...");
+			logger.debug("logs.app.cache.resetWindow");
 			configManager.saveBoundsConfig(configManager.DEFAULT_BOUNDS_CONFIG);
 		}
 
 		if (options.clearAppConfig) {
-			logger.debug("正在重置应用配置...");
+			logger.debug("logs.app.cache.resetApp");
 			configManager.saveAppConfig(configManager.DEFAULT_APP_CONFIG);
+			setLocale(configManager.DEFAULT_APP_CONFIG.language);
 			windowManager.setUserAlwaysOnTop(
 				configManager.DEFAULT_APP_CONFIG.alwaysOnTop,
 			);
+			if (typeof windowManager.updateWindowTitles === "function") {
+				windowManager.updateWindowTitles();
+			}
 		}
 
 		if (options.clearResolutionPresets) {
-			logger.debug("正在重置分辨率预设为默认值...");
+			logger.debug("logs.app.cache.resetResolution");
 			configManager.saveResolutionPresets(
 				configManager.DEFAULT_RESOLUTION_PRESETS,
 			);
 		}
 
-		logger.debug("缓存清理完成");
+		logger.debug("logs.app.cache.done");
 
 		broadcast("cache-cleared", {
 			success: true,
-			message: "缓存清理完成",
+			message: t("settings.cache.doneMessage"),
+		});
+		broadcast(IPC_CHANNELS.LANGUAGE_CHANGED, {
+			locale: configManager.getAppConfig().language,
 		});
 	});
 
 	ipcMain.on("restart-after-save", () => {
-		logger.debug("收到重启请求，准备重启应用...");
+		logger.debug("logs.app.restart.requested");
 		app.relaunch();
 		app.exit(0);
 	});
