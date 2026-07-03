@@ -74,6 +74,14 @@ function getPanelResizeMode(panel) {
 	return panel.dataset.resizeMode || "free";
 }
 
+function isPanelInteractionLocked(panel) {
+	return (
+		panel &&
+		panel.dataset.panelId === "direction-indicator" &&
+		document.body.classList.contains("immersion")
+	);
+}
+
 function getResizeCursor(direction) {
 	switch (direction) {
 		case "north":
@@ -521,6 +529,7 @@ function bindPanelDrag(panel) {
 
 	handle.addEventListener("mousedown", (event) => {
 		if (event.button !== 0) return;
+		if (isPanelInteractionLocked(panel)) return;
 		event.preventDefault();
 
 		const bounds = getPanelBounds(panel);
@@ -562,7 +571,13 @@ function bindPanelResize(panel) {
 	handles.forEach((handle) => {
 		handle.addEventListener("mousedown", (event) => {
 			if (event.button !== 0) return;
-			if (document.body.classList.contains("immersion")) return;
+			if (
+				(document.body.classList.contains("immersion") &&
+					panel.dataset.panelId !== "webview") ||
+				isPanelInteractionLocked(panel)
+			) {
+				return;
+			}
 			event.preventDefault();
 			event.stopPropagation();
 
@@ -659,11 +674,21 @@ async function bindFloatingPanels() {
 	});
 
 	window.addEventListener("blur", stopActiveInteractions);
+	window.addEventListener("immersion-mode-change", () => {
+		stopActiveInteractions();
+	});
 }
 
 function isInteractivePoint(x, y) {
 	const element = document.elementFromPoint(x, y);
-	return Boolean(element && element.closest(INTERACTIVE_SELECTOR));
+	if (!element) return false;
+
+	const lockedPanel = element.closest('[data-panel-id="direction-indicator"]');
+	if (lockedPanel && isPanelInteractionLocked(lockedPanel)) {
+		return false;
+	}
+
+	return Boolean(element.closest(INTERACTIVE_SELECTOR));
 }
 
 function setMousePassthrough(enabled) {

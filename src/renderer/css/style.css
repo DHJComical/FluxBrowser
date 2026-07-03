@@ -713,6 +713,15 @@ body.immersion .webview-panel .floating-panel-resize {
 	display: none;
 }
 
+body.immersion .direction-indicator-transform {
+	display: none;
+}
+
+body.immersion .direction-indicator-panel,
+body.immersion .direction-indicator-panel * {
+	pointer-events: none !important;
+}
+
 .browser-webview {
 	position: absolute;
 	inset: 0;

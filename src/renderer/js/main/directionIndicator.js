@@ -102,6 +102,10 @@ let rotateState = null;
 let saveRotationTimer = null;
 let hasBoundEvents = false;
 
+function isInteractionLocked() {
+	return document.body.classList.contains("immersion");
+}
+
 function normalizeAngle(value) {
 	const normalized = Math.round(Number(value) || 0) % 360;
 	return normalized < 0 ? normalized + 360 : normalized;
@@ -230,6 +234,7 @@ function bindRotationHandle() {
 
 	directionIndicatorRotateHandle.addEventListener("mousedown", (event) => {
 		if (event.button !== 0) return;
+		if (isInteractionLocked()) return;
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -271,6 +276,16 @@ function bindSubtitleUpdates() {
 function bindGlobalCleanup() {
 	window.addEventListener("blur", () => {
 		if (!rotateState) return;
+		rotateState = null;
+		endFloatingPanelInteraction();
+		scheduleSaveRotation();
+	});
+
+	window.addEventListener("immersion-mode-change", (event) => {
+		if (!event.detail || event.detail.isImmersion !== true || !rotateState) {
+			return;
+		}
+
 		rotateState = null;
 		endFloatingPanelInteraction();
 		scheduleSaveRotation();
