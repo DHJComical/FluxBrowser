@@ -64,6 +64,13 @@ function updateVideoControlInputs() {
 	}
 }
 
+function getLanguageOptionLabel(value) {
+	if (value === "en-US") {
+		return t("locale.en-US");
+	}
+	return t("locale.zh-CN");
+}
+
 function renderLanguageOptions() {
 	if (!dom.languageSelect) return;
 
@@ -77,6 +84,26 @@ function renderLanguageOptions() {
 			option.textContent = t("locale.en-US");
 		}
 	});
+
+	dom.languageSelect.value = state.language;
+
+	if (dom.languageSelectLabel) {
+		dom.languageSelectLabel.textContent = getLanguageOptionLabel(state.language);
+	}
+
+	dom.languageSelectOptions.forEach((option) => {
+		const isActive = option.dataset.value === state.language;
+		option.classList.toggle("active", isActive);
+		option.setAttribute("aria-selected", String(isActive));
+	});
+}
+
+function setLanguageSelectOpen(open) {
+	if (!dom.languageSelectTrigger || !dom.languageSelectMenu) return;
+
+	dom.languageSelectTrigger.classList.toggle("active", open);
+	dom.languageSelectTrigger.setAttribute("aria-expanded", String(open));
+	dom.languageSelectMenu.classList.toggle("hidden", !open);
 }
 
 function renderShortcuts() {
@@ -215,6 +242,7 @@ module.exports = {
 	updateAlwaysOnTopToggle,
 	updateVideoControlInputs,
 	renderLanguageOptions,
+	setLanguageSelectOpen,
 	renderShortcuts,
 	renderResolutionPresets,
 	updateAspectLockButton,

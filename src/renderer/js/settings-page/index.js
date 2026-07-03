@@ -127,9 +127,6 @@ async function init() {
 			renderLanguageOptions();
 			renderShortcuts();
 			renderResolutionPresets(debugLog);
-			if (dom.languageSelect) {
-				dom.languageSelect.value = state.language;
-			}
 		});
 	} catch (error) {
 		console.error("logs.settings.initFailed", error);

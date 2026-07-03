@@ -4,7 +4,9 @@ const state = require("./state");
 const {
 	setUpdateProgress,
 	resetUpdateProgress,
+	renderLanguageOptions,
 	renderResolutionPresets,
+	setLanguageSelectOpen,
 	updateAspectLockButton,
 	updateToggleState,
 } = require("./renderers");
@@ -79,6 +81,77 @@ function bindVideoControlEvents() {
 	if (dom.languageSelect) {
 		dom.languageSelect.addEventListener("change", () => {
 			state.language = dom.languageSelect.value || "zh-CN";
+			renderLanguageOptions();
+		});
+	}
+
+	if (dom.languageSelectTrigger && dom.languageSelectCustom) {
+		dom.languageSelectTrigger.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			const isHidden = dom.languageSelectMenu?.classList.contains("hidden");
+			setLanguageSelectOpen(Boolean(isHidden));
+		});
+
+		dom.languageSelectTrigger.addEventListener("keydown", (event) => {
+			if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				setLanguageSelectOpen(true);
+				const activeOption =
+					dom.languageSelectOptions.find(
+						(option) => option.dataset.value === state.language,
+					) || dom.languageSelectOptions[0];
+				activeOption?.focus();
+			}
+		});
+
+		dom.languageSelectOptions.forEach((option, index) => {
+			option.addEventListener("click", (event) => {
+				event.preventDefault();
+				const nextLanguage = option.dataset.value || "zh-CN";
+				state.language = nextLanguage;
+				if (dom.languageSelect) {
+					dom.languageSelect.value = nextLanguage;
+				}
+				renderLanguageOptions();
+				setLanguageSelectOpen(false);
+			});
+
+			option.addEventListener("keydown", (event) => {
+				if (event.key === "Escape") {
+					event.preventDefault();
+					setLanguageSelectOpen(false);
+					dom.languageSelectTrigger?.focus();
+					return;
+				}
+
+				if (event.key === "ArrowDown") {
+					event.preventDefault();
+					dom.languageSelectOptions[index + 1]?.focus();
+					return;
+				}
+
+				if (event.key === "ArrowUp") {
+					event.preventDefault();
+					if (index === 0) {
+						dom.languageSelectTrigger?.focus();
+						return;
+					}
+					dom.languageSelectOptions[index - 1]?.focus();
+				}
+			});
+		});
+
+		document.addEventListener("click", (event) => {
+			if (!dom.languageSelectCustom.contains(event.target)) {
+				setLanguageSelectOpen(false);
+			}
+		});
+
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Escape") {
+				setLanguageSelectOpen(false);
+			}
 		});
 	}
 }

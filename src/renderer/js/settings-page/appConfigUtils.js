@@ -8,6 +8,7 @@ const {
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
 	updateVideoControlInputs,
+	renderLanguageOptions,
 } = require("./renderers");
 
 function applyAppConfig(appConfig) {
@@ -19,6 +20,7 @@ function applyAppConfig(appConfig) {
 	if (dom.languageSelect) {
 		dom.languageSelect.value = state.language;
 	}
+	renderLanguageOptions();
 
 	state.bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 	state.alwaysOnTopState = appConfig.alwaysOnTop === true;
