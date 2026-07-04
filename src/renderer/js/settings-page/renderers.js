@@ -3,6 +3,7 @@ const dom = require("./dom");
 const state = require("./state");
 const { labelMap } = require("./constants");
 const { t } = require("../shared/i18n");
+const { applyMotionPreference } = require("../shared/motion");
 
 function setUpdateProgress(percent) {
 	const progressContainer = document.getElementById(
@@ -50,6 +51,16 @@ function updateAlwaysOnTopToggle() {
 	if (dom.alwaysOnTopToggle) {
 		dom.alwaysOnTopToggle.classList.toggle("active", state.alwaysOnTopState);
 	}
+}
+
+function updateAnimationsToggle() {
+	if (dom.animationsToggle) {
+		dom.animationsToggle.classList.toggle(
+			"active",
+			state.animationsEnabledState,
+		);
+	}
+	applyMotionPreference(state.animationsEnabledState);
 }
 
 function updateDirectionIndicatorToggle() {
@@ -249,6 +260,7 @@ module.exports = {
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
+	updateAnimationsToggle,
 	updateDirectionIndicatorToggle,
 	updateVideoControlInputs,
 	renderLanguageOptions,

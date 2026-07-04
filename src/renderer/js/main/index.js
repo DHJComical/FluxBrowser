@@ -11,9 +11,15 @@ const { bindLayoutEvents } = require("./layout");
 const { bindFloatingPanels } = require("./floatingPanels");
 const { bindDirectionIndicatorEvents } = require("./directionIndicator");
 const { bindSubtitleCollectorEvents } = require("./subtitleCollector");
+const {
+	bindMotionPreferenceEvents,
+	hydrateMotionPreference,
+} = require("./motion");
 
 async function init() {
 	await initI18n();
+	await hydrateMotionPreference();
+	bindMotionPreferenceEvents();
 	await bindFloatingPanels();
 	bindTabsEvents();
 	bindNavigationEvents();

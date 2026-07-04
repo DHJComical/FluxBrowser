@@ -7,6 +7,7 @@ const {
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
+	updateAnimationsToggle,
 	updateDirectionIndicatorToggle,
 	updateVideoControlInputs,
 	renderLanguageOptions,
@@ -25,6 +26,7 @@ function applyAppConfig(appConfig) {
 
 	state.bossKeyProtectionState = appConfig.bossKeyProtection !== false;
 	state.alwaysOnTopState = appConfig.alwaysOnTop === true;
+	state.animationsEnabledState = appConfig.animationsEnabled !== false;
 	state.directionIndicatorEnabledState =
 		appConfig.directionIndicator?.enabled !== false;
 	state.videoForwardSecondsState = normalizeNumber(
@@ -48,6 +50,7 @@ function applyAppConfig(appConfig) {
 
 	updateBossKeyProtectionToggle();
 	updateAlwaysOnTopToggle();
+	updateAnimationsToggle();
 	updateDirectionIndicatorToggle();
 	updateVideoControlInputs();
 }

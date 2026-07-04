@@ -16,6 +16,150 @@ let dropTargetAfter = false;
 let suppressClickTabId = "";
 let pendingDrag = null;
 let dragGhost = null;
+let settleAnimationFrameId = 0;
+let pendingDropAnimation = null;
+let dropGhostCleanupTimerId = 0;
+
+function cancelSettleAnimationFrame() {
+	if (!settleAnimationFrameId) return;
+	window.cancelAnimationFrame(settleAnimationFrameId);
+	settleAnimationFrameId = 0;
+}
+
+function clearDropGhostCleanupTimer() {
+	if (!dropGhostCleanupTimerId) return;
+	window.clearTimeout(dropGhostCleanupTimerId);
+	dropGhostCleanupTimerId = 0;
+}
+
+function cleanupPendingDropAnimation() {
+	clearDropGhostCleanupTimer();
+	if (pendingDropAnimation?.ghost) {
+		pendingDropAnimation.ghost.remove();
+	}
+	if (pendingDropAnimation?.tabId && strip) {
+		const targetElement = strip.querySelector(
+			`.tab-pill[data-tab-id="${CSS.escape(pendingDropAnimation.tabId)}"]`,
+		);
+		targetElement?.classList.remove("is-drop-settling-source");
+	}
+	pendingDropAnimation = null;
+}
+
+function captureTabRects() {
+	if (!strip) return new Map();
+
+	return new Map(
+		Array.from(strip.querySelectorAll(".tab-pill"))
+			.map((element) => [element.dataset.tabId, element.getBoundingClientRect()])
+			.filter(([tabId]) => Boolean(tabId)),
+	);
+}
+
+function animateTabReflow(previousRects) {
+	if (!strip || !(previousRects instanceof Map) || previousRects.size === 0) {
+		return;
+	}
+
+	const animatedElements = [];
+	Array.from(strip.querySelectorAll(".tab-pill")).forEach((element) => {
+		if (
+			pendingDropAnimation &&
+			pendingDropAnimation.tabId === element.dataset.tabId
+		) {
+			return;
+		}
+		const previousRect = previousRects.get(element.dataset.tabId);
+		if (!previousRect) return;
+
+		const nextRect = element.getBoundingClientRect();
+		const deltaX = previousRect.left - nextRect.left;
+		const deltaY = previousRect.top - nextRect.top;
+		if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
+			return;
+		}
+
+		element.classList.add("is-settling");
+		element.style.transition = "none";
+		element.style.transform = `translate(${Math.round(deltaX)}px, ${Math.round(deltaY)}px)`;
+		animatedElements.push(element);
+	});
+
+	if (animatedElements.length === 0) {
+		return;
+	}
+
+	cancelSettleAnimationFrame();
+	settleAnimationFrameId = window.requestAnimationFrame(() => {
+		settleAnimationFrameId = window.requestAnimationFrame(() => {
+			settleAnimationFrameId = 0;
+			animatedElements.forEach((element) => {
+				element.style.transition = "";
+				element.style.transform = "";
+			});
+		});
+	});
+
+	animatedElements.forEach((element) => {
+		window.setTimeout(() => {
+			element.classList.remove("is-settling");
+			element.style.transition = "";
+			element.style.transform = "";
+		}, 260);
+
+		element.addEventListener(
+			"transitionend",
+			() => {
+				element.classList.remove("is-settling");
+				element.style.transition = "";
+				element.style.transform = "";
+			},
+			{ once: true },
+		);
+	});
+}
+
+function animateDroppedGhost() {
+	if (!pendingDropAnimation?.ghost || !strip) {
+		return;
+	}
+
+	const targetElement = strip.querySelector(
+		`.tab-pill[data-tab-id="${CSS.escape(pendingDropAnimation.tabId)}"]`,
+	);
+	if (!targetElement) {
+		cleanupPendingDropAnimation();
+		return;
+	}
+
+	const targetRect = targetElement.getBoundingClientRect();
+	targetElement.classList.add("is-drop-settling-source");
+
+	const ghost = pendingDropAnimation.ghost;
+	ghost.classList.add("is-drop-settling");
+	ghost.style.width = `${Math.round(targetRect.width)}px`;
+
+	window.requestAnimationFrame(() => {
+		ghost.style.transform = `translate(${Math.round(targetRect.left)}px, ${Math.round(
+			targetRect.top,
+		)}px)`;
+	});
+
+	clearDropGhostCleanupTimer();
+	dropGhostCleanupTimerId = window.setTimeout(() => {
+		targetElement.classList.remove("is-drop-settling-source");
+		cleanupPendingDropAnimation();
+	}, 260);
+
+	ghost.addEventListener(
+		"transitionend",
+		() => {
+			targetElement.classList.remove("is-drop-settling-source");
+			cleanupPendingDropAnimation();
+		},
+		{ once: true },
+	);
+}
 
 function applyDragIndicatorClasses() {
 	if (!strip) return;
@@ -190,11 +334,15 @@ function scrollActiveTabIntoView() {
 
 function renderTabs() {
 	if (!strip) return;
+	const previousRects = captureTabRects();
+	cancelSettleAnimationFrame();
 	strip.innerHTML = "";
 	tabsState.tabs.forEach((tab) => {
 		strip.appendChild(buildTabElement(tab));
 	});
 	applyDragIndicatorClasses();
+	animateTabReflow(previousRects);
+	animateDroppedGhost();
 	requestAnimationFrame(scrollActiveTabIntoView);
 }
 
@@ -301,6 +449,14 @@ function bindDragEvents() {
 						}
 					: getDragTargetInfo(event.clientX);
 			if (targetInfo && targetInfo.targetTabId !== pendingDrag.tabId) {
+				cleanupPendingDropAnimation();
+				pendingDropAnimation = dragGhost
+					? {
+							tabId: pendingDrag.tabId,
+							ghost: dragGhost,
+						}
+					: null;
+				dragGhost = null;
 				ipcRenderer.send("reorder-tabs", {
 					draggedTabId: pendingDrag.tabId,
 					targetTabId: targetInfo.targetTabId,

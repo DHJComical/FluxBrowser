@@ -30,6 +30,7 @@ const DEFAULT_APP_CONFIG = {
 	debugMode: false,
 	bossKeyProtection: true,
 	alwaysOnTop: false,
+	animationsEnabled: true,
 	videoForwardSeconds: 10,
 	videoBackwardSeconds: 10,
 	videoLongPressRate: 2.0,

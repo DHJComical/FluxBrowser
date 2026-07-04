@@ -4,6 +4,7 @@ const state = {
 	debugModeState: false,
 	bossKeyProtectionState: true,
 	alwaysOnTopState: false,
+	animationsEnabledState: true,
 	directionIndicatorEnabledState: true,
 	videoForwardSecondsState: 10,
 	videoBackwardSecondsState: 10,
