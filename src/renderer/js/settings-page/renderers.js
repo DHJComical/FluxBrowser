@@ -52,6 +52,15 @@ function updateAlwaysOnTopToggle() {
 	}
 }
 
+function updateDirectionIndicatorToggle() {
+	if (dom.directionIndicatorToggle) {
+		dom.directionIndicatorToggle.classList.toggle(
+			"active",
+			state.directionIndicatorEnabledState,
+		);
+	}
+}
+
 function updateVideoControlInputs() {
 	if (dom.videoForwardSecondsInput) {
 		dom.videoForwardSecondsInput.value = state.videoForwardSecondsState;
@@ -240,6 +249,7 @@ module.exports = {
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
+	updateDirectionIndicatorToggle,
 	updateVideoControlInputs,
 	renderLanguageOptions,
 	setLanguageSelectOpen,

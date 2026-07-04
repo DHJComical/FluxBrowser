@@ -11,6 +11,7 @@ const {
 	updateDebugToggle,
 	updateBossKeyProtectionToggle,
 	updateAlwaysOnTopToggle,
+	updateDirectionIndicatorToggle,
 } = require("./renderers");
 const {
 	initTabs,
@@ -31,6 +32,9 @@ function handleSaveWithRestart() {
 		ipcRenderer.send("save-app-config", {
 			bossKeyProtection: state.bossKeyProtectionState,
 			alwaysOnTop: state.alwaysOnTopState,
+			directionIndicator: {
+				enabled: state.directionIndicatorEnabledState,
+			},
 			videoForwardSeconds: state.videoForwardSecondsState,
 			videoBackwardSeconds: state.videoBackwardSecondsState,
 			videoLongPressRate: state.videoLongPressRateState,
@@ -95,6 +99,14 @@ function bindCoreActions() {
 		dom.alwaysOnTopToggle.addEventListener("click", () => {
 			state.alwaysOnTopState = !state.alwaysOnTopState;
 			updateAlwaysOnTopToggle();
+		});
+	}
+
+	if (dom.directionIndicatorToggle) {
+		dom.directionIndicatorToggle.addEventListener("click", () => {
+			state.directionIndicatorEnabledState =
+				!state.directionIndicatorEnabledState;
+			updateDirectionIndicatorToggle();
 		});
 	}
 

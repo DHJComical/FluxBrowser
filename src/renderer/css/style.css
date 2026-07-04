@@ -415,6 +415,27 @@ body.immersion #webview-stack {
 	overflow: visible;
 }
 
+.direction-indicator-hint {
+	position: absolute;
+	left: 50%;
+	top: calc(100% + 10px);
+	width: max-content;
+	max-width: 220px;
+	padding: 6px 10px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 999px;
+	background: rgba(8, 10, 18, 0.78);
+	color: rgba(255, 255, 255, 0.72);
+	font-size: 11px;
+	line-height: 1.35;
+	letter-spacing: 0.01em;
+	text-align: center;
+	transform: translateX(-50%);
+	white-space: normal;
+	pointer-events: none;
+	backdrop-filter: blur(6px);
+}
+
 .direction-indicator-transform {
 	position: absolute;
 	inset: 14px;
@@ -709,6 +730,10 @@ body.immersion .webview-panel .floating-panel-resize {
 }
 
 body.immersion .direction-indicator-transform {
+	display: none;
+}
+
+body.immersion .direction-indicator-hint {
 	display: none;
 }
 

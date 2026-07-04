@@ -8,11 +8,31 @@ const { normalizeLocale, t } = require("./i18n");
 const { getConfigPaths } = require("./config/configPaths");
 const { loadConfig, saveConfig } = require("./config/configStore");
 
+function normalizeAppConfig(appConfig = {}) {
+	return {
+		...DEFAULT_APP_CONFIG,
+		...appConfig,
+		language: normalizeLocale(appConfig.language),
+		floatingPanels:
+			appConfig.floatingPanels && typeof appConfig.floatingPanels === "object"
+				? appConfig.floatingPanels
+				: {},
+		liveSubtitleKeywordDetection: {
+			...DEFAULT_APP_CONFIG.liveSubtitleKeywordDetection,
+			...(appConfig.liveSubtitleKeywordDetection || {}),
+		},
+		directionIndicator: {
+			...DEFAULT_APP_CONFIG.directionIndicator,
+			...(appConfig.directionIndicator || {}),
+		},
+	};
+}
+
 class ConfigManager {
 	constructor() {
 		this.keyConfig = DEFAULT_KEY_CONFIG;
 		this.boundsConfig = DEFAULT_BOUNDS_CONFIG;
-		this.appConfig = DEFAULT_APP_CONFIG;
+		this.appConfig = normalizeAppConfig(DEFAULT_APP_CONFIG);
 		this.resolutionPresets = DEFAULT_RESOLUTION_PRESETS;
 		this.tabsState = { tabs: [], activeTabId: null };
 		this.paths = getConfigPaths();
@@ -28,11 +48,9 @@ class ConfigManager {
 			this.paths.boundsConfigPath,
 			DEFAULT_BOUNDS_CONFIG,
 		);
-		this.appConfig = this._loadConfig(
-			this.paths.appConfigPath,
-			DEFAULT_APP_CONFIG,
+		this.appConfig = normalizeAppConfig(
+			this._loadConfig(this.paths.appConfigPath, DEFAULT_APP_CONFIG),
 		);
-		this.appConfig.language = normalizeLocale(this.appConfig.language);
 		this.resolutionPresets = this._loadConfig(
 			this.paths.resolutionPresetPath,
 			DEFAULT_RESOLUTION_PRESETS,
@@ -77,8 +95,18 @@ class ConfigManager {
 	}
 
 	saveAppConfig(config) {
-		this.appConfig = { ...this.appConfig, ...config };
-		this.appConfig.language = normalizeLocale(this.appConfig.language);
+		this.appConfig = normalizeAppConfig({
+			...this.appConfig,
+			...config,
+			liveSubtitleKeywordDetection: {
+				...this.appConfig.liveSubtitleKeywordDetection,
+				...(config.liveSubtitleKeywordDetection || {}),
+			},
+			directionIndicator: {
+				...this.appConfig.directionIndicator,
+				...(config.directionIndicator || {}),
+			},
+		});
 		this._saveConfig(this.paths.appConfigPath, this.appConfig);
 	}
 

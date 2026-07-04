@@ -10,6 +10,7 @@ const {
 	beginFloatingPanelInteraction,
 	endFloatingPanelInteraction,
 } = require("./floatingPanels");
+const { IPC_CHANNELS } = require("../../../constants/config");
 
 const DIRECTION_DEFINITIONS = [
 	{
@@ -97,11 +98,12 @@ const MARKER_FADE_OUT_MS = 3000;
 const ROTATION_SAVE_DELAY_MS = 160;
 
 let currentRotation = 0;
-let savedIndicatorConfig = { rotation: 0 };
+let savedIndicatorConfig = { enabled: true, rotation: 0 };
 let rotateState = null;
 let saveRotationTimer = null;
 let hasBoundEvents = false;
 let activeMarkerEntries = [];
+let isIndicatorEnabled = true;
 
 function isInteractionLocked() {
 	return document.body.classList.contains("immersion");
@@ -110,6 +112,13 @@ function isInteractionLocked() {
 function normalizeAngle(value) {
 	const normalized = Math.round(Number(value) || 0) % 360;
 	return normalized < 0 ? normalized + 360 : normalized;
+}
+
+function normalizeIndicatorConfig(config = {}) {
+	return {
+		enabled: config.enabled !== false,
+		rotation: normalizeAngle(config.rotation),
+	};
 }
 
 function normalizeSubtitleText(snapshot = {}) {
@@ -126,6 +135,17 @@ function normalizeSubtitleText(snapshot = {}) {
 function applyRotation() {
 	if (!directionIndicatorDial) return;
 	directionIndicatorDial.style.transform = `rotate(${currentRotation}deg)`;
+}
+
+function applyVisibility() {
+	if (!directionIndicatorPanel) return;
+	directionIndicatorPanel.classList.toggle("hidden", !isIndicatorEnabled);
+}
+
+function stopRotationInteraction() {
+	if (!rotateState) return;
+	rotateState = null;
+	endFloatingPanelInteraction();
 }
 
 function scheduleSaveRotation() {
@@ -199,6 +219,14 @@ function clearActiveMarkers() {
 	activeMarkerEntries = [];
 }
 
+function clearRenderedMarkers() {
+	clearActiveMarkers();
+	if (!directionIndicatorMarkers) return;
+	directionIndicatorMarkers
+		.querySelectorAll(".direction-hit-marker")
+		.forEach((marker) => marker.remove());
+}
+
 function fadeActiveMarkers() {
 	if (activeMarkerEntries.length === 0) return;
 
@@ -246,6 +274,8 @@ function showMarkers(matches = []) {
 }
 
 function handleSubtitleUpdate(snapshot = {}) {
+	if (!isIndicatorEnabled) return;
+
 	const matches = detectDirections(snapshot);
 	if (matches.length === 0) {
 		fadeActiveMarkers();
@@ -262,7 +292,7 @@ function handleSubtitleUpdate(snapshot = {}) {
 }
 
 function updateRotationFromPointer(clientX, clientY) {
-	if (!directionIndicatorPanel) return;
+	if (!directionIndicatorPanel || !isIndicatorEnabled) return;
 
 	const rect = directionIndicatorPanel.getBoundingClientRect();
 	const centerX = rect.left + rect.width / 2;
@@ -278,6 +308,7 @@ function bindRotationHandle() {
 	directionIndicatorRotateHandle.addEventListener("mousedown", (event) => {
 		if (event.button !== 0) return;
 		if (isInteractionLocked()) return;
+		if (!isIndicatorEnabled) return;
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -293,8 +324,7 @@ function bindRotationHandle() {
 
 	window.addEventListener("mouseup", () => {
 		if (!rotateState) return;
-		rotateState = null;
-		endFloatingPanelInteraction();
+		stopRotationInteraction();
 		scheduleSaveRotation();
 	});
 }
@@ -316,11 +346,39 @@ function bindSubtitleUpdates() {
 	});
 }
 
+function applyIndicatorConfig(config = {}) {
+	savedIndicatorConfig = {
+		...savedIndicatorConfig,
+		...normalizeIndicatorConfig(config),
+	};
+	isIndicatorEnabled = savedIndicatorConfig.enabled !== false;
+	currentRotation = normalizeAngle(savedIndicatorConfig.rotation);
+	applyRotation();
+	applyVisibility();
+
+	if (!isIndicatorEnabled) {
+		stopRotationInteraction();
+		clearRenderedMarkers();
+	}
+}
+
+function bindConfigUpdates() {
+	ipcRenderer.on(IPC_CHANNELS.APP_CONFIG_UPDATED, (_event, appConfig = {}) => {
+		if (!appConfig || !appConfig.directionIndicator) return;
+
+		const wasEnabled = isIndicatorEnabled;
+		applyIndicatorConfig(appConfig.directionIndicator);
+
+		if (!wasEnabled && isIndicatorEnabled) {
+			ensureSubtitleCaptureEnabled();
+		}
+	});
+}
+
 function bindGlobalCleanup() {
 	window.addEventListener("blur", () => {
 		if (!rotateState) return;
-		rotateState = null;
-		endFloatingPanelInteraction();
+		stopRotationInteraction();
 		scheduleSaveRotation();
 	});
 
@@ -329,8 +387,7 @@ function bindGlobalCleanup() {
 			return;
 		}
 
-		rotateState = null;
-		endFloatingPanelInteraction();
+		stopRotationInteraction();
 		scheduleSaveRotation();
 	});
 }
@@ -346,26 +403,22 @@ async function bindDirectionIndicatorEvents() {
 
 	try {
 		const appConfig = await ipcRenderer.invoke("get-app-config");
-		savedIndicatorConfig =
-			appConfig && appConfig.directionIndicator
-				? { ...appConfig.directionIndicator }
-				: { rotation: 0 };
-		currentRotation = normalizeAngle(savedIndicatorConfig.rotation);
+		applyIndicatorConfig(appConfig?.directionIndicator);
 	} catch (_error) {
-		currentRotation = 0;
-		savedIndicatorConfig = { rotation: 0 };
+		applyIndicatorConfig();
 	}
-
-	applyRotation();
 
 	if (!hasBoundEvents) {
 		hasBoundEvents = true;
 		bindRotationHandle();
 		bindSubtitleUpdates();
+		bindConfigUpdates();
 		bindGlobalCleanup();
 	}
 
-	await ensureSubtitleCaptureEnabled();
+	if (isIndicatorEnabled) {
+		await ensureSubtitleCaptureEnabled();
+	}
 }
 
 module.exports = {

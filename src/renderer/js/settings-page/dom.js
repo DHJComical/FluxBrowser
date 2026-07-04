@@ -11,6 +11,9 @@ module.exports = {
 		"boss-key-protection-toggle",
 	),
 	alwaysOnTopToggle: document.getElementById("always-on-top-toggle"),
+	directionIndicatorToggle: document.getElementById(
+		"direction-indicator-toggle",
+	),
 	versionNumber: document.getElementById("version-number"),
 	gitPatInput: document.getElementById("git-pat"),
 	gitRemoteInput: document.getElementById("git-remote"),
