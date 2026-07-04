@@ -14,7 +14,6 @@
     <div class="mainbar-row">
       <div class="brand-panel">
         <div class="drag-region" data-floating-handle>FluxBrowser</div>
-        <div class="window-status" id="window-status" data-i18n="main.status.idle">&#20934;&#22791;&#23601;&#32490;</div>
       </div>
 
       <div class="menu-container">
@@ -49,18 +48,58 @@
       </div>
 
       <div class="input-group">
-        <div class="address-meta">
-          <span class="address-label" data-i18n="main.address.label">&#22320;&#22336;</span>
-          <span class="page-title" id="page-title" data-i18n="main.navigation.pageTitleIdle">&#26410;&#21152;&#36733;&#39029;&#38754;</span>
+        <div class="nav-controls" aria-label="Navigation controls">
+          <button
+            id="back-btn"
+            class="nav-control-btn"
+            data-i18n-title="main.navigation.backAction"
+            data-i18n-aria-label="main.navigation.backAction"
+            title="&#21518;&#36864;"
+            aria-label="&#21518;&#36864;"
+          >
+            <i class="material-icons">arrow_back_ios_new</i>
+          </button>
+          <button
+            id="forward-btn"
+            class="nav-control-btn"
+            data-i18n-title="main.navigation.forwardAction"
+            data-i18n-aria-label="main.navigation.forwardAction"
+            title="&#21069;&#36827;"
+            aria-label="&#21069;&#36827;"
+          >
+            <i class="material-icons">arrow_forward_ios</i>
+          </button>
+          <button
+            id="refresh-btn"
+            class="nav-control-btn"
+            data-i18n-title="main.navigation.refreshAction"
+            data-i18n-aria-label="main.navigation.refreshAction"
+            title="&#21047;&#26032;"
+            aria-label="&#21047;&#26032;"
+          >
+            <i class="material-icons">refresh</i>
+          </button>
         </div>
-        <input
-          type="text"
-          id="url-input"
-          data-i18n-placeholder="main.navigation.inputPlaceholder"
-          placeholder="&#36755;&#20837;&#32593;&#22336;&#21518;&#22238;&#36710;&#25110;&#28857;&#20987;&#21069;&#24448;"
-          value=""
+
+        <div class="address-input-shell">
+          <input
+            type="text"
+            id="url-input"
+            data-i18n-placeholder="main.navigation.inputPlaceholder"
+            placeholder="&#36755;&#20837;&#32593;&#22336;&#21518;&#22238;&#36710;&#25110;&#28857;&#20987;&#21069;&#24448;"
+            value=""
+          >
+        </div>
+        <button
+          id="go-btn"
+          class="address-action-btn"
+          data-i18n-title="main.navigation.goAction"
+          data-i18n-aria-label="main.navigation.goAction"
+          title="&#21069;&#24448;"
+          aria-label="&#21069;&#24448;"
         >
-        <button id="go-btn"><i class="material-icons">arrow_forward</i></button>
+          <i class="material-icons">arrow_forward</i>
+        </button>
       </div>
     </div>
 

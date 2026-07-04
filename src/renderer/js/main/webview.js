@@ -2,7 +2,6 @@ const { ipcRenderer } = require("electron");
 const debugLog = require("./debug");
 const { getActiveWebview } = require("./tabs");
 const { syncActiveTabUi } = require("./activeTabUi");
-const { syncWindowStatusWithWebview } = require("./status");
 const {
 	state,
 	getWebview,
@@ -58,7 +57,6 @@ function bindWebviewEvents() {
 
 	window.addEventListener("flux-language-changed", () => {
 		syncActiveTabUi();
-		syncWindowStatusWithWebview();
 	});
 
 	window.onerror = (message, url, line) => {

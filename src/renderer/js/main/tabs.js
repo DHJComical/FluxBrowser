@@ -18,7 +18,6 @@ const {
 	clearStartupBackgroundMutedTab,
 } = require("./state");
 const { syncActiveTabUi } = require("./activeTabUi");
-const { setWindowStatus } = require("./status");
 
 const USER_AGENT =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -180,9 +179,6 @@ function createWebview(tab) {
 				isLoading: true,
 			},
 		});
-		if (tab.id === state.activeTabId) {
-			setWindowStatus("main.tabs.loadingStatus", "loading");
-		}
 	});
 
 	const persistNavigationState = () => {
@@ -199,7 +195,6 @@ function createWebview(tab) {
 		});
 		if (tab.id === state.activeTabId) {
 			syncActiveTabUi();
-			setWindowStatus("main.tabs.readyStatus", "ready", { autoReset: true });
 		}
 	};
 
@@ -216,12 +211,6 @@ function createWebview(tab) {
 				canGoForward: webview.canGoForward(),
 			},
 		});
-		if (tab.id === state.activeTabId) {
-			setWindowStatus("main.tabs.loadFailedStatus", "error", {
-				autoReset: true,
-				resetDelay: 2200,
-			});
-		}
 	});
 
 	return webview;
