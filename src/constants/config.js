@@ -43,6 +43,7 @@ const DEFAULT_APP_CONFIG = {
 		rules: [],
 	},
 	directionIndicator: {
+		enabled: true,
 		rotation: 0,
 	},
 };
@@ -152,6 +153,7 @@ const IPC_CHANNELS = {
 	TABS_STATE_CHANGED: "tabs-state-changed",
 	ACTIVE_TAB_NAVIGATION: "active-tab-navigation",
 	LANGUAGE_CHANGED: "language-changed",
+	APP_CONFIG_UPDATED: "app-config-updated",
 };
 
 // 插件相关常量

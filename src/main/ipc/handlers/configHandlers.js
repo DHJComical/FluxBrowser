@@ -77,6 +77,8 @@ function registerConfigHandlers({
 			nextConfig.language = normalizeLocale(nextConfig.language);
 		}
 		configManager.saveAppConfig(nextConfig);
+		const updatedAppConfig = configManager.getAppConfig();
+		broadcast(IPC_CHANNELS.APP_CONFIG_UPDATED, updatedAppConfig);
 		if (Object.hasOwn(nextConfig, "language")) {
 			const activeLocale = setLocale(nextConfig.language);
 			if (windowManager && typeof windowManager.updateWindowTitles === "function") {
