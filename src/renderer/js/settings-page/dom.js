@@ -11,6 +11,7 @@ module.exports = {
 		"boss-key-protection-toggle",
 	),
 	alwaysOnTopToggle: document.getElementById("always-on-top-toggle"),
+	animationsToggle: document.getElementById("animations-toggle"),
 	directionIndicatorToggle: document.getElementById(
 		"direction-indicator-toggle",
 	),

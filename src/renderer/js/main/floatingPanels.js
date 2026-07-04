@@ -10,6 +10,15 @@ const temporaryPanelBounds = new Map();
 let interactionShield = null;
 let lastMousePassthroughState = null;
 
+function parsePixelValue(value) {
+	if (typeof value !== "string" || !value.endsWith("px")) {
+		return null;
+	}
+
+	const parsed = Number.parseFloat(value);
+	return Number.isFinite(parsed) ? parsed : null;
+}
+
 function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
 }
@@ -22,6 +31,40 @@ function getPanelBounds(panel) {
 		width: rect.width,
 		height: rect.height,
 	};
+}
+
+function getPanelStyleBounds(panel) {
+	const left = parsePixelValue(panel.style.left);
+	const top = parsePixelValue(panel.style.top);
+	const width = parsePixelValue(panel.style.width);
+	const height = parsePixelValue(panel.style.height);
+
+	if (
+		left === null ||
+		top === null ||
+		width === null ||
+		height === null
+	) {
+		return null;
+	}
+
+	return {
+		x: left,
+		y: top,
+		width,
+		height,
+	};
+}
+
+function suspendPanelTransitions(panel, callback) {
+	if (!panel || typeof callback !== "function") return;
+
+	panel.classList.add("is-positioning");
+	callback();
+	void panel.offsetWidth;
+	window.requestAnimationFrame(() => {
+		panel.classList.remove("is-positioning");
+	});
 }
 
 function placePanel(panel, x, y) {
@@ -381,7 +424,7 @@ function getPersistedBounds(panel) {
 }
 
 function serializePanelBounds(panel) {
-	const bounds = getPanelBounds(panel);
+	const bounds = getPanelStyleBounds(panel) || getPanelBounds(panel);
 	return {
 		x: Math.round(bounds.x),
 		y: Math.round(bounds.y),
@@ -437,19 +480,23 @@ function setFloatingPanelSize(panelId, width, height) {
 	const extraHeight =
 		panel.dataset.sizeTarget === "content" && handle ? handle.offsetHeight : 0;
 
-	panel.style.width = `${Math.max(240, Math.round(Number(width) || 0))}px`;
-	panel.style.height = `${Math.max(
-		180,
-		Math.round(Number(height) || 0) + extraHeight,
-	)}px`;
-	keepPanelInView(panel);
+	suspendPanelTransitions(panel, () => {
+		panel.style.width = `${Math.max(240, Math.round(Number(width) || 0))}px`;
+		panel.style.height = `${Math.max(
+			180,
+			Math.round(Number(height) || 0) + extraHeight,
+		)}px`;
+		keepPanelInView(panel);
+	});
 	scheduleSavePanelBounds(panel);
 }
 
 function applyTemporaryPanelBounds(panel, bounds) {
-	panel.style.width = `${Math.round(bounds.width)}px`;
-	panel.style.height = `${Math.round(bounds.height)}px`;
-	placePanel(panel, bounds.x, bounds.y);
+	suspendPanelTransitions(panel, () => {
+		panel.style.width = `${Math.round(bounds.width)}px`;
+		panel.style.height = `${Math.round(bounds.height)}px`;
+		placePanel(panel, bounds.x, bounds.y);
+	});
 }
 
 function getContentExtraHeight(panel) {
@@ -491,8 +538,10 @@ function initializePanelPosition(panel) {
 
 	const persistedBounds = getPersistedBounds(panel);
 	if (persistedBounds) {
-		resizePanel(panel, persistedBounds.width || 0, persistedBounds.height || 0);
-		placePanel(panel, persistedBounds.x || 0, persistedBounds.y || 0);
+		suspendPanelTransitions(panel, () => {
+			resizePanel(panel, persistedBounds.width || 0, persistedBounds.height || 0);
+			placePanel(panel, persistedBounds.x || 0, persistedBounds.y || 0);
+		});
 		panel.dataset.positioned = "true";
 		return;
 	}
@@ -517,7 +566,9 @@ function initializePanelPosition(panel) {
 		}
 	}
 
-	placePanel(panel, x, y);
+	suspendPanelTransitions(panel, () => {
+		placePanel(panel, x, y);
+	});
 	panel.dataset.positioned = "true";
 }
 

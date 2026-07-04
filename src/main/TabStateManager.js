@@ -149,6 +149,37 @@ class TabStateManager {
 		return { ...nextTab };
 	}
 
+	reorderTabs(draggedTabId, targetTabId, options = {}) {
+		const fromIndex = this.state.tabs.findIndex((tab) => tab.id === draggedTabId);
+		const targetIndex = this.state.tabs.findIndex((tab) => tab.id === targetTabId);
+		if (fromIndex === -1 || targetIndex === -1) {
+			return this.getState();
+		}
+
+		const placeAfter = options.placeAfter === true;
+		if (
+			fromIndex === targetIndex ||
+			(placeAfter && fromIndex === targetIndex + 1) ||
+			(!placeAfter && fromIndex === targetIndex - 1)
+		) {
+			return this.getState();
+		}
+
+		const [draggedTab] = this.state.tabs.splice(fromIndex, 1);
+		let insertionIndex = targetIndex;
+		if (fromIndex < targetIndex) {
+			insertionIndex -= 1;
+		}
+		if (placeAfter) {
+			insertionIndex += 1;
+		}
+
+		insertionIndex = Math.max(0, Math.min(insertionIndex, this.state.tabs.length));
+		this.state.tabs.splice(insertionIndex, 0, draggedTab);
+		this.persist();
+		return this.getState();
+	}
+
 	closeTab(tabId) {
 		const index = this.state.tabs.findIndex((tab) => tab.id === tabId);
 		if (index === -1) {

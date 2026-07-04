@@ -62,6 +62,21 @@ function registerTabHandlers({
 		sendActiveTabNavigation(tabStateManager, sendToMainWindow);
 	});
 
+	ipcMain.on("reorder-tabs", (_event, payload = {}) => {
+		const draggedTabId =
+			typeof payload.draggedTabId === "string" ? payload.draggedTabId : "";
+		const targetTabId =
+			typeof payload.targetTabId === "string" ? payload.targetTabId : "";
+		if (!draggedTabId || !targetTabId || draggedTabId === targetTabId) {
+			return;
+		}
+
+		tabStateManager.reorderTabs(draggedTabId, targetTabId, {
+			placeAfter: payload.placeAfter === true,
+		});
+		broadcastTabs(tabStateManager, broadcast);
+	});
+
 	ipcMain.on("update-tab", (_event, payload = {}) => {
 		if (!payload.tabId) return;
 

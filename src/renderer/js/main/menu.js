@@ -11,7 +11,6 @@ const {
 const debugLog = require("./debug");
 const { showToast } = require("../shared/feedback");
 const { t } = require("../shared/i18n");
-const { setWindowStatus } = require("./navigation");
 const { getActiveWebview } = require("./tabs");
 
 function closeMenu() {
@@ -54,17 +53,12 @@ async function addBookmarkFromCurrentPage() {
 			time: videoInfo.time,
 			timestamp: Date.now(),
 		});
-		setWindowStatus("main.bookmarks.savedStatus", "ready", { autoReset: true });
 		showToast(t("main.bookmarks.savedMessage"), {
 			type: "success",
 			title: t("main.bookmarks.savedTitle"),
 		});
 	} catch (error) {
 		debugLog.error("logs.main.bookmarks.fetchVideoFailed", error);
-		setWindowStatus("main.bookmarks.addFailedStatus", "error", {
-			autoReset: true,
-			resetDelay: 2200,
-		});
 		showToast(t("main.bookmarks.addFailedMessage"), {
 			type: "error",
 			title: t("main.bookmarks.addFailedTitle"),
@@ -128,9 +122,6 @@ function bindMenuEvents() {
 
 	viewBookmarksBtn.onclick = () => {
 		closeMenu();
-		setWindowStatus("main.bookmarks.openWindowStatus", "idle", {
-			autoReset: true,
-		});
 		ipcRenderer.send("open-bookmarks-window");
 	};
 
@@ -149,15 +140,6 @@ function bindMenuEvents() {
 				}),
 			);
 			ipcRenderer.send("set-window-size", { width, height });
-			setWindowStatus(
-				t("main.resolution.switchedStatus", {
-					name: event.target.textContent,
-				}),
-				"ready",
-				{
-				autoReset: true,
-				},
-			);
 			showToast(
 				t("main.resolution.switchedMessage", {
 					name: event.target.textContent,
