@@ -112,7 +112,7 @@
 	},
 	"keywords": [],
 	"author": "DHJComical",
-	"license": "MIT",
+	"license": "GPL-3.0-or-later",
 	"description": "A floating, immersive, framework-based browser.",
 	"repository": {
 		"type": "git",
