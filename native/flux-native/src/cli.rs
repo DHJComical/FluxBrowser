@@ -1,10 +1,11 @@
-pub const USAGE: &str = "Usage: flux-native <key-hold-worker|focus-borderless-maximized|subtitle-keyword-worker|direction-keyword-worker>";
+pub const USAGE: &str = "Usage: flux-native <key-hold-worker|focus-borderless-maximized|subtitle-keyword-worker|direction-keyword-worker|subtitle-analysis-worker>";
 
 pub enum CliCommand {
     KeyHoldWorker,
     FocusBorderlessMaximized { flux_process_id: u32 },
     SubtitleKeywordWorker,
     DirectionKeywordWorker,
+    SubtitleAnalysisWorker,
 }
 
 impl CliCommand {
@@ -32,6 +33,7 @@ impl CliCommand {
             }
             "subtitle-keyword-worker" => Ok(Self::SubtitleKeywordWorker),
             "direction-keyword-worker" => Ok(Self::DirectionKeywordWorker),
+            "subtitle-analysis-worker" => Ok(Self::SubtitleAnalysisWorker),
             _ => Err(USAGE.to_owned()),
         }
     }

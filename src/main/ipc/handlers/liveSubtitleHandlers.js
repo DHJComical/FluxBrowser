@@ -3,6 +3,7 @@ const { t } = require("../../i18n");
 function registerLiveSubtitleHandlers({
 	ipcMain,
 	liveSubtitleMonitor,
+	liveSubtitleAnalysisCoordinator,
 	subtitleKeywordDetector,
 	directionKeywordDetector,
 	logger,
@@ -43,7 +44,7 @@ function registerLiveSubtitleHandlers({
 
 	ipcMain.on("set-live-subtitle-keyword-config", async (_event, config = {}) => {
 		const nextConfig = subtitleKeywordDetector.saveConfig(config);
-		await subtitleKeywordDetector.handleSnapshot(
+		await liveSubtitleAnalysisCoordinator.handleSnapshot(
 			liveSubtitleMonitor.getLatestSnapshot(),
 		);
 		logger.debug(
@@ -60,10 +61,7 @@ function registerLiveSubtitleHandlers({
 	ipcMain.on("live-subtitle-snapshot", async (_event, payload = {}) => {
 		const result = liveSubtitleMonitor.handleSnapshot(payload);
 		if (result && result.snapshot) {
-			await Promise.allSettled([
-				subtitleKeywordDetector.handleSnapshot(result.snapshot),
-				directionKeywordDetector.handleSnapshot(result.snapshot),
-			]);
+			await liveSubtitleAnalysisCoordinator.handleSnapshot(result.snapshot);
 		}
 	});
 }

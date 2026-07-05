@@ -76,6 +76,10 @@ class SubtitleKeywordDetector {
 		this.emitState();
 	}
 
+	getActiveRules() {
+		return getActiveRules(this.config.rules);
+	}
+
 	handleSnapshot(snapshot = {}) {
 		this.pendingAnalysis = this.pendingAnalysis
 			.catch(() => {})
@@ -90,8 +94,19 @@ class SubtitleKeywordDetector {
 		const text = typeof snapshot.text === "string" ? snapshot.text.trim() : "";
 		if (!text) return [];
 
-		const matches = await this.matchSnapshotRules(snapshot, text);
+		const { matches, backendMode } = await this.matchSnapshotRules(text);
+		return this.handleAnalyzedMatches(
+			{
+				...snapshot,
+				text,
+			},
+			this.decorateMatches(snapshot, text, matches),
+			backendMode,
+		);
+	}
 
+	async handleAnalyzedMatches(snapshot = {}, matches = [], backendMode = "") {
+		this.reportBackendMode(backendMode);
 		if (matches.length === 0) return [];
 
 		const signature = `${snapshot.url}::${snapshot.text}::${matches
@@ -113,10 +128,13 @@ class SubtitleKeywordDetector {
 		return matches;
 	}
 
-	async matchSnapshotRules(snapshot, text) {
-		const activeRules = getActiveRules(this.config.rules);
+	async matchSnapshotRules(text) {
+		const activeRules = this.getActiveRules();
 		if (activeRules.length === 0) {
-			return [];
+			return {
+				matches: [],
+				backendMode: "js",
+			};
 		}
 
 		let matches = [];
@@ -140,8 +158,14 @@ class SubtitleKeywordDetector {
 		if (!nativeHandled) {
 			matches = analyzeSubtitleKeywords(activeRules, text);
 		}
-		this.reportBackendMode(nativeHandled ? "rust" : "js");
 
+		return {
+			matches,
+			backendMode: nativeHandled ? "rust" : "js",
+		};
+	}
+
+	decorateMatches(snapshot, text, matches = []) {
 		return matches.map((match) => ({
 			id: `match-${Date.now().toString(36)}-${Math.random()
 				.toString(36)
@@ -153,7 +177,7 @@ class SubtitleKeywordDetector {
 			title: snapshot.title || "",
 			url: snapshot.url || "",
 			source: snapshot.source || "",
-			text: snapshot.text || "",
+			text: snapshot.text || text || "",
 			lines: Array.isArray(snapshot.lines) ? [...snapshot.lines] : [],
 			updatedAt:
 				typeof snapshot.updatedAt === "number"

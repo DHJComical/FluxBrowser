@@ -1,3 +1,4 @@
+pub mod analysis;
 pub mod cli;
 pub mod io;
 pub mod protocol;
@@ -33,6 +34,10 @@ where
             }
             Ok(cli::CliCommand::DirectionKeywordWorker) => {
                 commands::direction_keyword_worker::run();
+                0
+            }
+            Ok(cli::CliCommand::SubtitleAnalysisWorker) => {
+                commands::subtitle_analysis_worker::run();
                 0
             }
             Err(message) => {

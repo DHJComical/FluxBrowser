@@ -50,6 +50,7 @@ class DirectionKeywordDetector {
 		this.latestPayload = createPayload({}, []);
 		this.pendingAnalysis = Promise.resolve();
 		this.nativeWorker = new NativeDirectionKeywordWorker();
+		this.lastBackendMode = "";
 	}
 
 	loadConfig() {
@@ -62,6 +63,10 @@ class DirectionKeywordDetector {
 	syncConfig() {
 		this.config = this.loadConfig();
 		return this.config;
+	}
+
+	isEnabled() {
+		return this.syncConfig().enabled === true;
 	}
 
 	getLatestPayload() {
@@ -82,12 +87,14 @@ class DirectionKeywordDetector {
 		this.syncConfig();
 
 		if (!this.config.enabled) {
+			this.reportBackendMode("js");
 			this.emitMatches(snapshot, []);
 			return [];
 		}
 
 		const text = normalizeSubtitleText(snapshot);
 		if (!snapshot || snapshot.found !== true || !text) {
+			this.reportBackendMode("js");
 			this.emitMatches(snapshot, []);
 			return [];
 		}
@@ -108,13 +115,26 @@ class DirectionKeywordDetector {
 			matches = analyzeDirectionKeywords(text);
 		}
 
-		const didEmit = this.emitMatches(
+		return this.handleAnalyzedMatches(
 			{
 				...snapshot,
 				text,
 			},
 			matches,
+			nativeHandled ? "rust" : "js",
 		);
+	}
+
+	async handleAnalyzedMatches(snapshot = {}, matches = [], backendMode = "") {
+		this.syncConfig();
+		if (!this.config.enabled) {
+			this.reportBackendMode("js");
+			this.emitMatches(snapshot, []);
+			return [];
+		}
+
+		this.reportBackendMode(backendMode);
+		const didEmit = this.emitMatches(snapshot, matches);
 		if (didEmit && matches.length > 0) {
 			this.logger.debug(
 				`Direction indicator matched: ${matches
@@ -122,7 +142,6 @@ class DirectionKeywordDetector {
 					.join(", ")}`,
 			);
 		}
-
 		return matches;
 	}
 
@@ -137,6 +156,17 @@ class DirectionKeywordDetector {
 		this.latestPayload = payload;
 		this.broadcast(DIRECTION_MATCH_CHANNEL, this.getLatestPayload());
 		return true;
+	}
+
+	reportBackendMode(mode) {
+		if (!mode || mode === this.lastBackendMode) {
+			return;
+		}
+
+		this.lastBackendMode = mode;
+		this.logger.debug(
+			`Direction keyword detector backend: ${mode === "rust" ? "Rust" : "JS fallback"}`,
+		);
 	}
 }
 

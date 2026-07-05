@@ -8,6 +8,7 @@ const registerBookmarkHandlers = require("../ipc/handlers/bookmarkHandlers");
 const registerTabHandlers = require("../ipc/handlers/tabHandlers");
 const registerLiveSubtitleHandlers = require("../ipc/handlers/liveSubtitleHandlers");
 const LiveSubtitleMonitor = require("../services/LiveSubtitleMonitor");
+const LiveSubtitleAnalysisCoordinator = require("../services/LiveSubtitleAnalysisCoordinator");
 const SubtitleKeywordDetector = require("../services/SubtitleKeywordDetector");
 const DirectionKeywordDetector = require("../services/DirectionKeywordDetector");
 const {
@@ -45,6 +46,10 @@ class IPCManager {
 			logger,
 			configManager,
 			broadcast: this.broadcast.bind(this),
+		});
+		this.liveSubtitleAnalysisCoordinator = new LiveSubtitleAnalysisCoordinator({
+			subtitleKeywordDetector: this.subtitleKeywordDetector,
+			directionKeywordDetector: this.directionKeywordDetector,
 		});
 	}
 

@@ -30,6 +30,7 @@ function createIPCSharedContext(ipcManager) {
 		bookmarkService: ipcManager.bookmarkService,
 		bookmarkSyncService: ipcManager.bookmarkSyncService,
 		liveSubtitleMonitor: ipcManager.liveSubtitleMonitor,
+		liveSubtitleAnalysisCoordinator: ipcManager.liveSubtitleAnalysisCoordinator,
 		subtitleKeywordDetector: ipcManager.subtitleKeywordDetector,
 		directionKeywordDetector: ipcManager.directionKeywordDetector,
 		tabStateManager: ipcManager.tabStateManager,
