@@ -65,11 +65,13 @@ fn compile_rules(rules: &[KeywordRule]) -> Vec<CompiledRule> {
 }
 
 fn compile_rule(rule: &KeywordRule) -> Option<CompiledRule> {
-    if rule.pattern.trim().is_empty() || rule.is_regex {
+    if rule.pattern.trim().is_empty() {
         return None;
     }
 
-    let pattern = if rule.whole_word {
+    let pattern = if rule.is_regex {
+        rule.pattern.clone()
+    } else if rule.whole_word {
         format!(r"\b{}\b", regex::escape(&rule.pattern))
     } else {
         regex::escape(&rule.pattern)

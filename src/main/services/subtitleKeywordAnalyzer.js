@@ -79,7 +79,7 @@ function getActiveRules(rules = []) {
 
 function canUseNativeKeywordAnalyzer(rules = []) {
 	const activeRules = getActiveRules(rules);
-	return activeRules.length > 0 && activeRules.every((rule) => rule.isRegex !== true);
+	return activeRules.length > 0;
 }
 
 function createRuleSignature(rules = []) {

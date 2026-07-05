@@ -20,6 +20,7 @@ class SubtitleKeywordDetector {
 		this.config = this.loadConfig();
 		this.pendingAnalysis = Promise.resolve();
 		this.nativeWorker = new NativeSubtitleKeywordWorker();
+		this.lastBackendMode = "";
 	}
 
 	loadConfig() {
@@ -139,6 +140,7 @@ class SubtitleKeywordDetector {
 		if (!nativeHandled) {
 			matches = analyzeSubtitleKeywords(activeRules, text);
 		}
+		this.reportBackendMode(nativeHandled ? "rust" : "js");
 
 		return matches.map((match) => ({
 			id: `match-${Date.now().toString(36)}-${Math.random()
@@ -163,6 +165,17 @@ class SubtitleKeywordDetector {
 
 	emitState() {
 		this.broadcast("live-subtitle-keyword-state", this.getState());
+	}
+
+	reportBackendMode(mode) {
+		if (!mode || mode === this.lastBackendMode) {
+			return;
+		}
+
+		this.lastBackendMode = mode;
+		this.logger.debug(
+			`Live subtitle keyword detector backend: ${mode === "rust" ? "Rust" : "JS fallback"}`,
+		);
 	}
 }
 
