@@ -28,6 +28,8 @@ function registerConfigHandlers({
 	pluginLoader,
 	broadcast,
 	getCurrentOpacity,
+	liveSubtitleMonitor,
+	directionKeywordDetector,
 }) {
 	ipcMain.handle("get-shortcuts", () => configManager.getKeyConfig());
 
@@ -71,7 +73,7 @@ function registerConfigHandlers({
 		}
 	});
 
-	ipcMain.on("save-app-config", (_event, config) => {
+	ipcMain.on("save-app-config", async (_event, config) => {
 		const nextConfig = { ...config };
 		if (Object.hasOwn(nextConfig, "language")) {
 			nextConfig.language = normalizeLocale(nextConfig.language);
@@ -88,6 +90,11 @@ function registerConfigHandlers({
 		}
 		if (Object.hasOwn(nextConfig, "alwaysOnTop")) {
 			windowManager.setUserAlwaysOnTop(nextConfig.alwaysOnTop);
+		}
+		if (Object.hasOwn(nextConfig, "directionIndicator")) {
+			await directionKeywordDetector.handleSnapshot(
+				liveSubtitleMonitor.getLatestSnapshot(),
+			);
 		}
 	});
 

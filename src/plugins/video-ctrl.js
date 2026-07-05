@@ -1,5 +1,8 @@
 const { spawn } = require("child_process");
 const configManager = require("../main/ConfigManager");
+const {
+	resolveNativeBinaryPath,
+} = require("../main/native/resolveNativeBinaryPath");
 
 const DEFAULT_VIDEO_CONFIG = {
 	forwardSeconds: 10,
@@ -8,12 +11,17 @@ const DEFAULT_VIDEO_CONFIG = {
 };
 const LONG_PRESS_THRESHOLD_MS = 250;
 const KEY_POLL_INTERVAL_MS = 15;
+const NATIVE_BINARY_NAME =
+	process.platform === "win32" ? "flux-native.exe" : "flux-native";
 
 let keyHoldWorker = null;
 let keyHoldOutputBuffer = "";
 let keyHoldRequestId = 0;
 let activeForwardHold = null;
 let registeredExitCleanup = false;
+let keyHoldWorkerStopping = false;
+let nativeWorkerAvailable = process.platform === "win32";
+let nativeWorkerFailureLogged = false;
 
 const VIRTUAL_KEY_MAP = {
 	BACKSPACE: 0x08,
@@ -42,6 +50,21 @@ const VIRTUAL_KEY_MAP = {
 	COMMAND: 0x5b,
 	COMMANDORCONTROL: 0x11,
 };
+
+function logKeyHold(message) {
+	console.info(`[VideoController] ${message}`);
+}
+
+function logKeyHoldError(message) {
+	console.error(`[VideoController] ${message}`);
+}
+
+function markNativeWorkerUnavailable(reason) {
+	nativeWorkerAvailable = false;
+	if (nativeWorkerFailureLogged) return;
+	nativeWorkerFailureLogged = true;
+	logKeyHoldError(`Native key-hold worker unavailable. ${reason}`);
+}
 
 function clampNumber(value, fallback, min, max) {
 	const number = Number(value);
@@ -99,94 +122,11 @@ function getAcceleratorVirtualKeyCodes(accelerator) {
 	return [...new Set(codes)];
 }
 
-function buildKeyHoldWorkerScript() {
-	return `
-$signature = @'
-using System.Runtime.InteropServices;
-
-public static class KeyboardState {
-	[DllImport("user32.dll")]
-	public static extern short GetAsyncKeyState(int vKey);
-}
-'@
-
-Add-Type -TypeDefinition $signature
-
-function Test-AllKeysDown([int[]]$keyCodes) {
-	foreach ($keyCode in $keyCodes) {
-		if (([KeyboardState]::GetAsyncKeyState($keyCode) -band 0x8000) -eq 0) {
-			return $false
-		}
-	}
-	return $true
-}
-
-Write-Output "ready"
-
-while ($true) {
-	$line = [Console]::In.ReadLine()
-	if ($null -eq $line -or $line -eq "exit") {
-		break
-	}
-
-	$parts = $line -split "\\|"
-	if ($parts.Length -lt 4) {
-		continue
-	}
-
-	$requestId = $parts[0]
-	$keyCodes = @(
-		$parts[1].Split(",") |
-			Where-Object { $_ -match "^\\d+$" } |
-			ForEach-Object { [int]$_ }
-	)
-	$thresholdMs = [int]$parts[2]
-	$pollMs = [int]$parts[3]
-
-	if ($keyCodes.Count -eq 0) {
-		Write-Output "$requestId|short"
-		continue
-	}
-
-	$elapsedMs = 0
-	$isShort = $false
-
-	while ($elapsedMs -lt $thresholdMs) {
-		if (-not (Test-AllKeysDown $keyCodes)) {
-			Write-Output "$requestId|short"
-			$isShort = $true
-			break
-		}
-
-		Start-Sleep -Milliseconds $pollMs
-		$elapsedMs += $pollMs
-	}
-
-	if ($isShort) {
-		continue
-	}
-
-	Write-Output "$requestId|long"
-
-	while (Test-AllKeysDown $keyCodes) {
-		Start-Sleep -Milliseconds $pollMs
-	}
-
-	Write-Output "$requestId|released"
-}
-`;
-}
-
-function cleanupForwardHold(shouldSeekOnUnhandled = false) {
+function cleanupForwardHold() {
 	if (!activeForwardHold) return;
 
 	const hold = activeForwardHold;
 	activeForwardHold = null;
-
-	if (shouldSeekOnUnhandled && !hold.handled) {
-		seekVideo(hold.core, hold.config.forwardSeconds);
-	}
-
 	if (hold.rateActive) {
 		restoreLongPressPlaybackRate(hold.core);
 	}
@@ -215,50 +155,50 @@ function handleKeyHoldMessage(message) {
 
 function stopKeyHoldWorker() {
 	if (keyHoldWorker && !keyHoldWorker.killed) {
+		keyHoldWorkerStopping = true;
 		keyHoldWorker.kill();
 	}
 	keyHoldWorker = null;
 	keyHoldOutputBuffer = "";
-	cleanupForwardHold(true);
+	cleanupForwardHold();
 }
 
-function startKeyHoldWorker() {
-	if (process.platform !== "win32") return null;
-	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
-
+function attachKeyHoldWorkerListeners(worker) {
+	keyHoldWorker = worker;
 	keyHoldOutputBuffer = "";
-	keyHoldWorker = spawn(
-		"powershell.exe",
-		[
-			"-NoProfile",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-Command",
-			buildKeyHoldWorkerScript(),
-		],
-		{ windowsHide: true },
-	);
 
-	keyHoldWorker.stdout.on("data", (data) => {
-		keyHoldOutputBuffer += data.toString();
-		const lines = keyHoldOutputBuffer.split(/\r?\n/);
-		keyHoldOutputBuffer = lines.pop() || "";
-		lines
-			.map((line) => line.trim())
-			.filter(Boolean)
-			.forEach(handleKeyHoldMessage);
-	});
+	if (worker.stdout) {
+		worker.stdout.on("data", (data) => {
+			keyHoldOutputBuffer += data.toString();
+			const lines = keyHoldOutputBuffer.split(/\r?\n/);
+			keyHoldOutputBuffer = lines.pop() || "";
+			lines
+				.map((line) => line.trim())
+				.filter(Boolean)
+				.forEach(handleKeyHoldMessage);
+		});
+	}
 
-	keyHoldWorker.on("error", () => {
+	worker.on("error", (error) => {
+		if (!keyHoldWorkerStopping) {
+			markNativeWorkerUnavailable(error?.message || "spawn failed");
+		}
+		keyHoldWorkerStopping = false;
 		keyHoldWorker = null;
 		keyHoldOutputBuffer = "";
-		cleanupForwardHold(true);
+		cleanupForwardHold();
 	});
 
-	keyHoldWorker.on("close", () => {
+	worker.on("close", (code) => {
+		if (!keyHoldWorkerStopping) {
+			markNativeWorkerUnavailable(
+				`native worker exited with code ${code ?? "unknown"}`,
+			);
+		}
+		keyHoldWorkerStopping = false;
 		keyHoldWorker = null;
 		keyHoldOutputBuffer = "";
-		cleanupForwardHold(true);
+		cleanupForwardHold();
 	});
 
 	if (!registeredExitCleanup) {
@@ -266,16 +206,41 @@ function startKeyHoldWorker() {
 		process.once("exit", stopKeyHoldWorker);
 	}
 
-	return keyHoldWorker;
+	return worker;
+}
+
+function startKeyHoldWorker() {
+	if (process.platform !== "win32") return null;
+	if (!nativeWorkerAvailable) return null;
+	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
+
+	const binaryPath = resolveNativeBinaryPath(NATIVE_BINARY_NAME);
+	if (!binaryPath) {
+		markNativeWorkerUnavailable("native binary not found");
+		return null;
+	}
+
+	try {
+		const worker = spawn(binaryPath, ["key-hold-worker"], {
+			windowsHide: true,
+		});
+		logKeyHold(`Started key-hold worker via Rust: ${binaryPath}`);
+		return attachKeyHoldWorkerListeners(worker);
+	} catch (error) {
+		markNativeWorkerUnavailable(error?.message || "spawn failed");
+		return null;
+	}
 }
 
 function requestKeyHold(core, config, keyCodes) {
 	const worker = startKeyHoldWorker();
 	if (!worker || !worker.stdin || worker.stdin.destroyed) {
+		logKeyHoldError("Unable to submit key-hold request to native worker.");
 		return false;
 	}
 
 	const requestId = String(++keyHoldRequestId);
+	logKeyHold(`Key-hold request ${requestId} using Rust`);
 	activeForwardHold = {
 		id: requestId,
 		core,
@@ -288,7 +253,10 @@ function requestKeyHold(core, config, keyCodes) {
 		`${requestId}|${keyCodes.join(",")}|${LONG_PRESS_THRESHOLD_MS}|${KEY_POLL_INTERVAL_MS}\n`,
 		(error) => {
 			if (error && activeForwardHold?.id === requestId) {
-				cleanupForwardHold(true);
+				logKeyHoldError(
+					`Key-hold request ${requestId} write failed: ${error.message}`,
+				);
+				cleanupForwardHold();
 			}
 		},
 	);
@@ -334,22 +302,18 @@ function restoreLongPressPlaybackRate(core) {
 	`);
 }
 
-function handleFallbackForward(core, forwardSeconds) {
-	seekVideo(core, forwardSeconds);
-}
-
 function handleForward(core) {
 	if (activeForwardHold) return;
 
 	const config = getVideoConfig();
 	const keyCodes = getAcceleratorVirtualKeyCodes(core.getKey("Video-Forward"));
 	if (process.platform !== "win32" || keyCodes.length === 0) {
-		handleFallbackForward(core, config.forwardSeconds);
+		seekVideo(core, config.forwardSeconds);
 		return;
 	}
 
 	if (!requestKeyHold(core, config, keyCodes)) {
-		handleFallbackForward(core, config.forwardSeconds);
+		logKeyHoldError("Video forward shortcut aborted because native worker is unavailable.");
 	}
 }
 

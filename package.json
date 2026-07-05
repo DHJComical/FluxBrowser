@@ -69,8 +69,10 @@
 		"yauzl": "^3.3.0"
 	},
 	"scripts": {
-		"start": "chcp 65001 && electron .",
-		"build": "electron-builder"
+		"build:native": "node scripts/build-native.js --required",
+		"build:native:release": "node scripts/build-native.js --release --required",
+		"start": "chcp 65001 && node scripts/build-native.js --required && electron .",
+		"build": "node scripts/build-native.js --release --required && electron-builder"
 	},
 	"build": {
 		"appId": "com.flux.browser",
@@ -104,6 +106,12 @@
 			"uninstallDisplayName": "FluxBrowser",
 			"runAfterFinish": true
 		},
+		"extraResources": [
+			{
+				"from": "native/flux-native/target/release/flux-native.exe",
+				"to": "native/flux-native.exe"
+			}
+		],
 		"asar": true,
 		"files": [
 			"src/**/*",

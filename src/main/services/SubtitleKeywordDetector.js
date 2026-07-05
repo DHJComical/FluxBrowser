@@ -1,64 +1,11 @@
 const MAX_RECENT_MATCHES = 100;
 const { t } = require("../i18n");
-
-function createDefaultConfig() {
-	return {
-		enabled: true,
-		rules: [],
-	};
-}
-
-function normalizeRule(rule, index = 0) {
-	if (typeof rule === "string") {
-		const pattern = rule.trim();
-		if (!pattern) return null;
-		return {
-			id: `rule-${index}-${pattern.toLowerCase()}`,
-			pattern,
-			enabled: true,
-			matchCase: false,
-			wholeWord: false,
-			isRegex: false,
-		};
-	}
-
-	if (!rule || typeof rule !== "object") return null;
-
-	const pattern =
-		typeof rule.pattern === "string"
-			? rule.pattern.trim()
-			: typeof rule.keyword === "string"
-				? rule.keyword.trim()
-				: "";
-	if (!pattern) return null;
-
-	return {
-		id:
-			typeof rule.id === "string" && rule.id.trim()
-				? rule.id.trim()
-				: `rule-${index}-${pattern.toLowerCase()}`,
-		pattern,
-		enabled: rule.enabled !== false,
-		matchCase: rule.matchCase === true,
-		wholeWord: rule.wholeWord === true,
-		isRegex: rule.isRegex === true,
-	};
-}
-
-function normalizeConfig(config = {}) {
-	const rules = Array.isArray(config.rules)
-		? config.rules.map((rule, index) => normalizeRule(rule, index)).filter(Boolean)
-		: [];
-
-	return {
-		enabled: config.enabled !== false,
-		rules,
-	};
-}
-
-function escapeRegExp(value) {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
+const NativeSubtitleKeywordWorker = require("../native/NativeSubtitleKeywordWorker");
+const {
+	normalizeConfig,
+	createRuleSignature,
+	getActiveRules,
+} = require("./subtitleKeywordAnalyzer");
 
 class SubtitleKeywordDetector {
 	constructor({ logger, configManager, broadcast }) {
@@ -69,6 +16,9 @@ class SubtitleKeywordDetector {
 		this.lastSignature = "";
 		this.lastMatchAt = 0;
 		this.config = this.loadConfig();
+		this.pendingAnalysis = Promise.resolve();
+		this.nativeWorker = new NativeSubtitleKeywordWorker();
+		this.lastBackendMode = "";
 	}
 
 	loadConfig() {
@@ -124,18 +74,37 @@ class SubtitleKeywordDetector {
 		this.emitState();
 	}
 
+	getActiveRules() {
+		return getActiveRules(this.config.rules);
+	}
+
 	handleSnapshot(snapshot = {}) {
+		this.pendingAnalysis = this.pendingAnalysis
+			.catch(() => {})
+			.then(() => this.analyzeSnapshot(snapshot));
+		return this.pendingAnalysis;
+	}
+
+	async analyzeSnapshot(snapshot = {}) {
 		if (!this.config.enabled) return [];
 		if (!snapshot || snapshot.found !== true) return [];
 
 		const text = typeof snapshot.text === "string" ? snapshot.text.trim() : "";
 		if (!text) return [];
 
-		const matches = this.config.rules
-			.filter((rule) => rule.enabled !== false)
-			.map((rule) => this.matchRule(rule, snapshot))
-			.filter(Boolean);
+		const { matches, backendMode } = await this.matchSnapshotRules(text);
+		return this.handleAnalyzedMatches(
+			{
+				...snapshot,
+				text,
+			},
+			this.decorateMatches(snapshot, text, matches),
+			backendMode,
+		);
+	}
 
+	async handleAnalyzedMatches(snapshot = {}, matches = [], backendMode = "") {
+		this.reportBackendMode(backendMode);
 		if (matches.length === 0) return [];
 
 		const signature = `${snapshot.url}::${snapshot.text}::${matches
@@ -157,61 +126,74 @@ class SubtitleKeywordDetector {
 		return matches;
 	}
 
-	matchRule(rule, snapshot) {
-		try {
-			const matcher = this.createMatcher(rule);
-			if (!matcher) return null;
-
-			const matchedText = matcher(snapshot.text);
-			if (!matchedText) return null;
-
+	async matchSnapshotRules(text) {
+		const activeRules = this.getActiveRules();
+		if (activeRules.length === 0) {
 			return {
-				id: `match-${Date.now().toString(36)}-${Math.random()
-					.toString(36)
-					.slice(2, 8)}`,
-				ruleId: rule.id,
-				pattern: rule.pattern,
-				matchedText,
-				site: snapshot.site || "",
-				title: snapshot.title || "",
-				url: snapshot.url || "",
-				source: snapshot.source || "",
-				text: snapshot.text || "",
-				lines: Array.isArray(snapshot.lines) ? [...snapshot.lines] : [],
-				updatedAt:
-					typeof snapshot.updatedAt === "number"
-						? snapshot.updatedAt
-						: Date.now(),
-				detectedAt: Date.now(),
+				matches: [],
+				backendMode: "",
 			};
-		} catch (_error) {
-			return null;
+		}
+
+		try {
+			const nativeResult = await this.nativeWorker.analyze({
+				text,
+				rules: activeRules,
+				rulesSignature: createRuleSignature(activeRules),
+			});
+			return {
+				matches:
+					nativeResult && Array.isArray(nativeResult.matches)
+						? nativeResult.matches
+						: [],
+				backendMode: "rust",
+			};
+		} catch (error) {
+			this.logger.error(
+				`Live subtitle keyword detector native analysis failed: ${error?.message || "unknown error"}`,
+			);
+			return {
+				matches: [],
+				backendMode: "unavailable",
+			};
 		}
 	}
 
-	createMatcher(rule) {
-		if (rule.isRegex) {
-			const flags = rule.matchCase ? "g" : "gi";
-			const regex = new RegExp(rule.pattern, flags);
-			return (text) => {
-				const match = text.match(regex);
-				return Array.isArray(match) && match[0] ? match[0] : "";
-			};
-		}
-
-		const source = rule.wholeWord
-			? `\\b${escapeRegExp(rule.pattern)}\\b`
-			: escapeRegExp(rule.pattern);
-		const flags = rule.matchCase ? "" : "i";
-		const regex = new RegExp(source, flags);
-		return (text) => {
-			const match = text.match(regex);
-			return Array.isArray(match) && match[0] ? match[0] : "";
-		};
+	decorateMatches(snapshot, text, matches = []) {
+		return matches.map((match) => ({
+			id: `match-${Date.now().toString(36)}-${Math.random()
+				.toString(36)
+				.slice(2, 8)}`,
+			ruleId: match.ruleId,
+			pattern: match.pattern,
+			matchedText: match.matchedText,
+			site: snapshot.site || "",
+			title: snapshot.title || "",
+			url: snapshot.url || "",
+			source: snapshot.source || "",
+			text: snapshot.text || text || "",
+			lines: Array.isArray(snapshot.lines) ? [...snapshot.lines] : [],
+			updatedAt:
+				typeof snapshot.updatedAt === "number"
+					? snapshot.updatedAt
+					: Date.now(),
+			detectedAt: Date.now(),
+		}));
 	}
 
 	emitState() {
 		this.broadcast("live-subtitle-keyword-state", this.getState());
+	}
+
+	reportBackendMode(mode) {
+		if (!mode || mode === this.lastBackendMode) {
+			return;
+		}
+
+		this.lastBackendMode = mode;
+		this.logger.debug(
+			`Live subtitle keyword detector backend: ${mode === "rust" ? "Rust" : "Native unavailable"}`,
+		);
 	}
 }
 
