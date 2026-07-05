@@ -1,5 +1,8 @@
 const { spawn } = require("child_process");
 const configManager = require("../main/ConfigManager");
+const {
+	resolveNativeBinaryPath,
+} = require("../main/native/resolveNativeBinaryPath");
 
 const DEFAULT_VIDEO_CONFIG = {
 	forwardSeconds: 10,
@@ -8,12 +11,24 @@ const DEFAULT_VIDEO_CONFIG = {
 };
 const LONG_PRESS_THRESHOLD_MS = 250;
 const KEY_POLL_INTERVAL_MS = 15;
+const KEY_HOLD_BACKENDS = {
+	NATIVE: "native",
+	POWERSHELL: "powershell",
+};
+const NATIVE_BINARY_NAME =
+	process.platform === "win32" ? "flux-native.exe" : "flux-native";
 
 let keyHoldWorker = null;
 let keyHoldOutputBuffer = "";
 let keyHoldRequestId = 0;
 let activeForwardHold = null;
 let registeredExitCleanup = false;
+let keyHoldWorkerStopping = false;
+let keyHoldBackend =
+	process.platform === "win32"
+		? KEY_HOLD_BACKENDS.NATIVE
+		: KEY_HOLD_BACKENDS.POWERSHELL;
+let nativeFallbackWarningShown = false;
 
 const VIRTUAL_KEY_MAP = {
 	BACKSPACE: 0x08,
@@ -97,6 +112,30 @@ function getAcceleratorVirtualKeyCodes(accelerator) {
 		.filter((code) => code !== null);
 
 	return [...new Set(codes)];
+}
+
+function showNativeFallbackWarning(reason) {
+	if (nativeFallbackWarningShown) return;
+	nativeFallbackWarningShown = true;
+	console.warn(
+		`FluxBrowser native key-hold worker unavailable, falling back to PowerShell. ${reason}`,
+	);
+}
+
+function logKeyHoldBackend(message) {
+	console.info(`[VideoController] ${message}`);
+}
+
+function switchKeyHoldBackend(nextBackend, reason) {
+	if (keyHoldBackend === nextBackend) return;
+	keyHoldBackend = nextBackend;
+	if (nextBackend === KEY_HOLD_BACKENDS.POWERSHELL && reason) {
+		showNativeFallbackWarning(reason);
+	}
+}
+
+function resolveNativeKeyHoldBinaryPath() {
+	return resolveNativeBinaryPath(NATIVE_BINARY_NAME);
 }
 
 function buildKeyHoldWorkerScript() {
@@ -215,6 +254,7 @@ function handleKeyHoldMessage(message) {
 
 function stopKeyHoldWorker() {
 	if (keyHoldWorker && !keyHoldWorker.killed) {
+		keyHoldWorkerStopping = true;
 		keyHoldWorker.kill();
 	}
 	keyHoldWorker = null;
@@ -222,40 +262,43 @@ function stopKeyHoldWorker() {
 	cleanupForwardHold(true);
 }
 
-function startKeyHoldWorker() {
-	if (process.platform !== "win32") return null;
-	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
-
+function attachKeyHoldWorkerListeners(worker, backend) {
+	keyHoldWorker = worker;
 	keyHoldOutputBuffer = "";
-	keyHoldWorker = spawn(
-		"powershell.exe",
-		[
-			"-NoProfile",
-			"-ExecutionPolicy",
-			"Bypass",
-			"-Command",
-			buildKeyHoldWorkerScript(),
-		],
-		{ windowsHide: true },
-	);
 
-	keyHoldWorker.stdout.on("data", (data) => {
-		keyHoldOutputBuffer += data.toString();
-		const lines = keyHoldOutputBuffer.split(/\r?\n/);
-		keyHoldOutputBuffer = lines.pop() || "";
-		lines
-			.map((line) => line.trim())
-			.filter(Boolean)
-			.forEach(handleKeyHoldMessage);
-	});
+	if (worker.stdout) {
+		worker.stdout.on("data", (data) => {
+			keyHoldOutputBuffer += data.toString();
+			const lines = keyHoldOutputBuffer.split(/\r?\n/);
+			keyHoldOutputBuffer = lines.pop() || "";
+			lines
+				.map((line) => line.trim())
+				.filter(Boolean)
+				.forEach(handleKeyHoldMessage);
+		});
+	}
 
-	keyHoldWorker.on("error", () => {
+	worker.on("error", (error) => {
+		if (!keyHoldWorkerStopping && backend === KEY_HOLD_BACKENDS.NATIVE) {
+			switchKeyHoldBackend(
+				KEY_HOLD_BACKENDS.POWERSHELL,
+				error?.message || "spawn failed",
+			);
+		}
+		keyHoldWorkerStopping = false;
 		keyHoldWorker = null;
 		keyHoldOutputBuffer = "";
 		cleanupForwardHold(true);
 	});
 
-	keyHoldWorker.on("close", () => {
+	worker.on("close", (code) => {
+		if (!keyHoldWorkerStopping && backend === KEY_HOLD_BACKENDS.NATIVE) {
+			switchKeyHoldBackend(
+				KEY_HOLD_BACKENDS.POWERSHELL,
+				`native worker exited with code ${code ?? "unknown"}`,
+			);
+		}
+		keyHoldWorkerStopping = false;
 		keyHoldWorker = null;
 		keyHoldOutputBuffer = "";
 		cleanupForwardHold(true);
@@ -266,7 +309,62 @@ function startKeyHoldWorker() {
 		process.once("exit", stopKeyHoldWorker);
 	}
 
-	return keyHoldWorker;
+	return worker;
+}
+
+function startNativeKeyHoldWorker() {
+	if (process.platform !== "win32") return null;
+	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
+
+	const binaryPath = resolveNativeKeyHoldBinaryPath();
+	if (!binaryPath) {
+		switchKeyHoldBackend(
+			KEY_HOLD_BACKENDS.POWERSHELL,
+			"native binary not found",
+		);
+		return null;
+	}
+
+	const worker = spawn(binaryPath, ["key-hold-worker"], {
+		windowsHide: true,
+	});
+	logKeyHoldBackend(`Started key-hold worker via Rust: ${binaryPath}`);
+
+	return attachKeyHoldWorkerListeners(worker, KEY_HOLD_BACKENDS.NATIVE);
+}
+
+function startPowerShellKeyHoldWorker() {
+	if (process.platform !== "win32") return null;
+	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
+
+	const worker = spawn(
+		"powershell.exe",
+		[
+			"-NoProfile",
+			"-ExecutionPolicy",
+			"Bypass",
+			"-Command",
+			buildKeyHoldWorkerScript(),
+		],
+		{ windowsHide: true },
+	);
+	logKeyHoldBackend("Started key-hold worker via PowerShell");
+
+	return attachKeyHoldWorkerListeners(worker, KEY_HOLD_BACKENDS.POWERSHELL);
+}
+
+function startKeyHoldWorker() {
+	if (process.platform !== "win32") return null;
+	if (keyHoldWorker && !keyHoldWorker.killed) return keyHoldWorker;
+
+	if (keyHoldBackend === KEY_HOLD_BACKENDS.NATIVE) {
+		const nativeWorker = startNativeKeyHoldWorker();
+		if (nativeWorker) {
+			return nativeWorker;
+		}
+	}
+
+	return startPowerShellKeyHoldWorker();
 }
 
 function requestKeyHold(core, config, keyCodes) {
@@ -276,6 +374,7 @@ function requestKeyHold(core, config, keyCodes) {
 	}
 
 	const requestId = String(++keyHoldRequestId);
+	logKeyHoldBackend(`Key-hold request ${requestId} using ${keyHoldBackend}`);
 	activeForwardHold = {
 		id: requestId,
 		core,

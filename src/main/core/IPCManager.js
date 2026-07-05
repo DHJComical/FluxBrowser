@@ -9,6 +9,7 @@ const registerTabHandlers = require("../ipc/handlers/tabHandlers");
 const registerLiveSubtitleHandlers = require("../ipc/handlers/liveSubtitleHandlers");
 const LiveSubtitleMonitor = require("../services/LiveSubtitleMonitor");
 const SubtitleKeywordDetector = require("../services/SubtitleKeywordDetector");
+const DirectionKeywordDetector = require("../services/DirectionKeywordDetector");
 const {
 	createIPCServices,
 	createIPCSharedContext,
@@ -36,6 +37,11 @@ class IPCManager {
 			broadcast: this.broadcast.bind(this),
 		});
 		this.subtitleKeywordDetector = new SubtitleKeywordDetector({
+			logger,
+			configManager,
+			broadcast: this.broadcast.bind(this),
+		});
+		this.directionKeywordDetector = new DirectionKeywordDetector({
 			logger,
 			configManager,
 			broadcast: this.broadcast.bind(this),

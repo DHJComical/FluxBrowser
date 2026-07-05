@@ -1,0 +1,28 @@
+[package]
+name = "flux-native"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Native Rust sidecar for FluxBrowser desktop integrations"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/DHJComical/FluxBrowser"
+publish = false
+
+[lib]
+name = "flux_native"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flux-native"
+path = "src/main.rs"
+
+[dependencies]
+regex = "1.12.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Graphics_Dwm", "Win32_Graphics_Gdi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = "symbols"

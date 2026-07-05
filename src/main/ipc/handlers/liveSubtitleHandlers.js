@@ -4,6 +4,7 @@ function registerLiveSubtitleHandlers({
 	ipcMain,
 	liveSubtitleMonitor,
 	subtitleKeywordDetector,
+	directionKeywordDetector,
 	logger,
 }) {
 	ipcMain.handle("get-live-subtitle-state", () => liveSubtitleMonitor.getState());
@@ -18,6 +19,9 @@ function registerLiveSubtitleHandlers({
 	);
 	ipcMain.handle("get-live-subtitle-keyword-matches", () =>
 		subtitleKeywordDetector.getRecentMatches(),
+	);
+	ipcMain.handle("get-live-subtitle-direction-state", () =>
+		directionKeywordDetector.getLatestPayload(),
 	);
 
 	ipcMain.on("start-live-subtitle-capture", () => {
@@ -37,9 +41,11 @@ function registerLiveSubtitleHandlers({
 		);
 	});
 
-	ipcMain.on("set-live-subtitle-keyword-config", (_event, config = {}) => {
+	ipcMain.on("set-live-subtitle-keyword-config", async (_event, config = {}) => {
 		const nextConfig = subtitleKeywordDetector.saveConfig(config);
-		subtitleKeywordDetector.handleSnapshot(liveSubtitleMonitor.getLatestSnapshot());
+		await subtitleKeywordDetector.handleSnapshot(
+			liveSubtitleMonitor.getLatestSnapshot(),
+		);
 		logger.debug(
 			t("logs.liveSubtitle.rulesUpdated", {
 				count: nextConfig.rules.length,
@@ -51,10 +57,13 @@ function registerLiveSubtitleHandlers({
 		subtitleKeywordDetector.clearRecentMatches();
 	});
 
-	ipcMain.on("live-subtitle-snapshot", (_event, payload = {}) => {
+	ipcMain.on("live-subtitle-snapshot", async (_event, payload = {}) => {
 		const result = liveSubtitleMonitor.handleSnapshot(payload);
 		if (result && result.snapshot) {
-			subtitleKeywordDetector.handleSnapshot(result.snapshot);
+			await Promise.allSettled([
+				subtitleKeywordDetector.handleSnapshot(result.snapshot),
+				directionKeywordDetector.handleSnapshot(result.snapshot),
+			]);
 		}
 	});
 }

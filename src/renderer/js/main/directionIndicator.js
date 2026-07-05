@@ -12,76 +12,9 @@ const {
 } = require("./floatingPanels");
 const { IPC_CHANNELS } = require("../../../constants/config");
 
-const DIRECTION_DEFINITIONS = [
-	{
-		key: "northeast",
-		patterns: [
-			/\u4e1c\u5317(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u89d2)?/u,
-			/\u5317\u504f\u4e1c/u,
-			/\u4e1c\u504f\u5317/u,
-			/\bnorth[\s-]?east\b/i,
-			/\bnortheast\b/i,
-		],
-	},
-	{
-		key: "southeast",
-		patterns: [
-			/\u4e1c\u5357(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u89d2)?/u,
-			/\u5357\u504f\u4e1c/u,
-			/\u4e1c\u504f\u5357/u,
-			/\bsouth[\s-]?east\b/i,
-			/\bsoutheast\b/i,
-		],
-	},
-	{
-		key: "southwest",
-		patterns: [
-			/\u897f\u5357(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u89d2)?/u,
-			/\u5357\u504f\u897f/u,
-			/\u897f\u504f\u5357/u,
-			/\bsouth[\s-]?west\b/i,
-			/\bsouthwest\b/i,
-		],
-	},
-	{
-		key: "northwest",
-		patterns: [
-			/\u897f\u5317(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u89d2)?/u,
-			/\u5317\u504f\u897f/u,
-			/\u897f\u504f\u5317/u,
-			/\bnorth[\s-]?west\b/i,
-			/\bnorthwest\b/i,
-		],
-	},
-	{
-		key: "north",
-		patterns: [
-			/(?:\u6b63)?\u5317(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u7aef|\u5934)?/u,
-			/\bnorth\b/i,
-		],
-	},
-	{
-		key: "east",
-		patterns: [
-			/(?:\u6b63)?\u4e1c(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u7aef|\u5934)?/u,
-			/\beast\b/i,
-		],
-	},
-	{
-		key: "south",
-		patterns: [
-			/(?:\u6b63)?\u5357(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u7aef|\u5934)?/u,
-			/\bsouth\b/i,
-		],
-	},
-	{
-		key: "west",
-		patterns: [
-			/(?:\u6b63)?\u897f(?:\u65b9|\u8fb9|\u4fa7|\u9762|\u5411|\u90e8|\u7aef|\u5934)?/u,
-			/\bwest\b/i,
-		],
-	},
-];
+const LIVE_SUBTITLE_DIRECTION_MATCHES_CHANNEL =
+	"live-subtitle-direction-matches";
+const GET_LIVE_SUBTITLE_DIRECTION_STATE = "get-live-subtitle-direction-state";
 
 const DIRECTION_VECTORS = {
 	north: { x: 0, y: -1 },
@@ -121,17 +54,6 @@ function normalizeIndicatorConfig(config = {}) {
 	};
 }
 
-function normalizeSubtitleText(snapshot = {}) {
-	if (Array.isArray(snapshot.lines) && snapshot.lines.length > 0) {
-		return snapshot.lines
-			.map((line) => String(line || "").trim())
-			.filter(Boolean)
-			.join("\n");
-	}
-
-	return typeof snapshot.text === "string" ? snapshot.text.trim() : "";
-}
-
 function applyRotation() {
 	if (!directionIndicatorDial) return;
 	directionIndicatorDial.style.transform = `rotate(${currentRotation}deg)`;
@@ -169,39 +91,6 @@ function getDialRadius() {
 	const rect = directionIndicatorDial.getBoundingClientRect();
 	const size = Math.min(rect.width || 0, rect.height || 0);
 	return Math.max(32, Math.round(size / 2 - 10));
-}
-
-function findFirstMatch(text, patterns) {
-	for (const pattern of patterns) {
-		const match = text.match(pattern);
-		if (Array.isArray(match) && match[0]) {
-			return match[0];
-		}
-	}
-
-	return "";
-}
-
-function detectDirections(snapshot = {}) {
-	const originalText = normalizeSubtitleText(snapshot);
-	if (!originalText) return [];
-
-	const matches = [];
-	let workingText = originalText;
-
-	DIRECTION_DEFINITIONS.forEach((definition) => {
-		const matchedText = findFirstMatch(workingText, definition.patterns);
-		if (!matchedText) return;
-
-		matches.push({
-			direction: definition.key,
-			matchedText,
-		});
-
-		workingText = workingText.replace(matchedText, " ");
-	});
-
-	return matches;
 }
 
 function removeMarkerEntry(entry) {
@@ -273,10 +162,10 @@ function showMarkers(matches = []) {
 		.filter(Boolean);
 }
 
-function handleSubtitleUpdate(snapshot = {}) {
+function handleDirectionMatches(payload = {}) {
 	if (!isIndicatorEnabled) return;
 
-	const matches = detectDirections(snapshot);
+	const matches = Array.isArray(payload.matches) ? payload.matches : [];
 	if (matches.length === 0) {
 		fadeActiveMarkers();
 		return;
@@ -340,10 +229,22 @@ async function ensureSubtitleCaptureEnabled() {
 	}
 }
 
-function bindSubtitleUpdates() {
-	ipcRenderer.on("live-subtitle-updated", (_event, snapshot = {}) => {
-		handleSubtitleUpdate(snapshot);
-	});
+function bindDirectionUpdates() {
+	ipcRenderer.on(
+		LIVE_SUBTITLE_DIRECTION_MATCHES_CHANNEL,
+		(_event, payload = {}) => {
+			handleDirectionMatches(payload);
+		},
+	);
+}
+
+async function hydrateDirectionMatches() {
+	try {
+		const payload = await ipcRenderer.invoke(GET_LIVE_SUBTITLE_DIRECTION_STATE);
+		handleDirectionMatches(payload);
+	} catch (_error) {
+		// Ignore hydration failures and wait for the next broadcast.
+	}
 }
 
 function applyIndicatorConfig(config = {}) {
@@ -371,6 +272,7 @@ function bindConfigUpdates() {
 
 		if (!wasEnabled && isIndicatorEnabled) {
 			ensureSubtitleCaptureEnabled();
+			hydrateDirectionMatches();
 		}
 	});
 }
@@ -411,13 +313,14 @@ async function bindDirectionIndicatorEvents() {
 	if (!hasBoundEvents) {
 		hasBoundEvents = true;
 		bindRotationHandle();
-		bindSubtitleUpdates();
+		bindDirectionUpdates();
 		bindConfigUpdates();
 		bindGlobalCleanup();
 	}
 
 	if (isIndicatorEnabled) {
 		await ensureSubtitleCaptureEnabled();
+		await hydrateDirectionMatches();
 	}
 }
 

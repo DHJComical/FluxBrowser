@@ -1,4 +1,11 @@
 const { execFile } = require("child_process");
+const {
+	resolveNativeBinaryPath,
+} = require("../native/resolveNativeBinaryPath");
+
+const NATIVE_BINARY_NAME =
+	process.platform === "win32" ? "flux-native.exe" : "flux-native";
+let nativeFallbackWarningShown = false;
 
 const FOCUS_BORDERLESS_MAXIMIZED_WINDOW_SCRIPT = `
 $signature = @'
@@ -138,9 +145,20 @@ while ($hwnd -ne [IntPtr]::Zero) {
 }
 `;
 
-function focusBorderlessMaximizedApp() {
-	if (process.platform !== "win32") return;
+function showNativeFallbackWarning(reason) {
+	if (nativeFallbackWarningShown) return;
+	nativeFallbackWarningShown = true;
+	console.warn(
+		`FluxBrowser native focus helper unavailable, falling back to PowerShell. ${reason}`,
+	);
+}
 
+function logFocusHelperBackend(message) {
+	console.info(`[WindowFocusHelper] ${message}`);
+}
+
+function runPowerShellFocusScript() {
+	logFocusHelperBackend("Invoking focus helper via PowerShell");
 	execFile(
 		"powershell.exe",
 		[
@@ -152,6 +170,28 @@ function focusBorderlessMaximizedApp() {
 		],
 		{ windowsHide: true },
 		() => {},
+	);
+}
+
+function focusBorderlessMaximizedApp() {
+	if (process.platform !== "win32") return;
+
+	const nativeBinaryPath = resolveNativeBinaryPath(NATIVE_BINARY_NAME);
+	if (!nativeBinaryPath) {
+		runPowerShellFocusScript();
+		return;
+	}
+
+	logFocusHelperBackend(`Invoking focus helper via Rust: ${nativeBinaryPath}`);
+	execFile(
+		nativeBinaryPath,
+		["focus-borderless-maximized", String(process.pid)],
+		{ windowsHide: true },
+		(error) => {
+			if (!error) return;
+			showNativeFallbackWarning(error.message);
+			runPowerShellFocusScript();
+		},
 	);
 }
 
