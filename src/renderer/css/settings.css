@@ -314,10 +314,84 @@ body.animations-disabled *::after {
 	border-bottom: none;
 }
 
+.checkbox-item {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 12px 0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+	cursor: pointer;
+}
+
+.checkbox-item:last-child {
+	border-bottom: none;
+}
+
+.checkbox-item.active .toggle-label,
+.checkbox-item:hover .toggle-label {
+	color: #eef2ff;
+}
+
+.cache-option-checkbox {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.checkbox-mark {
+	width: 20px;
+	height: 20px;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+	flex: 0 0 20px;
+	order: -1;
+	transition:
+		background-color var(--motion-duration-base) var(--motion-ease-standard),
+		border-color var(--motion-duration-base) var(--motion-ease-standard),
+		box-shadow var(--motion-duration-base) var(--motion-ease-standard),
+		transform var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.checkbox-mark::after {
+	content: "";
+	display: block;
+	width: 5px;
+	height: 10px;
+	border-right: 2px solid transparent;
+	border-bottom: 2px solid transparent;
+	transform: translate(6px, 2px) rotate(45deg);
+	transition: border-color var(--motion-duration-base) var(--motion-ease-standard);
+}
+
+.cache-option-checkbox:focus-visible + .checkbox-mark,
+.checkbox-item:hover .checkbox-mark {
+	border-color: rgba(108, 140, 255, 0.42);
+	box-shadow: 0 0 0 3px rgba(108, 140, 255, 0.12);
+}
+
+.cache-option-checkbox:checked + .checkbox-mark {
+	background: linear-gradient(135deg, #6c8cff 0%, #4dccff 100%);
+	border-color: rgba(108, 140, 255, 0.48);
+	box-shadow: 0 10px 24px rgba(108, 140, 255, 0.22);
+	transform: translateY(-1px);
+}
+
+.cache-option-checkbox:checked + .checkbox-mark::after {
+	border-right-color: #ffffff;
+	border-bottom-color: #ffffff;
+}
+
 .toggle-info {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+}
+
+.checkbox-item .toggle-info {
+	flex: 1;
 }
 
 .toggle-label {
@@ -557,6 +631,32 @@ body.animations-disabled *::after {
 	font-size: 13px;
 	color: #00dd77;
 	font-weight: 500;
+}
+
+.cache-options-card {
+	margin-bottom: 0;
+	padding-bottom: 10px;
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.cache-confirm-card {
+	margin-top: 0;
+	padding-top: 0;
+	border-top: none;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	background: rgba(255, 255, 255, 0.045);
+}
+
+.cache-confirm-card .card-title {
+	display: none;
+}
+
+.cache-actions {
+	margin-top: 18px;
+	padding-top: 18px;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .auto-restart-info i {

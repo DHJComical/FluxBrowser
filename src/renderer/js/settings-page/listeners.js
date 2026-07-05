@@ -234,59 +234,73 @@ function bindResolutionEvents({ debugLog, showToast }) {
 }
 
 function bindCacheToggleEvents() {
+	function syncCacheClearButtonState() {
+		if (!dom.cacheClearBtn || dom.cacheClearBtn.dataset.busy === "true") {
+			return;
+		}
+
+		const hasAnyOption = Object.values(state.cacheClearOptions).some(Boolean);
+		dom.cacheClearBtn.disabled = !hasAnyOption;
+	}
+
 	if (dom.clearLogsToggle) {
-		dom.clearLogsToggle.addEventListener("click", () => {
-			state.cacheClearOptions.clearLogs = !state.cacheClearOptions.clearLogs;
+		dom.clearLogsToggle.addEventListener("change", () => {
+			state.cacheClearOptions.clearLogs = dom.clearLogsToggle.checked;
 			updateToggleState(
 				dom.clearLogsToggle,
 				state.cacheClearOptions.clearLogs,
 			);
+			syncCacheClearButtonState();
 		});
 	}
 
 	if (dom.clearKeyConfigToggle) {
-		dom.clearKeyConfigToggle.addEventListener("click", () => {
-			state.cacheClearOptions.clearKeyConfig =
-				!state.cacheClearOptions.clearKeyConfig;
+		dom.clearKeyConfigToggle.addEventListener("change", () => {
+			state.cacheClearOptions.clearKeyConfig = dom.clearKeyConfigToggle.checked;
 			updateToggleState(
 				dom.clearKeyConfigToggle,
 				state.cacheClearOptions.clearKeyConfig,
 			);
+			syncCacheClearButtonState();
 		});
 	}
 
 	if (dom.clearWindowConfigToggle) {
-		dom.clearWindowConfigToggle.addEventListener("click", () => {
+		dom.clearWindowConfigToggle.addEventListener("change", () => {
 			state.cacheClearOptions.clearWindowConfig =
-				!state.cacheClearOptions.clearWindowConfig;
+				dom.clearWindowConfigToggle.checked;
 			updateToggleState(
 				dom.clearWindowConfigToggle,
 				state.cacheClearOptions.clearWindowConfig,
 			);
+			syncCacheClearButtonState();
 		});
 	}
 
 	if (dom.clearAppConfigToggle) {
-		dom.clearAppConfigToggle.addEventListener("click", () => {
-			state.cacheClearOptions.clearAppConfig =
-				!state.cacheClearOptions.clearAppConfig;
+		dom.clearAppConfigToggle.addEventListener("change", () => {
+			state.cacheClearOptions.clearAppConfig = dom.clearAppConfigToggle.checked;
 			updateToggleState(
 				dom.clearAppConfigToggle,
 				state.cacheClearOptions.clearAppConfig,
 			);
+			syncCacheClearButtonState();
 		});
 	}
 
 	if (dom.clearResolutionPresetsToggle) {
-		dom.clearResolutionPresetsToggle.addEventListener("click", () => {
+		dom.clearResolutionPresetsToggle.addEventListener("change", () => {
 			state.cacheClearOptions.clearResolutionPresets =
-				!state.cacheClearOptions.clearResolutionPresets;
+				dom.clearResolutionPresetsToggle.checked;
 			updateToggleState(
 				dom.clearResolutionPresetsToggle,
 				state.cacheClearOptions.clearResolutionPresets,
 			);
+			syncCacheClearButtonState();
 		});
 	}
+
+	syncCacheClearButtonState();
 }
 
 function resetSyncButtons() {
@@ -317,12 +331,13 @@ function resetCacheClearState() {
 		state.cacheClearOptions[key] = false;
 	});
 	document
-		.querySelectorAll(".cache-section .toggle-switch")
+		.querySelectorAll(".cache-section .cache-option-checkbox")
 		.forEach((toggle) => {
-			toggle.classList.remove("active");
+			updateToggleState(toggle, false);
 		});
 	if (dom.cacheClearBtn) {
-		dom.cacheClearBtn.disabled = false;
+		dom.cacheClearBtn.dataset.busy = "false";
+		dom.cacheClearBtn.disabled = true;
 		dom.cacheClearBtn.textContent = t("settings.cache.startAction");
 	}
 }
