@@ -438,55 +438,60 @@
                         <div class="settings-section-desc" data-i18n="settings.cache.sectionDesc">重置配置和日志前，先明确影响范围，避免误清理常用数据。</div>
                     </div>
 
-                    <div class="settings-card">
+                    <div class="settings-card cache-options-card">
                         <div class="card-title" data-i18n="settings.cache.cardTitle">
                             <i class="material-icons">delete_forever</i>
                             清理缓存文件
                         </div>
                         <div class="cache-section">
-                            <div class="toggle-item">
+                            <label class="checkbox-item" for="clear-logs-toggle">
                                 <div class="toggle-info">
                                     <span class="toggle-label" data-i18n="settings.cache.logsLabel">日志文件</span>
                                     <span class="toggle-desc" data-i18n="settings.cache.logsDesc">清理所有日志文件，包括主日志和调试日志</span>
                                 </div>
-                                <div class="toggle-switch" id="clear-logs-toggle"></div>
-                            </div>
+                                <input type="checkbox" class="cache-option-checkbox" id="clear-logs-toggle">
+                                <span class="checkbox-mark" aria-hidden="true"></span>
+                            </label>
 
-                            <div class="toggle-item">
+                            <label class="checkbox-item" for="clear-key-config-toggle">
                                 <div class="toggle-info">
                                     <span class="toggle-label" data-i18n="settings.cache.shortcutsLabel">快捷键配置</span>
                                     <span class="toggle-desc" data-i18n="settings.cache.shortcutsDesc">重置所有快捷键配置为默认值</span>
                                 </div>
-                                <div class="toggle-switch" id="clear-key-config-toggle"></div>
-                            </div>
+                                <input type="checkbox" class="cache-option-checkbox" id="clear-key-config-toggle">
+                                <span class="checkbox-mark" aria-hidden="true"></span>
+                            </label>
 
-                            <div class="toggle-item">
+                            <label class="checkbox-item" for="clear-window-config-toggle">
                                 <div class="toggle-info">
                                     <span class="toggle-label" data-i18n="settings.cache.windowLabel">窗口配置</span>
                                     <span class="toggle-desc" data-i18n="settings.cache.windowDesc">重置窗口位置、大小和透明度为默认值</span>
                                 </div>
-                                <div class="toggle-switch" id="clear-window-config-toggle"></div>
-                            </div>
+                                <input type="checkbox" class="cache-option-checkbox" id="clear-window-config-toggle">
+                                <span class="checkbox-mark" aria-hidden="true"></span>
+                            </label>
 
-                            <div class="toggle-item">
+                            <label class="checkbox-item" for="clear-app-config-toggle">
                                 <div class="toggle-info">
                                     <span class="toggle-label" data-i18n="settings.cache.appLabel">应用配置</span>
                                     <span class="toggle-desc" data-i18n="settings.cache.appDesc">重置应用设置，包括调试模式</span>
                                 </div>
-                                <div class="toggle-switch" id="clear-app-config-toggle"></div>
-                            </div>
+                                <input type="checkbox" class="cache-option-checkbox" id="clear-app-config-toggle">
+                                <span class="checkbox-mark" aria-hidden="true"></span>
+                            </label>
 
-                            <div class="toggle-item">
+                            <label class="checkbox-item" for="clear-resolution-presets-toggle">
                                 <div class="toggle-info">
                                     <span class="toggle-label" data-i18n="settings.cache.resolutionLabel">分辨率预设</span>
                                     <span class="toggle-desc" data-i18n="settings.cache.resolutionDesc">重置所有分辨率预设为默认值</span>
                                 </div>
-                                <div class="toggle-switch" id="clear-resolution-presets-toggle"></div>
-                            </div>
+                                <input type="checkbox" class="cache-option-checkbox" id="clear-resolution-presets-toggle">
+                                <span class="checkbox-mark" aria-hidden="true"></span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="settings-card">
+                    <div class="settings-card cache-confirm-card">
                         <div class="card-title" data-i18n="settings.cache.confirmCardTitle">
                             <i class="material-icons">warning</i>
                             操作确认

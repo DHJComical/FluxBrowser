@@ -24,11 +24,13 @@ async function performCacheClear({ confirmAction, showToast }) {
 		}
 
 		ipcRenderer.send("clear-cache", state.cacheClearOptions);
+		dom.cacheClearBtn.dataset.busy = "true";
 		dom.cacheClearBtn.disabled = true;
 		dom.cacheClearBtn.textContent = t("settings.cache.runningAction");
 	} catch (error) {
 		console.error("logs.settings.cache.performFailed", error);
 		showToast(t("settings.cache.runningErrorMessage"), { type: "error" });
+		dom.cacheClearBtn.dataset.busy = "false";
 		dom.cacheClearBtn.disabled = false;
 		dom.cacheClearBtn.textContent = t("settings.cache.startAction");
 	}

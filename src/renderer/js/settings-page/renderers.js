@@ -251,6 +251,15 @@ function updateAspectLockButton() {
 }
 
 function updateToggleState(toggleElement, isActive) {
+	if (
+		toggleElement instanceof HTMLInputElement &&
+		toggleElement.type === "checkbox"
+	) {
+		toggleElement.checked = isActive;
+		toggleElement.closest(".checkbox-item")?.classList.toggle("active", isActive);
+		return;
+	}
+
 	toggleElement.classList.toggle("active", isActive);
 }
 
