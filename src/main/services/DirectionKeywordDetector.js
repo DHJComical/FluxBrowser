@@ -1,8 +1,5 @@
 const NativeDirectionKeywordWorker = require("../native/NativeDirectionKeywordWorker");
-const {
-	analyzeDirectionKeywords,
-	normalizeSubtitleText,
-} = require("./directionKeywordAnalyzer");
+const { normalizeSubtitleText } = require("./directionKeywordAnalyzer");
 
 const DIRECTION_MATCH_CHANNEL = "live-subtitle-direction-matches";
 
@@ -87,48 +84,49 @@ class DirectionKeywordDetector {
 		this.syncConfig();
 
 		if (!this.config.enabled) {
-			this.reportBackendMode("js");
+			this.reportBackendMode("");
 			this.emitMatches(snapshot, []);
 			return [];
 		}
 
 		const text = normalizeSubtitleText(snapshot);
 		if (!snapshot || snapshot.found !== true || !text) {
-			this.reportBackendMode("js");
+			this.reportBackendMode("");
 			this.emitMatches(snapshot, []);
 			return [];
 		}
 
-		let matches = [];
-		let nativeHandled = false;
 		try {
 			const nativeResult = await this.nativeWorker.analyze({ text });
-			if (nativeResult && Array.isArray(nativeResult.matches)) {
-				nativeHandled = true;
-				matches = nativeResult.matches;
-			}
-		} catch (_error) {
-			nativeHandled = false;
+			return this.handleAnalyzedMatches(
+				{
+					...snapshot,
+					text,
+				},
+				nativeResult && Array.isArray(nativeResult.matches)
+					? nativeResult.matches
+					: [],
+				"rust",
+			);
+		} catch (error) {
+			this.logger.error(
+				`Direction keyword detector native analysis failed: ${error?.message || "unknown error"}`,
+			);
+			return this.handleAnalyzedMatches(
+				{
+					...snapshot,
+					text,
+				},
+				[],
+				"unavailable",
+			);
 		}
-
-		if (!nativeHandled) {
-			matches = analyzeDirectionKeywords(text);
-		}
-
-		return this.handleAnalyzedMatches(
-			{
-				...snapshot,
-				text,
-			},
-			matches,
-			nativeHandled ? "rust" : "js",
-		);
 	}
 
 	async handleAnalyzedMatches(snapshot = {}, matches = [], backendMode = "") {
 		this.syncConfig();
 		if (!this.config.enabled) {
-			this.reportBackendMode("js");
+			this.reportBackendMode("");
 			this.emitMatches(snapshot, []);
 			return [];
 		}
@@ -165,7 +163,7 @@ class DirectionKeywordDetector {
 
 		this.lastBackendMode = mode;
 		this.logger.debug(
-			`Direction keyword detector backend: ${mode === "rust" ? "Rust" : "JS fallback"}`,
+			`Direction keyword detector backend: ${mode === "rust" ? "Rust" : "Native unavailable"}`,
 		);
 	}
 }

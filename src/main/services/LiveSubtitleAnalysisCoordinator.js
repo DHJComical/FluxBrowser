@@ -3,10 +3,12 @@ const { createRuleSignature } = require("./subtitleKeywordAnalyzer");
 const { normalizeSubtitleText } = require("./directionKeywordAnalyzer");
 
 class LiveSubtitleAnalysisCoordinator {
-	constructor({ subtitleKeywordDetector, directionKeywordDetector }) {
+	constructor({ logger, subtitleKeywordDetector, directionKeywordDetector }) {
+		this.logger = logger;
 		this.subtitleKeywordDetector = subtitleKeywordDetector;
 		this.directionKeywordDetector = directionKeywordDetector;
 		this.nativeWorker = new NativeSubtitleAnalysisWorker();
+		this.lastBackendMode = "";
 	}
 
 	async handleSnapshot(snapshot = {}) {
@@ -33,6 +35,7 @@ class LiveSubtitleAnalysisCoordinator {
 				includeDirectionMatches,
 			});
 			if (nativeResult) {
+				this.reportBackendMode("combined-rust");
 				const analyzedSnapshot = {
 					...snapshot,
 					text,
@@ -52,9 +55,12 @@ class LiveSubtitleAnalysisCoordinator {
 				return;
 			}
 		} catch (_error) {
-			// Fall through to the existing detector pipelines.
+			this.logger.error(
+				`Live subtitle combined native analysis failed: ${_error?.message || "unknown error"}`,
+			);
 		}
 
+		this.reportBackendMode("dedicated-rust");
 		await this.handleWithExistingDetectors(snapshot);
 	}
 
@@ -63,6 +69,17 @@ class LiveSubtitleAnalysisCoordinator {
 			this.subtitleKeywordDetector.handleSnapshot(snapshot),
 			this.directionKeywordDetector.handleSnapshot(snapshot),
 		]);
+	}
+
+	reportBackendMode(mode) {
+		if (!mode || mode === this.lastBackendMode) {
+			return;
+		}
+
+		this.lastBackendMode = mode;
+		this.logger.debug(
+			`Live subtitle analysis backend: ${mode === "combined-rust" ? "Rust combined worker" : "Rust dedicated workers"}`,
+		);
 	}
 }
 

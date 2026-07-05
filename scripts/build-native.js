@@ -37,7 +37,7 @@ if (!fs.existsSync(manifestPath)) {
 	if (required) {
 		exitWithFailure(`Missing Rust manifest: ${manifestPath}`);
 	}
-	warn("Rust sidecar project is missing. Skipping native build.");
+	warn("Rust sidecar project is missing. Native features will be unavailable.");
 	process.exit(0);
 }
 
@@ -54,7 +54,7 @@ if (versionCheck.error || versionCheck.status !== 0) {
 	if (required) {
 		exitWithFailure(`Rust toolchain is required but unavailable: ${reason}`);
 	}
-	warn(`Rust toolchain not found. Falling back to JS/PowerShell path. (${reason})`);
+	warn(`Rust toolchain not found. Native features will be unavailable. (${reason})`);
 	process.exit(0);
 }
 
@@ -77,7 +77,7 @@ if (buildResult.error || buildResult.status !== 0) {
 	if (required) {
 		exitWithFailure(`Rust build failed: ${reason}`);
 	}
-	warn(`Rust build failed. Falling back to JS/PowerShell path. (${reason})`);
+	warn(`Rust build failed. Native features will be unavailable. (${reason})`);
 	process.exit(0);
 }
 

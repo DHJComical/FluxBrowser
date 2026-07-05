@@ -46,40 +46,10 @@ function normalizeConfig(config = {}) {
 	};
 }
 
-function escapeRegExp(value) {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function createMatcher(rule) {
-	if (rule.isRegex) {
-		const flags = rule.matchCase ? "g" : "gi";
-		const regex = new RegExp(rule.pattern, flags);
-		return (text) => {
-			const match = text.match(regex);
-			return Array.isArray(match) && match[0] ? match[0] : "";
-		};
-	}
-
-	const source = rule.wholeWord
-		? `\\b${escapeRegExp(rule.pattern)}\\b`
-		: escapeRegExp(rule.pattern);
-	const flags = rule.matchCase ? "" : "i";
-	const regex = new RegExp(source, flags);
-	return (text) => {
-		const match = text.match(regex);
-		return Array.isArray(match) && match[0] ? match[0] : "";
-	};
-}
-
 function getActiveRules(rules = []) {
 	return Array.isArray(rules)
 		? rules.filter((rule) => rule && rule.enabled !== false)
 		: [];
-}
-
-function canUseNativeKeywordAnalyzer(rules = []) {
-	const activeRules = getActiveRules(rules);
-	return activeRules.length > 0;
 }
 
 function createRuleSignature(rules = []) {
@@ -94,32 +64,8 @@ function createRuleSignature(rules = []) {
 	);
 }
 
-function analyzeSubtitleKeywords(rules = [], text = "") {
-	if (!text) return [];
-
-	return getActiveRules(rules)
-		.map((rule) => {
-			try {
-				const matcher = createMatcher(rule);
-				const matchedText = matcher(text);
-				if (!matchedText) return null;
-
-				return {
-					ruleId: rule.id,
-					pattern: rule.pattern,
-					matchedText,
-				};
-			} catch (_error) {
-				return null;
-			}
-		})
-		.filter(Boolean);
-}
-
 module.exports = {
 	normalizeConfig,
-	analyzeSubtitleKeywords,
-	canUseNativeKeywordAnalyzer,
 	createRuleSignature,
 	getActiveRules,
 };

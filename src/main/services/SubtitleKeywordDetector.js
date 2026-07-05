@@ -3,8 +3,6 @@ const { t } = require("../i18n");
 const NativeSubtitleKeywordWorker = require("../native/NativeSubtitleKeywordWorker");
 const {
 	normalizeConfig,
-	analyzeSubtitleKeywords,
-	canUseNativeKeywordAnalyzer,
 	createRuleSignature,
 	getActiveRules,
 } = require("./subtitleKeywordAnalyzer");
@@ -133,36 +131,32 @@ class SubtitleKeywordDetector {
 		if (activeRules.length === 0) {
 			return {
 				matches: [],
-				backendMode: "js",
+				backendMode: "",
 			};
 		}
 
-		let matches = [];
-		let nativeHandled = false;
-		if (canUseNativeKeywordAnalyzer(activeRules)) {
-			try {
-				const nativeResult = await this.nativeWorker.analyze({
-					text,
-					rules: activeRules,
-					rulesSignature: createRuleSignature(activeRules),
-				});
-				if (nativeResult && Array.isArray(nativeResult.matches)) {
-					nativeHandled = true;
-					matches = nativeResult.matches;
-				}
-			} catch (_error) {
-				nativeHandled = false;
-			}
+		try {
+			const nativeResult = await this.nativeWorker.analyze({
+				text,
+				rules: activeRules,
+				rulesSignature: createRuleSignature(activeRules),
+			});
+			return {
+				matches:
+					nativeResult && Array.isArray(nativeResult.matches)
+						? nativeResult.matches
+						: [],
+				backendMode: "rust",
+			};
+		} catch (error) {
+			this.logger.error(
+				`Live subtitle keyword detector native analysis failed: ${error?.message || "unknown error"}`,
+			);
+			return {
+				matches: [],
+				backendMode: "unavailable",
+			};
 		}
-
-		if (!nativeHandled) {
-			matches = analyzeSubtitleKeywords(activeRules, text);
-		}
-
-		return {
-			matches,
-			backendMode: nativeHandled ? "rust" : "js",
-		};
 	}
 
 	decorateMatches(snapshot, text, matches = []) {
@@ -198,7 +192,7 @@ class SubtitleKeywordDetector {
 
 		this.lastBackendMode = mode;
 		this.logger.debug(
-			`Live subtitle keyword detector backend: ${mode === "rust" ? "Rust" : "JS fallback"}`,
+			`Live subtitle keyword detector backend: ${mode === "rust" ? "Rust" : "Native unavailable"}`,
 		);
 	}
 }

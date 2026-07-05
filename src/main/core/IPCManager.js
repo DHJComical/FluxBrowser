@@ -48,6 +48,7 @@ class IPCManager {
 			broadcast: this.broadcast.bind(this),
 		});
 		this.liveSubtitleAnalysisCoordinator = new LiveSubtitleAnalysisCoordinator({
+			logger,
 			subtitleKeywordDetector: this.subtitleKeywordDetector,
 			directionKeywordDetector: this.directionKeywordDetector,
 		});

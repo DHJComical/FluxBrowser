@@ -18,18 +18,18 @@ class NativeLineWorkerClient {
 		this.exitCleanupRegistered = false;
 		this.nativeAvailable = process.platform === "win32";
 		this.nativeUnavailableReason = "";
-		this.fallbackWarningShown = false;
+		this.unavailableWarningShown = false;
 	}
 
 	log(message) {
 		console.info(`[${this.logPrefix}] ${message}`);
 	}
 
-	warnNativeFallback(reason) {
-		if (this.fallbackWarningShown) return;
-		this.fallbackWarningShown = true;
-		console.warn(
-			`FluxBrowser native ${this.workerLabel} unavailable, falling back to JS. ${reason}`,
+	logNativeUnavailable(reason) {
+		if (this.unavailableWarningShown) return;
+		this.unavailableWarningShown = true;
+		console.error(
+			`FluxBrowser native ${this.workerLabel} unavailable. ${reason}`,
 		);
 	}
 
@@ -40,7 +40,7 @@ class NativeLineWorkerClient {
 	markNativeUnavailable(reason) {
 		this.nativeAvailable = false;
 		this.nativeUnavailableReason = reason || "unknown reason";
-		this.warnNativeFallback(this.nativeUnavailableReason);
+		this.logNativeUnavailable(this.nativeUnavailableReason);
 	}
 
 	rejectPendingRequests(error) {
