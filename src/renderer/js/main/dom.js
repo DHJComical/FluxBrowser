@@ -1,5 +1,6 @@
 module.exports = {
 	webviewStack: document.getElementById("webview-stack"),
+	webviewPanel: document.getElementById("webview-panel"),
 	urlInput: document.getElementById("url-input"),
 	goBtn: document.getElementById("go-btn"),
 	backBtn: document.getElementById("back-btn"),

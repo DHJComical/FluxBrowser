@@ -16,6 +16,7 @@ const {
 	markStartupBackgroundMutedTabs,
 	shouldStartupBackgroundMuteTab,
 	clearStartupBackgroundMutedTab,
+	getEffectiveWebviewOpacity,
 } = require("./state");
 const { syncActiveTabUi } = require("./activeTabUi");
 
@@ -127,7 +128,7 @@ function createWebview(tab) {
 	webview.setAttribute("allowpopups", "true");
 	webview.dataset.tabId = tab.id;
 	webview.src = tab.url;
-	webview.style.opacity = String(state.webviewOpacity);
+	webview.style.opacity = String(getEffectiveWebviewOpacity());
 
 	webview.addEventListener("dom-ready", () => {
 		webview.setUserAgent(USER_AGENT);
