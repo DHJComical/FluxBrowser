@@ -734,6 +734,11 @@ function isInteractivePoint(x, y) {
 	const element = document.elementFromPoint(x, y);
 	if (!element) return false;
 
+	const webviewPanel = element.closest('[data-panel-id="webview"]');
+	if (webviewPanel && document.body.classList.contains("immersion")) {
+		return false;
+	}
+
 	const lockedPanel = element.closest('[data-panel-id="direction-indicator"]');
 	if (lockedPanel && isPanelInteractionLocked(lockedPanel)) {
 		return false;

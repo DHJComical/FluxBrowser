@@ -24,6 +24,7 @@ function bindImmersionEvents() {
 			}),
 		);
 		if (!isImmersion) setMousePassthrough(false);
+		if (isImmersion) setMousePassthrough(true);
 		ipcRenderer.send("immersion-mode-changed", isImmersion);
 	});
 

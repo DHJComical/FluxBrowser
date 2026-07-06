@@ -829,11 +829,17 @@ body.immersion .webview-panel {
 	border-radius: 0;
 	box-shadow: none;
 	background: #0a0a14;
+	pointer-events: none;
 }
 
 body.immersion .webview-panel .floating-panel-grip,
 body.immersion .webview-panel .floating-panel-resize {
 	display: none;
+}
+
+body.immersion .webview-panel *,
+body.immersion .browser-webview.is-active {
+	pointer-events: none !important;
 }
 
 body.immersion .direction-indicator-transform {
