@@ -14,7 +14,9 @@ const {
 let hasLoggedInitialOpacity = false;
 
 function applyWebviewOpacity() {
-	const opacity = String(getEffectiveWebviewOpacity());
+	const effectiveOpacity = getEffectiveWebviewOpacity();
+	const opacity = String(effectiveOpacity);
+	document.body.classList.toggle("webview-translucent", effectiveOpacity < 1);
 	state.webviews.forEach((webview) => {
 		webview.style.opacity = opacity;
 	});

@@ -832,6 +832,13 @@ body.immersion .webview-panel {
 	pointer-events: none;
 }
 
+body.webview-translucent #webview-stack,
+body.webview-translucent .webview-panel,
+body.webview-translucent .webview-panel .floating-panel-content,
+body.webview-translucent .browser-webview {
+	background: transparent !important;
+}
+
 body.immersion .webview-panel .floating-panel-grip,
 body.immersion .webview-panel .floating-panel-resize {
 	display: none;
