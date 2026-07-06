@@ -5,6 +5,7 @@ const state = {
 	activeTabId: null,
 	webviews: new Map(),
 	webviewOpacity: 1,
+	webviewOpacityOverride: null,
 	pendingScripts: new Map(),
 	startupPauseTabIds: new Set(),
 	startupBackgroundMutedTabIds: new Set(),
@@ -43,6 +44,15 @@ function getActiveTab() {
 
 function setWebviewOpacity(opacity) {
 	state.webviewOpacity = opacity;
+}
+
+function setWebviewOpacityOverride(opacity) {
+	state.webviewOpacityOverride =
+		typeof opacity === "number" && Number.isFinite(opacity) ? opacity : null;
+}
+
+function getEffectiveWebviewOpacity() {
+	return state.webviewOpacityOverride ?? state.webviewOpacity;
 }
 
 function queuePendingScript(tabId, code) {
@@ -95,6 +105,8 @@ module.exports = {
 	getWebview,
 	getActiveTab,
 	setWebviewOpacity,
+	setWebviewOpacityOverride,
+	getEffectiveWebviewOpacity,
 	queuePendingScript,
 	takePendingScript,
 	markStartupPauseTabs,

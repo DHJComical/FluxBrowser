@@ -734,6 +734,11 @@ function isInteractivePoint(x, y) {
 	const element = document.elementFromPoint(x, y);
 	if (!element) return false;
 
+	const webviewPanel = element.closest('[data-panel-id="webview"]');
+	if (webviewPanel && document.body.classList.contains("immersion")) {
+		return false;
+	}
+
 	const lockedPanel = element.closest('[data-panel-id="direction-indicator"]');
 	if (lockedPanel && isPanelInteractionLocked(lockedPanel)) {
 		return false;
@@ -742,10 +747,17 @@ function isInteractivePoint(x, y) {
 	return Boolean(element.closest(INTERACTIVE_SELECTOR));
 }
 
-function setMousePassthrough(enabled) {
-	if (lastMousePassthroughState === enabled) return;
-	lastMousePassthroughState = enabled;
-	ipcRenderer.send("set-ignore-mouse", enabled);
+function setMousePassthrough(enabled, options = {}) {
+	const shouldIgnore = enabled === true;
+	const forward =
+		typeof options.forward === "boolean" ? options.forward : shouldIgnore;
+	const nextState = `${shouldIgnore}:${forward}`;
+	if (lastMousePassthroughState === nextState) return;
+	lastMousePassthroughState = nextState;
+	ipcRenderer.send("set-ignore-mouse", {
+		ignore: shouldIgnore,
+		forward,
+	});
 }
 
 function beginFloatingPanelInteraction(cursor = "") {
@@ -761,6 +773,11 @@ function bindMousePassthrough() {
 	setMousePassthrough(true);
 
 	window.addEventListener("mousemove", (event) => {
+		if (document.body.classList.contains("immersion")) {
+			setMousePassthrough(true, { forward: false });
+			return;
+		}
+
 		if (activeDragState || activeResizeState) {
 			setMousePassthrough(false);
 			return;
@@ -769,7 +786,9 @@ function bindMousePassthrough() {
 	});
 
 	window.addEventListener("mouseleave", () => {
-		setMousePassthrough(true);
+		setMousePassthrough(true, {
+			forward: !document.body.classList.contains("immersion"),
+		});
 	});
 }
 

@@ -6,10 +6,26 @@ const {
 	state,
 	getWebview,
 	setWebviewOpacity,
+	setWebviewOpacityOverride,
+	getEffectiveWebviewOpacity,
 	queuePendingScript,
 } = require("./state");
 
 let hasLoggedInitialOpacity = false;
+
+function applyWebviewOpacity() {
+	const effectiveOpacity = getEffectiveWebviewOpacity();
+	const opacity = String(effectiveOpacity);
+	document.body.classList.toggle("webview-translucent", effectiveOpacity < 1);
+	state.webviews.forEach((webview) => {
+		webview.style.opacity = opacity;
+	});
+}
+
+function setTemporaryWebviewOpacity(opacity) {
+	setWebviewOpacityOverride(opacity);
+	applyWebviewOpacity();
+}
 
 async function restoreOpacity() {
 	try {
@@ -19,9 +35,7 @@ async function restoreOpacity() {
 			hasLoggedInitialOpacity = true;
 		}
 		setWebviewOpacity(opacity);
-		state.webviews.forEach((webview) => {
-			webview.style.opacity = opacity;
-		});
+		applyWebviewOpacity();
 	} catch (error) {
 		debugLog.error("logs.main.webview.restoreOpacityFailed", error);
 	}
@@ -30,9 +44,7 @@ async function restoreOpacity() {
 function bindWebviewEvents() {
 	ipcRenderer.on("set-opacity", (_event, opacity) => {
 		setWebviewOpacity(opacity);
-		state.webviews.forEach((webview) => {
-			webview.style.opacity = opacity;
-		});
+		applyWebviewOpacity();
 	});
 
 	ipcRenderer.on("execute-active-tab-js", (_event, payload) => {
@@ -67,4 +79,5 @@ function bindWebviewEvents() {
 module.exports = {
 	bindWebviewEvents,
 	restoreOpacity,
+	setTemporaryWebviewOpacity,
 };

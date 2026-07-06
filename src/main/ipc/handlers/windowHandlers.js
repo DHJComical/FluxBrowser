@@ -1,4 +1,4 @@
-const { app } = require("electron");
+const { app, screen } = require("electron");
 const { t } = require("../../i18n");
 
 function registerWindowHandlers({ ipcMain, windowManager, logger }) {
@@ -9,8 +9,26 @@ function registerWindowHandlers({ ipcMain, windowManager, logger }) {
 		}
 	});
 
-	ipcMain.on("set-ignore-mouse", (_event, ignore) => {
-		windowManager.setIgnoreMouseEvents(ignore);
+	ipcMain.on("set-ignore-mouse", (_event, payload) => {
+		if (payload && typeof payload === "object") {
+			windowManager.setIgnoreMouseEvents(payload.ignore, {
+				forward: payload.forward,
+			});
+			return;
+		}
+
+		windowManager.setIgnoreMouseEvents(payload);
+	});
+
+	ipcMain.handle("get-pointer-screen-state", () => {
+		const mainWindow = windowManager.getMainWindow();
+		return {
+			cursor: screen.getCursorScreenPoint(),
+			windowBounds:
+				mainWindow && !mainWindow.isDestroyed()
+					? mainWindow.getBounds()
+					: null,
+		};
 	});
 
 	ipcMain.on("set-window-size", (_event, { width, height }) => {

@@ -107,8 +107,8 @@ class FluxCore {
 	}
 
 	// 设置鼠标穿透
-	setIgnoreMouse(ignore) {
-		this.windowManager.setIgnoreMouseEvents(ignore);
+	setIgnoreMouse(ignore, options = {}) {
+		this.windowManager.setIgnoreMouseEvents(ignore, options);
 	}
 
 	// 设置主窗口是否可聚焦
