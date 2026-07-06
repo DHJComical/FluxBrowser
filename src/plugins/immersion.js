@@ -12,7 +12,7 @@ module.exports = {
 				core.windowManager.toggleImmersionMode();
 
 			if (isImmersion) {
-				core.setIgnoreMouse(true);
+				core.setIgnoreMouse(true, { forward: false });
 				core.setAlwaysOnTop(true);
 				core.setFocusable(false);
 				core.focusBorderlessMaximizedApp();

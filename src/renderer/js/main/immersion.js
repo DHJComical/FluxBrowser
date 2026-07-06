@@ -24,7 +24,7 @@ function bindImmersionEvents() {
 			}),
 		);
 		if (!isImmersion) setMousePassthrough(false);
-		if (isImmersion) setMousePassthrough(true);
+		if (isImmersion) setMousePassthrough(true, { forward: false });
 		ipcRenderer.send("immersion-mode-changed", isImmersion);
 	});
 
@@ -36,7 +36,7 @@ function bindImmersionEvents() {
 		const activeWebview = getActiveWebview();
 		if (!activeWebview) return;
 		if (event.target === activeWebview && state.isImmersionMode) {
-			setMousePassthrough(true);
+			setMousePassthrough(true, { forward: false });
 		}
 	});
 }

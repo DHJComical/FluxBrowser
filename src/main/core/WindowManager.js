@@ -113,9 +113,17 @@ class WindowManager {
 		this.mainWindow.setAlwaysOnTop(shouldAlwaysOnTop, "screen-saver");
 	}
 
-	setIgnoreMouseEvents(ignore) {
+	setIgnoreMouseEvents(ignore, options = {}) {
 		if (this.mainWindow) {
-			this.mainWindow.setIgnoreMouseEvents(ignore, { forward: ignore });
+			const shouldIgnore = ignore === true;
+			if (!shouldIgnore) {
+				this.mainWindow.setIgnoreMouseEvents(false);
+				return;
+			}
+
+			const forward =
+				typeof options.forward === "boolean" ? options.forward : true;
+			this.mainWindow.setIgnoreMouseEvents(true, { forward });
 		}
 	}
 

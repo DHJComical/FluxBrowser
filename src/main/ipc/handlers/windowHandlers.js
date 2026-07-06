@@ -9,8 +9,15 @@ function registerWindowHandlers({ ipcMain, windowManager, logger }) {
 		}
 	});
 
-	ipcMain.on("set-ignore-mouse", (_event, ignore) => {
-		windowManager.setIgnoreMouseEvents(ignore);
+	ipcMain.on("set-ignore-mouse", (_event, payload) => {
+		if (payload && typeof payload === "object") {
+			windowManager.setIgnoreMouseEvents(payload.ignore, {
+				forward: payload.forward,
+			});
+			return;
+		}
+
+		windowManager.setIgnoreMouseEvents(payload);
 	});
 
 	ipcMain.on("set-window-size", (_event, { width, height }) => {
