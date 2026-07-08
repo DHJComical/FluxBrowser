@@ -255,7 +255,6 @@
 	"main.indicator.resizeSouthwest": "向左下缩放",
 	"main.indicator.resizeWest": "向左缩放",
 	"main.indicator.move": "移动指示器",
-	"main.indicator.rotate": "旋转指示器",
 	"main.indicator.subtitleHint": "若要使用此功能，请打开视频字幕",
 	"settings.page.sidebarTitle": "设置",
 	"settings.navigation.experienceGroupTitle": "播放与窗口",

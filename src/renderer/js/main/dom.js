@@ -17,7 +17,4 @@ module.exports = {
 	directionIndicatorPanel: document.getElementById("direction-indicator-panel"),
 	directionIndicatorDial: document.getElementById("direction-indicator-dial"),
 	directionIndicatorMarkers: document.getElementById("direction-indicator-markers"),
-	directionIndicatorRotateHandle: document.getElementById(
-		"direction-indicator-rotate-handle",
-	),
 };
