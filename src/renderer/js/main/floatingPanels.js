@@ -747,6 +747,28 @@ async function bindFloatingPanels() {
 }
 
 function isInteractivePoint(x, y) {
+	const directionIndicatorPanel = document.querySelector(
+		'[data-panel-id="direction-indicator"]',
+	);
+	if (
+		directionIndicatorPanel &&
+		!isPanelInteractionLocked(directionIndicatorPanel)
+	) {
+		const visualBounds =
+			directionIndicatorPanel
+				.querySelector(".direction-indicator-transform")
+				?.getBoundingClientRect() ||
+			directionIndicatorPanel.getBoundingClientRect();
+		if (
+			x >= visualBounds.left &&
+			x <= visualBounds.right &&
+			y >= visualBounds.top &&
+			y <= visualBounds.bottom
+		) {
+			return true;
+		}
+	}
+
 	const element = document.elementFromPoint(x, y);
 	if (!element) return false;
 
