@@ -45,7 +45,6 @@ const DEFAULT_APP_CONFIG = {
 	},
 	directionIndicator: {
 		enabled: true,
-		rotation: 0,
 	},
 };
 

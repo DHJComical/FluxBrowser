@@ -23,6 +23,18 @@ function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max);
 }
 
+function getPanelViewportMargin(panel) {
+	const margin = Number(panel.dataset.viewportMargin);
+	return Number.isFinite(margin)
+		? Math.max(0, Math.round(margin))
+		: FLOATING_PANEL_MARGIN;
+}
+
+function getPanelViewportInset(panel) {
+	const inset = Number(panel.dataset.viewportInset);
+	return Number.isFinite(inset) ? Math.max(0, Math.round(inset)) : 0;
+}
+
 function getPanelBounds(panel) {
 	const rect = panel.getBoundingClientRect();
 	return {
@@ -68,16 +80,20 @@ function suspendPanelTransitions(panel, callback) {
 }
 
 function placePanel(panel, x, y) {
+	const viewportMargin = getPanelViewportMargin(panel);
+	const viewportInset = getPanelViewportInset(panel);
+	const minX = viewportMargin - viewportInset;
+	const minY = viewportMargin - viewportInset;
 	const maxX = Math.max(
-		FLOATING_PANEL_MARGIN,
-		window.innerWidth - panel.offsetWidth - FLOATING_PANEL_MARGIN,
+		minX,
+		window.innerWidth - panel.offsetWidth - viewportMargin + viewportInset,
 	);
 	const maxY = Math.max(
-		FLOATING_PANEL_MARGIN,
-		window.innerHeight - panel.offsetHeight - FLOATING_PANEL_MARGIN,
+		minY,
+		window.innerHeight - panel.offsetHeight - viewportMargin + viewportInset,
 	);
-	panel.style.left = `${Math.round(clamp(x, FLOATING_PANEL_MARGIN, maxX))}px`;
-	panel.style.top = `${Math.round(clamp(y, FLOATING_PANEL_MARGIN, maxY))}px`;
+	panel.style.left = `${Math.round(clamp(x, minX, maxX))}px`;
+	panel.style.top = `${Math.round(clamp(y, minY, maxY))}px`;
 	panel.style.right = "auto";
 	panel.style.bottom = "auto";
 }
@@ -731,6 +747,28 @@ async function bindFloatingPanels() {
 }
 
 function isInteractivePoint(x, y) {
+	const directionIndicatorPanel = document.querySelector(
+		'[data-panel-id="direction-indicator"]',
+	);
+	if (
+		directionIndicatorPanel &&
+		!isPanelInteractionLocked(directionIndicatorPanel)
+	) {
+		const visualBounds =
+			directionIndicatorPanel
+				.querySelector(".direction-indicator-transform")
+				?.getBoundingClientRect() ||
+			directionIndicatorPanel.getBoundingClientRect();
+		if (
+			x >= visualBounds.left &&
+			x <= visualBounds.right &&
+			y >= visualBounds.top &&
+			y <= visualBounds.bottom
+		) {
+			return true;
+		}
+	}
+
 	const element = document.elementFromPoint(x, y);
 	if (!element) return false;
 

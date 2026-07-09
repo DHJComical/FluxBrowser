@@ -591,8 +591,7 @@ body.immersion #webview-stack {
 }
 
 .direction-indicator-handle,
-.direction-indicator-move,
-.direction-indicator-rotate {
+.direction-indicator-move {
 	position: absolute;
 	z-index: 4;
 	width: 10px;
@@ -606,8 +605,7 @@ body.immersion #webview-stack {
 }
 
 .direction-indicator-handle:hover,
-.direction-indicator-move:hover,
-.direction-indicator-rotate:hover {
+.direction-indicator-move:hover {
 	border-color: rgba(255, 255, 255, 0.88);
 	background: rgba(255, 255, 255, 0.08);
 }
@@ -668,23 +666,6 @@ body.immersion #webview-stack {
 	cursor: move;
 }
 
-.direction-indicator-rotate-stem {
-	position: absolute;
-	left: 50%;
-	top: 0;
-	width: 1px;
-	height: 18px;
-	background: rgba(255, 255, 255, 0.16);
-	transform: translate(-50%, -100%);
-	pointer-events: none;
-}
-
-.direction-indicator-rotate {
-	left: 50%;
-	top: -18px;
-	cursor: grab;
-}
-
 .direction-label {
 	position: absolute;
 	z-index: 2;
@@ -728,9 +709,9 @@ body.immersion #webview-stack {
 	margin-left: -5px;
 	margin-top: -5px;
 	border-radius: 50%;
-	background: rgba(255, 70, 70, 0.18);
-	border: 1px solid rgba(255, 80, 80, 0.96);
-	box-shadow: 0 0 14px rgba(255, 48, 48, 0.42);
+	background: #ff0000;
+	border: none;
+	box-shadow: none;
 	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
 		scale(0.72);
 	opacity: 0;
@@ -750,7 +731,7 @@ body.immersion #webview-stack {
 	opacity: 0;
 	transform: translate(calc(var(--marker-x) * 1px), calc(var(--marker-y) * 1px))
 		scale(0.92);
-	box-shadow: 0 0 0 rgba(255, 48, 48, 0);
+	box-shadow: none;
 }
 
 .floating-panel-grip {

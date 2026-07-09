@@ -554,7 +554,6 @@
 	"main.indicator.resizeSouthwest": "Resize toward bottom-left",
 	"main.indicator.resizeWest": "Resize to the left",
 	"main.indicator.move": "Move indicator",
-	"main.indicator.rotate": "Rotate indicator",
 	"main.indicator.subtitleHint": "Turn on video subtitles to use this feature",
 	"settings.page.sidebarTitle": "Settings",
 	"settings.navigation.experienceGroupTitle": "Playback & Window",

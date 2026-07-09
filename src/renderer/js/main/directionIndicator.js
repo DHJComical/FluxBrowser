@@ -4,12 +4,7 @@ const {
 	directionIndicatorPanel,
 	directionIndicatorDial,
 	directionIndicatorMarkers,
-	directionIndicatorRotateHandle,
 } = require("./dom");
-const {
-	beginFloatingPanelInteraction,
-	endFloatingPanelInteraction,
-} = require("./floatingPanels");
 const { IPC_CHANNELS } = require("../../../constants/config");
 
 const LIVE_SUBTITLE_DIRECTION_MATCHES_CHANNEL =
@@ -28,62 +23,21 @@ const DIRECTION_VECTORS = {
 };
 
 const MARKER_FADE_OUT_MS = 3000;
-const ROTATION_SAVE_DELAY_MS = 160;
 
-let currentRotation = 0;
-let savedIndicatorConfig = { enabled: true, rotation: 0 };
-let rotateState = null;
-let saveRotationTimer = null;
+let savedIndicatorConfig = { enabled: true };
 let hasBoundEvents = false;
 let activeMarkerEntries = [];
 let isIndicatorEnabled = true;
 
-function isInteractionLocked() {
-	return document.body.classList.contains("immersion");
-}
-
-function normalizeAngle(value) {
-	const normalized = Math.round(Number(value) || 0) % 360;
-	return normalized < 0 ? normalized + 360 : normalized;
-}
-
 function normalizeIndicatorConfig(config = {}) {
 	return {
 		enabled: config.enabled !== false,
-		rotation: normalizeAngle(config.rotation),
 	};
-}
-
-function applyRotation() {
-	if (!directionIndicatorDial) return;
-	directionIndicatorDial.style.transform = `rotate(${currentRotation}deg)`;
 }
 
 function applyVisibility() {
 	if (!directionIndicatorPanel) return;
 	directionIndicatorPanel.classList.toggle("hidden", !isIndicatorEnabled);
-}
-
-function stopRotationInteraction() {
-	if (!rotateState) return;
-	rotateState = null;
-	endFloatingPanelInteraction();
-}
-
-function scheduleSaveRotation() {
-	if (saveRotationTimer) {
-		clearTimeout(saveRotationTimer);
-	}
-
-	saveRotationTimer = setTimeout(() => {
-		savedIndicatorConfig = {
-			...savedIndicatorConfig,
-			rotation: currentRotation,
-		};
-		ipcRenderer.send("save-app-config", {
-			directionIndicator: savedIndicatorConfig,
-		});
-	}, ROTATION_SAVE_DELAY_MS);
 }
 
 function getDialRadius() {
@@ -180,44 +134,6 @@ function handleDirectionMatches(payload = {}) {
 	);
 }
 
-function updateRotationFromPointer(clientX, clientY) {
-	if (!directionIndicatorPanel || !isIndicatorEnabled) return;
-
-	const rect = directionIndicatorPanel.getBoundingClientRect();
-	const centerX = rect.left + rect.width / 2;
-	const centerY = rect.top + rect.height / 2;
-	const radians = Math.atan2(clientY - centerY, clientX - centerX);
-	currentRotation = normalizeAngle((radians * 180) / Math.PI + 90);
-	applyRotation();
-}
-
-function bindRotationHandle() {
-	if (!directionIndicatorRotateHandle) return;
-
-	directionIndicatorRotateHandle.addEventListener("mousedown", (event) => {
-		if (event.button !== 0) return;
-		if (isInteractionLocked()) return;
-		if (!isIndicatorEnabled) return;
-
-		event.preventDefault();
-		event.stopPropagation();
-		rotateState = { active: true };
-		beginFloatingPanelInteraction("grabbing");
-		updateRotationFromPointer(event.clientX, event.clientY);
-	});
-
-	window.addEventListener("mousemove", (event) => {
-		if (!rotateState) return;
-		updateRotationFromPointer(event.clientX, event.clientY);
-	});
-
-	window.addEventListener("mouseup", () => {
-		if (!rotateState) return;
-		stopRotationInteraction();
-		scheduleSaveRotation();
-	});
-}
-
 async function ensureSubtitleCaptureEnabled() {
 	try {
 		const subtitleState = await ipcRenderer.invoke("get-live-subtitle-state");
@@ -253,12 +169,9 @@ function applyIndicatorConfig(config = {}) {
 		...normalizeIndicatorConfig(config),
 	};
 	isIndicatorEnabled = savedIndicatorConfig.enabled !== false;
-	currentRotation = normalizeAngle(savedIndicatorConfig.rotation);
-	applyRotation();
 	applyVisibility();
 
 	if (!isIndicatorEnabled) {
-		stopRotationInteraction();
 		clearRenderedMarkers();
 	}
 }
@@ -274,23 +187,6 @@ function bindConfigUpdates() {
 			ensureSubtitleCaptureEnabled();
 			hydrateDirectionMatches();
 		}
-	});
-}
-
-function bindGlobalCleanup() {
-	window.addEventListener("blur", () => {
-		if (!rotateState) return;
-		stopRotationInteraction();
-		scheduleSaveRotation();
-	});
-
-	window.addEventListener("immersion-mode-change", (event) => {
-		if (!event.detail || event.detail.isImmersion !== true || !rotateState) {
-			return;
-		}
-
-		stopRotationInteraction();
-		scheduleSaveRotation();
 	});
 }
 
@@ -312,10 +208,8 @@ async function bindDirectionIndicatorEvents() {
 
 	if (!hasBoundEvents) {
 		hasBoundEvents = true;
-		bindRotationHandle();
 		bindDirectionUpdates();
 		bindConfigUpdates();
-		bindGlobalCleanup();
 	}
 
 	if (isIndicatorEnabled) {

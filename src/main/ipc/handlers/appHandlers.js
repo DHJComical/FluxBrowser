@@ -30,14 +30,9 @@ function registerAppHandlers({
 		if (options.clearWindowConfig) {
 			logger.debug("logs.app.cache.resetWindow");
 			configManager.saveBoundsConfig(configManager.DEFAULT_BOUNDS_CONFIG);
-			const appConfig = configManager.getAppConfig();
 			configManager.saveAppConfig({
 				floatingPanels: {
 					...configManager.DEFAULT_APP_CONFIG.floatingPanels,
-				},
-				directionIndicator: {
-					...appConfig.directionIndicator,
-					rotation: configManager.DEFAULT_APP_CONFIG.directionIndicator.rotation,
 				},
 			});
 			broadcast(IPC_CHANNELS.APP_CONFIG_UPDATED, configManager.getAppConfig());
